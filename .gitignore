@@ -1,0 +1,21 @@
+# autotools
+Makefile.in
+aclocal.m4
+config.guess
+config.h.in
+config.log
+config.status
+configure
+libtool
+stamp-h1
+admin/
+autom4te.cache/
+m4/
+
+# CMake
+CMakeCache.txt
+CMakeFiles/
+cmake_install.cmake
+
+# CMake build needs this file
+!/cmake/config.h.in

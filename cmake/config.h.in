@@ -1,0 +1,17 @@
+///////////////////////////////////////////
+// Copyright (C) 2019 Xueyi Yao
+// Please see license terms in file COPYING
+///////////////////////////////////////////
+
+// config.h.in
+// config.h template for CMake build
+
+#ifndef config_h
+#define config_h
+
+#define PACKAGE_BUGREPORT "${PROJECT_BUGREPORT}"
+#define PACKAGE_NAME      "${CMAKE_PROJECT_NAME}"
+#define PACKAGE_VERSION   "${PROJECT_VERSION}"
+#define PACKAGE_STRING    "${CMAKE_PROJECT_NAME} ${PROJECT_VERSION}"
+
+#endif //config_h

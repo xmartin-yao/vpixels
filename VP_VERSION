@@ -1,0 +1,12 @@
+0.6.4
+###########################################
+# Copyright (C) 2019 Xueyi Yao
+# Please see license terms in file COPYING
+###########################################
+# Only the 1st line is in use, which defines version number and is used by
+# configure.ac and cmake/SetVersionNumber.cmake.
+#
+# For new version number to take the effect, run
+#   autoconf -f
+# or re-run
+#   camke -G

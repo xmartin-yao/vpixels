@@ -1,0 +1,344 @@
+////////////////////////////////////////////////////////////////////////
+// Copyright (C) 2019 Xueyi Yao
+//
+// This file is part of VPixels.
+//
+// VPixels is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+// 
+// VPixels is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+// 
+// You should have received a copy of the GNU General Public License
+// along with VPixels.  If not, see <https://www.gnu.org/licenses/>.
+////////////////////////////////////////////////////////////////////////
+// Unit tests for BmpInfo
+
+#include "BmpInfo1BitTest.h"
+#include "BmpInfo1Bit.h"
+#include "Exception.h"
+
+CPPUNIT_TEST_SUITE_REGISTRATION( BmpInfo1BitTest );
+
+
+/////////////////////////
+void BmpInfo1BitTest::setUp()
+{
+  m_p1x1 = new BmpInfo1Bit( 1, 1 );
+  m_p1x2 = new BmpInfo1Bit( 1, 2 );
+  m_p2x2 = new BmpInfo1Bit( 2, 2 );
+  m_p3x2 = new BmpInfo1Bit( 3, 2 );
+  m_p4x2 = new BmpInfo1Bit( 4, 2 );
+
+  m_p10x10 = new BmpInfo1Bit( 10, 10 );
+  m_p10x20 = new BmpInfo1Bit( 10, 20 );
+  m_p20x20 = new BmpInfo1Bit( 20, 20 );
+  m_p30x20 = new BmpInfo1Bit( 30, 20 );
+  m_p40x20 = new BmpInfo1Bit( 40, 20 );
+}
+
+/////////////////////////
+void BmpInfo1BitTest::tearDown()
+{
+  delete m_p1x1;
+  delete m_p1x2;
+  delete m_p2x2;
+  delete m_p3x2;
+  delete m_p4x2;
+  delete m_p10x10;
+  delete m_p10x20;
+  delete m_p20x20;
+  delete m_p30x20;
+  delete m_p40x20;
+}
+
+//////////////////////////////////////
+void BmpInfo1BitTest::testBitsPerPixel()
+{
+  CPPUNIT_ASSERT( m_p1x1->BitsPerPixel() == 1 );
+  CPPUNIT_ASSERT( m_p1x2->BitsPerPixel() == 1 );
+  CPPUNIT_ASSERT( m_p2x2->BitsPerPixel() == 1 );
+  CPPUNIT_ASSERT( m_p3x2->BitsPerPixel() == 1 );
+  CPPUNIT_ASSERT( m_p4x2->BitsPerPixel() == 1 );
+  CPPUNIT_ASSERT( m_p10x10->BitsPerPixel() == 1 );
+  CPPUNIT_ASSERT( m_p10x20->BitsPerPixel() == 1 );
+  CPPUNIT_ASSERT( m_p20x20->BitsPerPixel() == 1 );
+  CPPUNIT_ASSERT( m_p30x20->BitsPerPixel() == 1 );
+  CPPUNIT_ASSERT( m_p40x20->BitsPerPixel() == 1 );
+}
+
+////////////////////////////////
+void BmpInfo1BitTest::testRowLength()
+{
+  CPPUNIT_ASSERT( m_p1x1->RowLength() == 1 );
+  CPPUNIT_ASSERT( m_p1x2->RowLength() == 1 );
+  CPPUNIT_ASSERT( m_p2x2->RowLength() == 1 );
+  CPPUNIT_ASSERT( m_p3x2->RowLength() == 1 );
+  CPPUNIT_ASSERT( m_p4x2->RowLength() == 1 );
+  CPPUNIT_ASSERT( m_p10x10->RowLength() == 2 );
+  CPPUNIT_ASSERT( m_p10x20->RowLength() == 2 );
+  CPPUNIT_ASSERT( m_p20x20->RowLength() == 3 );
+  CPPUNIT_ASSERT( m_p30x20->RowLength() == 4 );
+  CPPUNIT_ASSERT( m_p40x20->RowLength() == 5 );
+}
+
+////////////////////////////////
+void BmpInfo1BitTest::testByteArraySize()
+{
+  CPPUNIT_ASSERT( m_p1x1->ByteArraySize() == 1 );
+  CPPUNIT_ASSERT( m_p1x2->ByteArraySize() == 2 );
+  CPPUNIT_ASSERT( m_p2x2->ByteArraySize() == 2 );
+  CPPUNIT_ASSERT( m_p3x2->ByteArraySize() == 2 );
+  CPPUNIT_ASSERT( m_p4x2->ByteArraySize() == 2 );
+  CPPUNIT_ASSERT( m_p10x10->ByteArraySize() == 20 );
+  CPPUNIT_ASSERT( m_p10x20->ByteArraySize() == 40 );
+  CPPUNIT_ASSERT( m_p20x20->ByteArraySize() == 60 );
+  CPPUNIT_ASSERT( m_p30x20->ByteArraySize() == 80 );
+  CPPUNIT_ASSERT( m_p40x20->ByteArraySize() == 100 );
+}
+
+////////////////////////////////
+void BmpInfo1BitTest::testImageDataSize()
+{
+  CPPUNIT_ASSERT( m_p1x1->ImageDataSize() == 4 );
+  CPPUNIT_ASSERT( m_p1x2->ImageDataSize() == 8 );
+  CPPUNIT_ASSERT( m_p2x2->ImageDataSize() == 8 );
+  CPPUNIT_ASSERT( m_p3x2->ImageDataSize() == 8 );
+  CPPUNIT_ASSERT( m_p4x2->ImageDataSize() == 8 );
+  CPPUNIT_ASSERT( m_p10x10->ImageDataSize() == 40 );
+  CPPUNIT_ASSERT( m_p10x20->ImageDataSize() == 80 );
+  CPPUNIT_ASSERT( m_p20x20->ImageDataSize() == 80 );
+  CPPUNIT_ASSERT( m_p30x20->ImageDataSize() == 80 );
+  CPPUNIT_ASSERT( m_p40x20->ImageDataSize() == 160 );
+}
+
+////////////////////////////////
+void BmpInfo1BitTest::testByteArrayIndices()
+{
+  uint32_t ByteIndex;
+  uint8_t BitIndex;
+
+  // 1x1 (1 byte)
+  m_p1x1->ByteArrayIndices( 0, 0, ByteIndex, BitIndex );
+  CPPUNIT_ASSERT( 0 == ByteIndex );
+  CPPUNIT_ASSERT( 0 == BitIndex );
+  CPPUNIT_ASSERT_THROW( m_p1x1->ByteArrayIndices( 1, 0, ByteIndex, BitIndex ),
+                        vp::Exception );
+  CPPUNIT_ASSERT_THROW( m_p1x1->ByteArrayIndices( -1, 0, ByteIndex, BitIndex ),
+                        vp::Exception );
+  CPPUNIT_ASSERT_THROW( m_p1x1->ByteArrayIndices( 0, 1, ByteIndex, BitIndex ),
+                        vp::Exception );
+  CPPUNIT_ASSERT_THROW( m_p1x1->ByteArrayIndices( 0, -1, ByteIndex, BitIndex ),
+                        vp::Exception );
+  // 1x2 (1 byte x 2)
+  m_p1x2->ByteArrayIndices( 0, 1, ByteIndex, BitIndex );
+  CPPUNIT_ASSERT( 0 == ByteIndex );
+  CPPUNIT_ASSERT( 0 == BitIndex );
+  m_p1x2->ByteArrayIndices( 0, 0, ByteIndex, BitIndex );
+  CPPUNIT_ASSERT( 1 == ByteIndex );
+  CPPUNIT_ASSERT( 0 == BitIndex );
+
+  // 2x2 (1 byte x 2)
+  m_p2x2->ByteArrayIndices( 0, 1, ByteIndex, BitIndex );
+  CPPUNIT_ASSERT( 0 == ByteIndex );
+  CPPUNIT_ASSERT( 0 == BitIndex );
+  m_p2x2->ByteArrayIndices( 1, 1, ByteIndex, BitIndex );
+  CPPUNIT_ASSERT( 0 == ByteIndex );
+  CPPUNIT_ASSERT( 1 == BitIndex );
+  m_p2x2->ByteArrayIndices( 0, 0, ByteIndex, BitIndex );
+  CPPUNIT_ASSERT( 1 == ByteIndex );
+  CPPUNIT_ASSERT( 0 == BitIndex );
+  m_p2x2->ByteArrayIndices( 1, 0, ByteIndex, BitIndex );
+  CPPUNIT_ASSERT( 1 == ByteIndex );
+  CPPUNIT_ASSERT( 1 == BitIndex );
+
+  // 3x2 (1 byte x 2)
+  m_p3x2->ByteArrayIndices( 0, 1, ByteIndex, BitIndex );
+  CPPUNIT_ASSERT( 0 == ByteIndex );
+  CPPUNIT_ASSERT( 0 == BitIndex );
+  m_p3x2->ByteArrayIndices( 2, 1, ByteIndex, BitIndex );
+  CPPUNIT_ASSERT( 0 == ByteIndex );
+  CPPUNIT_ASSERT( 2 == BitIndex );
+  m_p3x2->ByteArrayIndices( 0, 0, ByteIndex, BitIndex );
+  CPPUNIT_ASSERT( 1 == ByteIndex );
+  CPPUNIT_ASSERT( 0 == BitIndex );
+  m_p3x2->ByteArrayIndices( 2, 0, ByteIndex, BitIndex );
+  CPPUNIT_ASSERT( 1 == ByteIndex );
+  CPPUNIT_ASSERT( 2 == BitIndex );
+
+  // 4x2 (1 byte x 2)
+  m_p4x2->ByteArrayIndices( 0, 1, ByteIndex, BitIndex );
+  CPPUNIT_ASSERT( 0 == ByteIndex );
+  CPPUNIT_ASSERT( 0 == BitIndex );
+  m_p4x2->ByteArrayIndices( 3, 1, ByteIndex, BitIndex );
+  CPPUNIT_ASSERT( 0 == ByteIndex );
+  CPPUNIT_ASSERT( 3 == BitIndex );
+  m_p4x2->ByteArrayIndices( 0, 0, ByteIndex, BitIndex );
+  CPPUNIT_ASSERT( 1 == ByteIndex );
+  CPPUNIT_ASSERT( 0 == BitIndex );
+  m_p4x2->ByteArrayIndices( 3, 0, ByteIndex, BitIndex );
+  CPPUNIT_ASSERT( 1 == ByteIndex );
+  CPPUNIT_ASSERT( 3 == BitIndex );
+
+  // 10x10 (2 bytes x 10)
+  m_p10x10->ByteArrayIndices( 0, 9, ByteIndex, BitIndex );
+  CPPUNIT_ASSERT( 0 == ByteIndex );
+  CPPUNIT_ASSERT( 0 == BitIndex );
+  m_p10x10->ByteArrayIndices( 9, 9, ByteIndex, BitIndex );
+  CPPUNIT_ASSERT( 1 == ByteIndex );
+  CPPUNIT_ASSERT( 1 == BitIndex );
+  m_p10x10->ByteArrayIndices( 4, 4, ByteIndex, BitIndex );
+  CPPUNIT_ASSERT( 10 == ByteIndex );
+  CPPUNIT_ASSERT( 4 == BitIndex );
+  m_p10x10->ByteArrayIndices( 0, 0, ByteIndex, BitIndex );
+  CPPUNIT_ASSERT( 18 == ByteIndex );
+  CPPUNIT_ASSERT( 0 == BitIndex );
+  m_p10x10->ByteArrayIndices( 9, 0, ByteIndex, BitIndex );
+  CPPUNIT_ASSERT( 19 == ByteIndex );
+  CPPUNIT_ASSERT( 1 == BitIndex );
+
+  // 10x20 (2 bytes x 20)
+  m_p10x20->ByteArrayIndices( 0, 19, ByteIndex, BitIndex );
+  CPPUNIT_ASSERT( 0 == ByteIndex );
+  CPPUNIT_ASSERT( 0 == BitIndex );
+  m_p10x20->ByteArrayIndices( 9, 19, ByteIndex, BitIndex );
+  CPPUNIT_ASSERT( 1 == ByteIndex );
+  CPPUNIT_ASSERT( 1 == BitIndex );
+  m_p10x20->ByteArrayIndices( 4, 9, ByteIndex, BitIndex );
+  CPPUNIT_ASSERT( 20 == ByteIndex );
+  CPPUNIT_ASSERT( 4 == BitIndex );
+  m_p10x20->ByteArrayIndices( 0, 0, ByteIndex, BitIndex );
+  CPPUNIT_ASSERT( 38 == ByteIndex );
+  CPPUNIT_ASSERT( 0 == BitIndex );
+  m_p10x20->ByteArrayIndices( 9, 0, ByteIndex, BitIndex );
+  CPPUNIT_ASSERT( 39 == ByteIndex );
+  CPPUNIT_ASSERT( 1 == BitIndex );
+
+  // 20x20 (3 bytes x 20)
+  m_p20x20->ByteArrayIndices( 0, 19, ByteIndex, BitIndex );
+  CPPUNIT_ASSERT( 0 == ByteIndex );
+  CPPUNIT_ASSERT( 0 == BitIndex );
+  m_p20x20->ByteArrayIndices( 19, 19, ByteIndex, BitIndex );
+  CPPUNIT_ASSERT( 2 == ByteIndex );
+  CPPUNIT_ASSERT( 3 == BitIndex );
+  m_p20x20->ByteArrayIndices( 9, 9, ByteIndex, BitIndex );
+  CPPUNIT_ASSERT( 31 == ByteIndex );
+  CPPUNIT_ASSERT( 1 == BitIndex );
+  m_p20x20->ByteArrayIndices( 0, 0, ByteIndex, BitIndex );
+  CPPUNIT_ASSERT( 57 == ByteIndex );
+  CPPUNIT_ASSERT( 0 == BitIndex );
+  m_p20x20->ByteArrayIndices( 19, 0, ByteIndex, BitIndex );
+  CPPUNIT_ASSERT( 59 == ByteIndex );
+  CPPUNIT_ASSERT( 3 == BitIndex );
+
+  // 30x20 (4 bytes x 20)
+  m_p30x20->ByteArrayIndices( 0, 19, ByteIndex, BitIndex );
+  CPPUNIT_ASSERT( 0 == ByteIndex );
+  CPPUNIT_ASSERT( 0 == BitIndex );
+  m_p30x20->ByteArrayIndices( 29, 19, ByteIndex, BitIndex );
+  CPPUNIT_ASSERT( 3 == ByteIndex );
+  CPPUNIT_ASSERT( 5 == BitIndex );
+  m_p30x20->ByteArrayIndices( 14, 9, ByteIndex, BitIndex );
+  CPPUNIT_ASSERT( 41 == ByteIndex );
+  CPPUNIT_ASSERT( 6 == BitIndex );
+  m_p30x20->ByteArrayIndices( 0, 0, ByteIndex, BitIndex );
+  CPPUNIT_ASSERT( 76 == ByteIndex );
+  CPPUNIT_ASSERT( 0 == BitIndex );
+  m_p30x20->ByteArrayIndices( 29, 0, ByteIndex, BitIndex );
+  CPPUNIT_ASSERT( 79 == ByteIndex );
+  CPPUNIT_ASSERT( 5 == BitIndex );
+
+  // 40x20 (5 bytes x 20)
+  m_p40x20->ByteArrayIndices( 0, 19, ByteIndex, BitIndex );
+  CPPUNIT_ASSERT( 0 == ByteIndex );
+  CPPUNIT_ASSERT( 0 == BitIndex );
+  m_p40x20->ByteArrayIndices( 39, 19, ByteIndex, BitIndex );
+  CPPUNIT_ASSERT( 4 == ByteIndex );
+  CPPUNIT_ASSERT( 7 == BitIndex );
+  m_p40x20->ByteArrayIndices( 19, 9, ByteIndex, BitIndex );
+  CPPUNIT_ASSERT( 52 == ByteIndex );
+  CPPUNIT_ASSERT( 3 == BitIndex );
+  m_p40x20->ByteArrayIndices( 0, 0, ByteIndex, BitIndex );
+  CPPUNIT_ASSERT( 95 == ByteIndex );
+  CPPUNIT_ASSERT( 0 == BitIndex );
+  m_p40x20->ByteArrayIndices( 39, 0, ByteIndex, BitIndex );
+  CPPUNIT_ASSERT( 99 == ByteIndex );
+  CPPUNIT_ASSERT( 7 == BitIndex );
+}
+
+//////////////////////////////////////
+void BmpInfo1BitTest::testColorTableSize()
+{
+  CPPUNIT_ASSERT( m_p1x1->ColorTableSize() == 2 );
+  CPPUNIT_ASSERT( m_p1x2->ColorTableSize() == 2 );
+  CPPUNIT_ASSERT( m_p2x2->ColorTableSize() == 2 );
+  CPPUNIT_ASSERT( m_p3x2->ColorTableSize() == 2 );
+  CPPUNIT_ASSERT( m_p4x2->ColorTableSize() == 2 );
+  CPPUNIT_ASSERT( m_p10x10->ColorTableSize() == 2 );
+  CPPUNIT_ASSERT( m_p10x20->ColorTableSize() == 2 );
+  CPPUNIT_ASSERT( m_p20x20->ColorTableSize() == 2 );
+  CPPUNIT_ASSERT( m_p30x20->ColorTableSize() == 2 );
+  CPPUNIT_ASSERT( m_p40x20->ColorTableSize() == 2 );
+}
+
+// GetColorIndex() is irrelevant to dimension,
+// test it using on instance
+///////////////////////////////////////////
+void BmpInfo1BitTest::testGetColorIndex()
+{
+  uint8_t Byte = 0xE9; // 11101001
+  CPPUNIT_ASSERT( 1 == m_p1x1->GetColorIndex( Byte, 0 ) );
+  CPPUNIT_ASSERT( 1 == m_p1x1->GetColorIndex( Byte, 1 ) );
+  CPPUNIT_ASSERT( 1 == m_p1x1->GetColorIndex( Byte, 2 ) );
+  CPPUNIT_ASSERT( 0 == m_p1x1->GetColorIndex( Byte, 3 ) );
+  CPPUNIT_ASSERT( 1 == m_p1x1->GetColorIndex( Byte, 4 ) );
+  CPPUNIT_ASSERT( 0 == m_p1x1->GetColorIndex( Byte, 5 ) );
+  CPPUNIT_ASSERT( 0 == m_p1x1->GetColorIndex( Byte, 6 ) );
+  CPPUNIT_ASSERT( 1 == m_p1x1->GetColorIndex( Byte, 7 ) );
+
+  CPPUNIT_ASSERT_THROW( m_p1x1->GetColorIndex( Byte, -1 ), vp::Exception );
+  CPPUNIT_ASSERT_THROW( m_p1x1->GetColorIndex( Byte, 8 ), vp::Exception );
+}
+
+// SetColorIndex() is irrelevant to dimension,
+// test it using on instance
+//////////////////////////////////////
+void BmpInfo1BitTest::testSetColorIndex()
+{
+  uint8_t Byte = 0xE9; // 11101001
+  m_p1x1->SetColorIndex( Byte, 0, 0 );
+  CPPUNIT_ASSERT( Byte == 0x69 );  // 01101001
+
+  m_p1x1->SetColorIndex( Byte, 1, 0 );
+  CPPUNIT_ASSERT( Byte == 0x29 );  // 00101001
+
+  m_p1x1->SetColorIndex( Byte, 2, 0 );
+  CPPUNIT_ASSERT( Byte == 0x09 );  // 00001001
+
+  m_p1x1->SetColorIndex( Byte, 3, 1 );
+  CPPUNIT_ASSERT( Byte == 0x19 );  // 00011001
+
+  m_p1x1->SetColorIndex( Byte, 4, 0 );
+  CPPUNIT_ASSERT( Byte == 0x11 );  // 00010001
+
+  m_p1x1->SetColorIndex( Byte, 5, 1 );
+  CPPUNIT_ASSERT( Byte == 0x15 );  // 00010101
+
+  m_p1x1->SetColorIndex( Byte, 6, 1 );
+  CPPUNIT_ASSERT( Byte == 0x17 );  // 00010111
+
+  m_p1x1->SetColorIndex( Byte, 7, 0 );
+  CPPUNIT_ASSERT( Byte == 0x16 );  // 00010110
+
+  // incorrect bit index
+  CPPUNIT_ASSERT_THROW( m_p1x1->SetColorIndex( Byte, -1, 0 ), vp::Exception );
+  CPPUNIT_ASSERT_THROW( m_p1x1->SetColorIndex( Byte, 8, 0 ), vp::Exception );
+
+  // incorrect color index
+  CPPUNIT_ASSERT_THROW( m_p1x1->SetColorIndex( Byte, 0, -1 ), vp::Exception );
+  CPPUNIT_ASSERT_THROW( m_p1x1->SetColorIndex( Byte, 1, 2 ), vp::Exception );
+}

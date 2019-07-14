@@ -1,0 +1,43 @@
+Prerequisite
+============
+Lua 5.2 (https://www.lua.org/ftp/)
+Python 2.7 (https://www.python.org/downloads/)
+
+Optional (for running tests)
+==============================
+CppUnit (https://freedesktop.org/wiki/Software/cppunit/)
+LuaUnit (https://github.com/bluebird75/luaunit)
+PyUnit
+
+Build with Autotools
+====================
+1. Clone the repository
+2. Change to the directory
+3. Generate configuration files
+   autoreconf -i
+4. Download ax_cxx_compile_stdcxx.m4 and move it into directory m4/
+   (https://www.gnu.org/software/autoconf-archive/ax_cxx_compile_stdcxx.html)
+5. Make a build directory
+   (e.g. mkdir _build)
+6. Change to the build directory
+7. Configure the package
+   ../configure
+   (run ../configure --help for options)
+8. Build and install the package
+   make && make install
+9. Run tests (optional)
+   make check
+
+Build with CMake
+================
+1. Clone the repository
+2. Change to the directory
+3. Make a build directory
+   (e.g. mkdir _build)
+4. Change to the build directory
+5. Configure the package
+   (e.g. cmake .. -G "Unix Makefiles")
+6. Build the package
+   make
+7. Run tests (optional)
+   make check
