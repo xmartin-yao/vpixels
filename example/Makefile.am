@@ -16,4 +16,4 @@
 ## along with VPixels.  If not, see <https://www.gnu.org/licenses/>.
 
 ## Makefile.am for directory example/
-SUBDIRS = bmp gif lua py
+SUBDIRS = bmp gif img lua py

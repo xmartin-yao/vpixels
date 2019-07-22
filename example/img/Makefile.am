@@ -15,22 +15,5 @@
 ## You should have received a copy of the GNU General Public License
 ## along with VPixels.  If not, see <https://www.gnu.org/licenses/>.
 
-## Makefile.am for project root directory
-
-ACLOCAL_AMFLAGS = -I m4
-
-## build 'src' before 'test'
-SUBDIRS = include src test example cmake
-
-EXTRA_DIST = CMakeLists.txt VP_VERSION README.md
-
-## Switch README to markdown version
-## Add this rule, automake won't complain missing README file.
-## 'make README' or 'make dist' will create a dummy README file.
-README:
-	@if test ! -f $@; then \
-	  echo "Please see $@.md" > $@; \
-	fi
-
-## clean up dummy README file
-CLEANFILES = README
+## Makefile.am for directory example/img
+EXTRA_DIST = conic_color_small.png conic_gray_small.png rainyday.gif
