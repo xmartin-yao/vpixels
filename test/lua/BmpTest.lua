@@ -304,11 +304,32 @@ function TestBmp:test24Bit()
 end
 
 function TestBmp:testImport()
-  local bmp = vpixels.bmp()
+  local bmp = vpixels.bmp( 4, 5, 6 )
+
+  -- import non-existing file
   lu.assertError( bmp.import, bmp, 'not-exits.bmp' ) -- not exit
-  lu.assertError( bmp.import, bmp, 'BmpTest.lua' )   -- not a BMP file
+  -- bmp unchanged
+  lu.assertEquals( 4, bmp:bpp() )
+  lu.assertEquals( 5, bmp:width() )
+  lu.assertEquals( 6, bmp:height() )
+  lu.assertEquals( 16, bmp:colortablesize() )
+
+  -- import() expects a string argument
   lu.assertError( bmp.import, bmp, 2 )
   lu.assertError( bmp.import, bmp, {} )
+  -- bmp unchanged
+  lu.assertEquals( 4, bmp:bpp() )
+  lu.assertEquals( 5, bmp:width() )
+  lu.assertEquals( 6, bmp:height() )
+  lu.assertEquals( 16, bmp:colortablesize() )
+
+  -- import non-bmp file or corrupted bmp file
+  lu.assertError( bmp.import, bmp, 'BmpTest.lua' )   -- not a BMP file
+  -- bmp still a valid object, but  becomes bpp=1, 1x1
+  lu.assertEquals( 1, bmp:bpp() )
+  lu.assertEquals( 1, bmp:width() )
+  lu.assertEquals( 1, bmp:height() )
+  lu.assertEquals( 2, bmp:colortablesize() )
 end
 
 function TestBmp:testExport()

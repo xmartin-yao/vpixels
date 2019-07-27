@@ -230,13 +230,20 @@ PyObject* PyBmpImpl::Import( PyBmpObject* self, PyObject* arg )
   {
     if( !self->pBmp->Import(FileName) )
     {
+      // file does not exist
       PyErr_Format( PyExc_IOError, "failed to open '%s'", FileName );
       return nullptr;
     }
   }
   catch( const vp::Exception& e )
   {
-    PyErr_Format( PyExc_IOError, "failed to read '%s' (%s)", FileName, e.what() );
+    // Basic exception safety
+    // vp::Bmp object may not be valid, create a new one,
+    // in order to keep self still a valid object.
+    delete self->pBmp;
+    self->pBmp = new vp::Bmp();
+
+    PyErr_Format( PyExc_Exception, "failed to import '%s' (%s)", FileName, e.what() );
     return nullptr;
   }
 
@@ -249,7 +256,7 @@ PyObject* PyBmpImpl::Import( PyBmpObject* self, PyObject* arg )
 PyObject* PyBmpImpl::Export( PyBmpObject* self, PyObject* args )
 {
   const char* FileName = nullptr;
-  PyObject* pyBool = Py_False;
+  PyObject* pyBool = Py_False;  // False by default
   if( !PyArg_ParseTuple(args, "s|O!", &FileName, &PyBool_Type, &pyBool) )
     return nullptr;
 

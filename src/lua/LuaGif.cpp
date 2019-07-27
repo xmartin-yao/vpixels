@@ -56,8 +56,10 @@ namespace LuaGifImpl
   int GetField( lua_State* L );
   vp::Gif* NewGif( lua_State* L );
   vp::Gif* CheckGif( lua_State* L, int arg );
+  void     CheckGif( lua_State* L, vp::Gif* pGif, int arg );
   LuaGifUD* CheckGifUD( lua_State* L, int arg );
-  
+  void Invalidate( SimpleList<LuaGifImageUD>* pListImageUD );
+
   // methods of LuaGif
   const luaL_Reg Methods[] = {
     { "clone",          Clone },
@@ -196,30 +198,43 @@ int LuaGifImpl::Import( lua_State* L )
 {
   LuaUtil::CheckArgs( L, 2 );
 
-  vp::Gif* pGif = CheckGif( L, 1 );
+  LuaGifUD* pGifUD = CheckGifUD( L, 1 );
+  CheckGif( L, pGifUD->pGif,  1 );
+
   const char* FileName = luaL_checkstring( L, 2 );
 
   bool Error = false;
   try
   {
-    if( !pGif->Import( FileName ) )
+    // file does not exist
+    if( !pGifUD->pGif->Import( FileName ) )
       return luaL_error( L, "failed to open '%s'", FileName );
   }
   catch( const vp::Exception& e )
   {
-    // set error message, call lua_error() outside of catch-block;
-    // otherwise, the exception object won't be deallocated, b/c
-    // luaL_error() or lua_error() never returns.
+    // error occurred during importing
     Error = true;
+
+    // Basic exception safety
+    // vp::Gif object may not be valid, create a new one,
+    // in order to keep LuaGif still a valid object.
+    delete pGifUD->pGif;
+    pGifUD->pGif = new vp::Gif();
+
+    // set error message
     luaL_where( L, 1 );
-    lua_pushfstring( L, "failed to read '%s' (%s)", FileName, e.what() );
+    lua_pushfstring( L, "failed to import '%s' (%s)", FileName, e.what() );
     lua_concat( L, 2 );
   }
 
+  // reset the list, no matter whether importing failed or not
+  Invalidate( pGifUD->pListImageUD );
+  pGifUD->pListImageUD->Clear();
+
   if( Error )
-    return lua_error( L );
+    return lua_error( L );  // exception caught
   else
-    return 0;
+    return 0;  // file successfully imported
 }
 
 ///////////////////
@@ -434,11 +449,7 @@ int LuaGifImpl::GetImage( lua_State* L )
 
   LuaGifUD* pGifUD = CheckGifUD( L, 1 );
   vp::Gif* pGif = pGifUD->pGif;
-  if( pGif == nullptr )
-  {
-    const char* msg = lua_pushfstring( L, "invalid '%s' object", LuaGif::ID );
-    luaL_argerror( L, 1, msg );
-  }
+  CheckGif( L, pGif, 1 );
 
   auto Images = static_cast<uint16_t>(pGif->Images());
   if( Images == 0 )
@@ -483,18 +494,11 @@ int LuaGifImpl::Finalizer( lua_State* L )
 {
   LuaGifUD* pGifUD = CheckGifUD( L, 1 );
 
+  // delete the list
   if( pGifUD->pListImageUD != nullptr )
   {
-    // set each LuaGifImage to invalid
-    pGifUD->pListImageUD->Rewind();
-    LuaGifImageUD* pGifImageUD = pGifUD->pListImageUD->Next();
-    while( pGifImageUD != nullptr )
-    {
-      pGifImageUD->IsValid = false;
-      pGifImageUD = pGifUD->pListImageUD->Next();
-    }
+    Invalidate( pGifUD->pListImageUD );
 
-    // delete the list
     delete pGifUD->pListImageUD;
     pGifUD->pListImageUD = nullptr;
   }
@@ -557,11 +561,21 @@ vp::Gif* LuaGifImpl::CheckGif( lua_State* L, int arg )
   // in case __gc() has been called directly, e.g. gif:__gc()
   if( pGifUD->pGif == nullptr )
   {
-    const char* msg = lua_pushfstring( L, "invalid '%s' object", LuaGif::ID );
+    const char* msg = lua_pushfstring( L, "invalid '%s' object (pGif is null)", LuaGif::ID );
     luaL_argerror( L, arg, msg );
   }
 
   return pGifUD->pGif;
+}
+
+//////////////////////////////////
+void LuaGifImpl::CheckGif( lua_State* L, vp::Gif* pGif, int arg )
+{
+  if( pGif == nullptr )
+  {
+    const char* msg = lua_pushfstring( L, "invalid '%s' object (pGif is null)", LuaGif::ID );
+    luaL_argerror( L, arg, msg );
+  }
 }
 
 ///////////////////////////////////
@@ -575,4 +589,18 @@ int LuaGifImpl::GetField( lua_State* L )
     return 1;
   else
     return luaL_error( L, "'%s' object has no field '%s'", LuaGif::ID, Key );
+}
+
+////////////////////////
+// set LuaGifImage objects in the list to invalid state
+//////////////////////////////////////////////////////////////
+void LuaGifImpl::Invalidate( SimpleList<LuaGifImageUD>* pListImageUD )
+{
+  pListImageUD->Rewind();
+  LuaGifImageUD* pGifImageUD = pListImageUD->Next();
+  while( pGifImageUD != nullptr )
+  {
+    pGifImageUD->IsValid = false;
+    pGifImageUD = pListImageUD->Next();
+  }
 }

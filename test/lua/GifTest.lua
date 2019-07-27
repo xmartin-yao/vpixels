@@ -187,11 +187,49 @@ function TestGif:testClone()
 end
 
 function TestGif:testImport()
-  local gif = vpixels.gif()
+  local gif = vpixels.gif( 3, 4, 5, 2 )
+  local img0 = gif[0]
+  local img1 = gif[1]
+
+  -- import non-existing file
   lu.assertError( gif.import, gif, "not-exist.gif" ) -- not exit
-  lu.assertError( gif.import, gif, "GifTest.lua" )   -- not a GIF file
+  -- gif unchanged
+  lu.assertEquals( gif:bpp(), 3 )
+  lu.assertEquals( gif:width(), 4 )
+  lu.assertEquals( gif:height(), 5 )
+  lu.assertEquals( #gif, 2 )
+  lu.assertEquals( gif:colortablesize(), 8 )
+  -- img0 and img1 are still valid
+  lu.assertEquals( img0:bpp(), 3 )
+  lu.assertEquals( img1:bpp(), 3 )
+
+  -- import() expects a string argument
   lu.assertError( gif.import, gif, 2.5 )
   lu.assertError( gif.import, gif, {} )
+  -- gif unchanged
+  lu.assertEquals( gif:bpp(), 3 )
+  lu.assertEquals( gif:width(), 4 )
+  lu.assertEquals( gif:height(), 5 )
+  lu.assertEquals( #gif, 2 )
+  lu.assertEquals( gif:colortablesize(), 8 )
+  -- img0 and img1 are still valid
+  lu.assertEquals( img0:bpp(), 3 )
+  lu.assertEquals( img1:bpp(), 3 )
+
+  -- import non-gif file or corrupted gif file
+  lu.assertError( gif.import, gif, "GifTest.lua" )  -- not a GIF file
+  -- gif still a valid object, but becomes bpp=2, 1x1, images=1, colors=4
+  lu.assertEquals( gif:bpp(), 2 )
+  lu.assertEquals( gif:width(), 1 )
+  lu.assertEquals( gif:height(), 1 )
+  lu.assertEquals( #gif, 1 )
+  lu.assertEquals( gif:colortablesize(), 4 )
+  -- img0 and img1 are invalid, b/c the gif object they refer to is out of scope
+  lu.assertNotIsNil( img0 )
+  lu.assertNotIsNil( img1 )
+  lu.assertError( img0.bpp, img0 )
+  lu.assertError( img1.bpp, img1 )
+
 end
 
 function TestGif:testExport()
@@ -329,7 +367,7 @@ function TestGifImage:testOutOfScope()
   lu.assertEquals( img0:bpp(), 2 )
   lu.assertEquals( img4:bpp(), 2 )
 
-  -- gif out of scope
+  -- assign to nil, gif out of scope
   gif = nil
   collectgarbage( "collect" )
   lu.assertNotIsNil( img0 )
@@ -337,7 +375,7 @@ function TestGifImage:testOutOfScope()
   lu.assertError( img0.bpp, img0 ) -- cannot call img0:bpp()
   lu.assertError( img4.bpp, img4 ) -- cannot call img4:bpp()
 
-  -- assign a new object to gif
+  -- assign to a new object
   gif = vpixels.gif( 3, 3, 5, 5 )
   lu.assertError( img0.bpp, img0 ) -- still cannot call img0:bpp()
   lu.assertError( img4.bpp, img4 ) -- still cannot call img4:bpp()
@@ -356,7 +394,7 @@ function TestGifImage:testOutOfScope()
   lu.assertError( img0.bpp, img0 ) -- cannot call img0:bpp()
   lu.assertError( img4.bpp, img4 ) -- cannot call img4:bpp()
 
-  -- img0 is usable, img4 is not
+  -- clone() will fail, b/c img4 is invalid
   img0 = gif[0];
   lu.assertError( img0.clone, img0, img4 ) -- img0:clone(img4)
   lu.assertError( img4.clone, img4, img0 ) -- img4:clone(img0)

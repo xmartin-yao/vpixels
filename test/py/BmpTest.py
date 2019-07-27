@@ -243,16 +243,34 @@ class TestBmp( unittest.TestCase ):
 
 
   def testImportf( self ):
-    bmp = vpixels.bmp()
+    bmp = vpixels.bmp( 4, 5, 6 )
+
+    # import non-existing file
     self.assertRaises( IOError, bmp.importf, 'not-exits.bmp' ) # not exit
-    self.assertRaises( IOError, bmp.importf, 'BmpTest.py' ) # not a bmp file
+    # bmp unchanged
+    self.assertEqual( 4, bmp.bpp() )
+    self.assertEqual( (5, 6), bmp.dimension() )
+    self.assertEqual( 16, bmp.colortablesize() )
+
+    # importf() expects a string argument
     self.assertRaises( TypeError, bmp.importf, 2 ) # not a file name
+    # bmp unchanged
+    self.assertEqual( 4, bmp.bpp() )
+    self.assertEqual( (5, 6), bmp.dimension() )
+    self.assertEqual( 16, bmp.colortablesize() )
+
+    # import non-bmp file or corrupted bmp file
+    self.assertRaises( Exception, bmp.importf, 'BmpTest.py' ) # not a bmp file
+    # bmp still a valid object, but becomes bpp=1, 1x1
+    self.assertEqual( 1, bmp.bpp() )
+    self.assertEqual( (1, 1), bmp.dimension() )
+    self.assertEqual( 2, bmp.colortablesize() )
 
 
   def testExport( self ):
     bmp = vpixels.bmp()
     bmp.export( 'temp.bmp', True ) # overwrite = True
-    self.assertRaises( IOError, bmp.export, 'temp.bmp' ) # overwrite = True
+    self.assertRaises( IOError, bmp.export, 'temp.bmp' ) # overwrite = False
     self.assertRaises( IOError, bmp.export, 'temp.bmp', False ) # overwrite = False
 
 

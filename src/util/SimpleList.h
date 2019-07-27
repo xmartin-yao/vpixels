@@ -45,6 +45,9 @@ public:
   void Add( T* const pData );
   T* Remove( T* const pData );
 
+  // clear list
+  void Clear();
+
 private:
   struct Node
   {
@@ -67,13 +70,7 @@ SimpleList<T>::SimpleList()
 template<typename T>
 SimpleList<T>::~SimpleList()
 {
-  Node* pThisNode = m_pHead;
-  while( pThisNode != nullptr )
-  {
-    Node* pNode = pThisNode;
-    pThisNode = pThisNode->pNext;
-    delete pNode;
-  }
+  Clear();
 }
 
 ////////////////////
@@ -146,6 +143,21 @@ T* SimpleList<T>::Remove( T* const pData )
   }
 
   return Ret;
+}
+
+///////////////////////
+template<typename T>
+void SimpleList<T>::Clear()
+{
+  Node* pThisNode = m_pHead;
+  while( pThisNode != nullptr )
+  {
+    Node* pNode = pThisNode;
+    pThisNode = pThisNode->pNext;
+    delete pNode;
+  }
+
+  m_pHead = nullptr;
 }
 
 #endif //SimpleList_h

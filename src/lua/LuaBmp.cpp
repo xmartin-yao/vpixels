@@ -185,24 +185,33 @@ int LuaBmpImpl::Import( lua_State* L )
   bool Error = false;
   try
   {
+    // file does not exist
     if( !pBmp->Import( FileName ) )
       return luaL_error( L, "failed to open '%s'", FileName );
   }
   catch( const vp::Exception& e )
   {
-    // set error message, call lua_error() outside of catch-block;
-    // otherwise, the exception object won't be deallocated, b/c
-    // luaL_error() or lua_error() never returns.
+    // error occurred during importing
     Error = true;
+
+    // Basic exception safety
+    // vp::Bmp object may not be valid, create a new one,
+    // in order to keep LuaBmp still a valid object.
+    delete pBmp;
+    pBmp = new vp::Bmp();
+
+    // set error message, call lua_error() outside of catch-block;
+    // otherwise, the vp::Exception object won't be deallocated,
+    // b/c luaL_error() or lua_error() never returns.
     luaL_where( L, 1 );
-    lua_pushfstring( L, "failed to read '%s' (%s)", FileName, e.what() );
+    lua_pushfstring( L, "failed to import '%s' (%s)", FileName, e.what() );
     lua_concat( L, 2 );
   }
 
   if( Error )
-    return lua_error( L );
+    return lua_error( L );  // exception caught
   else
-    return 0;
+    return 0;  // file successfully imported
 }
 
 ///////////////////////
@@ -514,7 +523,7 @@ vp::Bmp* LuaBmpImpl::CheckBmp( lua_State* L, int arg )
   // in case __gc() has been called directly, e.g. bmp:__gc()
   if( *ppBmp == nullptr )
   {
-    const char* msg = lua_pushfstring( L, "invalid '%s' object", ID );
+    const char* msg = lua_pushfstring( L, "invalid '%s' object (pBmp is null)", ID );
     luaL_argerror( L, arg, msg );
   }
 

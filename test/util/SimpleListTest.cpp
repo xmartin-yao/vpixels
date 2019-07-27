@@ -62,10 +62,16 @@ void SimpleListTest::testInt()
   CPPUNIT_ASSERT( list.Remove( &x1 ) == nullptr );
   CPPUNIT_ASSERT( list.Remove( &x2 ) == nullptr );
 
-  // add again, for code coverage of dtor
+  // add again
   list.Add( &x0 );
   list.Add( &x1 );
   list.Add( &x2 );
+
+  // clear list
+  list.Clear();
+  CPPUNIT_ASSERT( list.Remove( &x0 ) == nullptr );
+  CPPUNIT_ASSERT( list.Remove( &x1 ) == nullptr );
+  CPPUNIT_ASSERT( list.Remove( &x2 ) == nullptr );
 }
 
 // node: pointer to struct
@@ -117,10 +123,16 @@ void SimpleListTest::testStruct()
   CPPUNIT_ASSERT( list.Remove( pD1 ) == nullptr );
   CPPUNIT_ASSERT( list.Remove( pD2 ) == nullptr );
 
-  // add again, for code coverage of dtor
+  // add again
   list.Add( pD0 );
   list.Add( pD1 );
   list.Add( pD2 );
+
+  // clear list
+  list.Clear();
+  CPPUNIT_ASSERT( list.Remove( pD0 ) == nullptr );
+  CPPUNIT_ASSERT( list.Remove( pD1 ) == nullptr );
+  CPPUNIT_ASSERT( list.Remove( pD2 ) == nullptr );
 
   delete pD0;
   delete pD1;

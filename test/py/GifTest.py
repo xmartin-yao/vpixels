@@ -264,10 +264,44 @@ class TestGif( unittest.TestCase ):
 
 
   def testImportf( self ):
-    gif = vpixels.gif()
+    gif = vpixels.gif( 3, 4, 5, 2 )
+    img0 = gif[0]
+    img1 = gif[1]
+
+    # import non-existing file
     self.assertRaises( IOError, gif.importf, 'not-exits.gif' ) # not exit
-    self.assertRaises( IOError, gif.importf, 'GifTest.py' ) # not a bmp file
+    # gif unchanged
+    self.assertEqual( 3, gif.bpp() )
+    self.assertEqual( (4, 5), gif.dimension() )
+    self.assertEqual( 2, gif.images() )
+    self.assertEqual( 2, len(gif) )
+    # img0 and img1 are still valid
+    self.assertEqual( 3, img0.bpp() )
+    self.assertEqual( 3, img1.bpp() )
+
+    # importf() expects a string argument
     self.assertRaises( TypeError, gif.importf, 2 ) # not a file name
+    # gif unchanged
+    self.assertEqual( 3, gif.bpp() )
+    self.assertEqual( (4, 5), gif.dimension() )
+    self.assertEqual( 2, gif.images() )
+    self.assertEqual( 2, len(gif) )
+    # img0 and img1 are still valid
+    self.assertEqual( 3, img0.bpp() )
+    self.assertEqual( 3, img1.bpp() )
+
+    # import non-gif file or corrupted gif file
+    self.assertRaises( Exception, gif.importf, 'GifTest.py' ) # not a gif file
+    # gif still a valid object, but becomes bpp=2, 1x1, images=1, colors=4
+    self.assertEqual( 2, gif.bpp() )
+    self.assertEqual( (1, 1), gif.dimension() )
+    self.assertEqual( 1, len(gif) )
+    self.assertEqual( 4, gif.colortablesize() )
+    # img0 and img1 are invalid, b/c the gif object they refer to is out of scope
+    self.assertNotEqual( img0, None )
+    self.assertNotEqual( img1, None )
+    self.assertRaises( Exception, img0.bpp )
+    self.assertRaises( Exception, img1.bpp )
 
 
   def testExport( self ):
@@ -298,28 +332,41 @@ class TestGifImage( unittest.TestCase ):
     self.assertEqual( 2, img0.bpp() )
     self.assertEqual( 2, img4.bpp() )
 
-    # out of scope, gif assigned to None
+    # assign to None, gif out of scope
     gif = None                              
+    # img0 and img4 become invalid
+    self.assertNotEqual( img0, None )
+    self.assertNotEqual( img4, None )
     self.assertRaises( Exception, img0.bpp )
     self.assertRaises( Exception, img4.bpp )
 
-    # gif is usable
+    # assign to a new object
     gif = vpixels.gif( 3, 3, 4, 5 )
+    # img0 and img4 are still invalid
+    self.assertNotEqual( img0, None )
+    self.assertNotEqual( img4, None )
+    self.assertRaises( Exception, img0.bpp )
+    self.assertRaises( Exception, img4.bpp )
+
+    # assign img0 and img4 again
     img0 = gif[0]
     img4 = gif[4]
     self.assertEqual( 3, img0.bpp() )
     self.assertEqual( 3, img4.bpp() )
 
-    # out of scope, gif assigned to another Gif object
+    # assign to another Gif object
     gif = vpixels.gif( 4, 5, 6 )
+    # img0 and img4 become invalid, b/c the gif object they refer to is out of scope
+    self.assertNotEqual( img0, None )
+    self.assertNotEqual( img4, None )
     self.assertRaises( Exception, img0.bpp )
     self.assertRaises( Exception, img4.bpp )
 
-    # img0 is usable, img4 is not
+    # clone() will fail, b/c img4 is invalid
     img0 = gif[0]
     self.assertRaises( Exception, img0.clone, img4 )
     self.assertRaises( Exception, img4.clone, img0 )
-    
+
 
   # directly calling __new__() and __init__() is not allowed
   def testNewAndInit(self):

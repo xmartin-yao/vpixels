@@ -54,6 +54,7 @@ namespace PyGifImpl
 
   // utils
   vp::Gif* NewGif( PyObject* args, PyObject* kw );
+  void Invalidate( SimpleList<PyGifImageObject>* pGifImageObjectList );
 
   // Gif_Type methods
   PyMethodDef Methods[] = {
@@ -200,23 +201,16 @@ vp::Gif* PyGifImpl::NewGif( PyObject* args, PyObject* kw )
 ///////////////////////////////////////
 void PyGifImpl::Dealloc( PyGifObject* self )
 {
+  // delete list
   if( self->pGifImageObjectList != nullptr )
   {
-    // set each pGifImageObject to invalid
-    self->pGifImageObjectList->Rewind();
-    PyGifImageObject* pGifImageObject = self->pGifImageObjectList->Next();
-    while( pGifImageObject != nullptr )
-    {
-      pGifImageObject->IsValid = false;
-      pGifImageObject = self->pGifImageObjectList->Next();
-    }
+    Invalidate( self->pGifImageObjectList );
 
-    // delete the list
     delete self->pGifImageObjectList;
     self->pGifImageObjectList = nullptr;
   }
 
-  // delete vp:Gif object
+  // delete vp::Gif object
   if( self->pGif != nullptr )
   {
     delete self->pGif;
@@ -224,6 +218,20 @@ void PyGifImpl::Dealloc( PyGifObject* self )
   }
 
   self->ob_type->tp_free( self );
+}
+
+///////////////////
+// set each PyGifImageObject in the list to invalid state
+////////////////////////////////////////////////////////////////
+void PyGifImpl::Invalidate( SimpleList<PyGifImageObject>* pGifImageObjectList )
+{
+  pGifImageObjectList->Rewind();
+  PyGifImageObject* pGifImageObject = pGifImageObjectList->Next();
+  while( pGifImageObject != nullptr )
+  {
+    pGifImageObject->IsValid = false;
+    pGifImageObject = pGifImageObjectList->Next();
+  }
 }
 
 ///////////////////////////////////////
@@ -255,17 +263,30 @@ PyObject* PyGifImpl::Import( PyGifObject* self, PyObject* arg )
   {
     if( !self->pGif->Import(FileName) )
     {
+      // file does not exist
       PyErr_Format( PyExc_IOError, "failed to open '%s'", FileName );
       return nullptr;
     }
   }
   catch( const vp::Exception& e )
   {
-    PyErr_Format( PyExc_IOError, "failed to read '%s' (%s)", FileName, e.what() );
-    return nullptr;
+    // Basic exception safety
+    // vp::Gif object may not be valid, create a new one,
+    // in order to keep self still a valid object.
+    delete self->pGif;
+    self->pGif = new vp::Gif();
+
+    PyErr_Format( PyExc_Exception, "failed to read '%s' (%s)", FileName, e.what() );
   }
 
-  Py_RETURN_NONE;
+  // reset the list, no matter whether importing failed or not
+  Invalidate( self->pGifImageObjectList );
+  self->pGifImageObjectList->Clear();
+
+  if( PyErr_Occurred() == nullptr )
+    Py_RETURN_NONE;  // file successfully imported
+  else
+    return nullptr;  // exception caught
 }
 
 ///////////////////
@@ -274,7 +295,7 @@ PyObject* PyGifImpl::Import( PyGifObject* self, PyObject* arg )
 PyObject* PyGifImpl::Export( PyGifObject* self, PyObject* args )
 {
   const char* FileName = nullptr;
-  PyObject* pyBool = Py_False;
+  PyObject* pyBool = Py_False;  // False by default
   if( !PyArg_ParseTuple(args, "s|O!", &FileName, &PyBool_Type, &pyBool) )
     return nullptr;
 
