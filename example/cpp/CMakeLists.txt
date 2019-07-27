@@ -17,11 +17,19 @@
 # along with VPixels.  If not, see <https://www.gnu.org/licenses/>.
 #######################################################################
 
-# build GIF examples
-message(STATUS "Configuring example/gif/")
+# build C++ examples
+message(STATUS "Configuring example/cpp/")
 
 # path to include/
 include_directories(${PROJECT_SOURCE_DIR}/include)
+
+#
+# target: bmpinfo
+#
+add_executable(bmpinfo BmpInfo.cpp)
+
+# link to libvpbmp
+set_target_properties(bmpinfo PROPERTIES LINK_LIBRARIES vpbmp)
 
 #
 # target: gifinfo

@@ -21,12 +21,19 @@
 EXTRA_DIST = CMakeLists.txt
 
 ## non-install executables
-noinst_PROGRAMS = gifinfo gifimages
+noinst_PROGRAMS = bmpinfo gifinfo gifimages
 
+## bmpinfo
+bmpinfo_SOURCES = BmpInfo.cpp
+bmpinfo_LDADD = @top_builddir@/src/bmp/libvpbmp.a
+
+## gifinfo
 gifinfo_SOURCES = GifInfo.cpp
-gifimages_SOURCES = GifImages.cpp
+gifinfo_LDADD = @top_builddir@/src/gif/libvpgif.a
 
-## includes, flags and libs
+## gifimages
+gifimages_SOURCES = GifImages.cpp
+gifimages_LDADD = @top_builddir@/src/gif/libvpgif.a
+
+## includes
 AM_CXXFLAGS = -I@top_srcdir@/include/
-AM_LDFLAGS  = -L@top_builddir@/src/gif/
-LIBS = -lvpgif

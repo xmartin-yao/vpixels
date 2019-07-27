@@ -228,7 +228,7 @@ AC_CONFIG_FILES([Makefile
                  test/bmp/Makefile test/gif/Makefile test/util/Makefile
                  test/lua/Makefile test/py/Makefile
                  example/Makefile
-                 example/bmp/Makefile example/gif/Makefile example/img/Makefile
+                 example/cpp/Makefile example/img/Makefile
                  example/lua/Makefile example/py/Makefile
                  cmake/Makefile])
 AC_OUTPUT
