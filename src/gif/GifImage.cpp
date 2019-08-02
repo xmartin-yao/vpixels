@@ -140,15 +140,69 @@ uint8_t GifImage::GetPixel( const uint16_t X, const uint16_t Y ) const
 }
 
 /////////////////////////////////////////////
-bool GifImage::Delay( uint16_t MilliSec )
+void GifImage::Delay( uint16_t Centisecond )
 {
-  return GetImpl()->Delay( MilliSec );
+  GetImpl()->Delay( Centisecond );
 }
 
 /////////////////////////////////
 uint16_t GifImage::Delay() const
 {
   return GetImpl()->Delay();
+}
+
+/////////////////////////////////
+uint8_t GifImage::DisposalMethod() const
+{
+  return GetImpl()->DisposalMethod();
+}
+
+/////////////////////////////////
+void GifImage::DisposalMethod( const uint8_t MethodID )
+{
+  return GetImpl()->DisposalMethod( MethodID );
+}
+
+/////////////////////////////////
+bool GifImage::HasTransColor() const
+{
+  return GetImpl()->HasTransColor();
+}
+
+/////////////////////////////////
+void GifImage::HasTransColor( const bool TrunOn )
+{
+  GetImpl()->HasTransColor( TrunOn );
+}
+
+/////////////////////////////////
+void GifImage::TransColor( const uint8_t ColorIndex )
+{
+  GetImpl()->TransColor( ColorIndex );
+}
+
+/////////////////////////////////
+uint8_t GifImage::TransColor() const
+{
+  return GetImpl()->TransColor();
+}
+
+/////////////////////////////////
+bool GifImage::UserInput() const
+{
+  return GetImpl()->UserInput();
+}
+
+/////////////////////////////////
+uint16_t GifImage::CheckColorTable() const
+{
+  return GetImpl()->CheckColorTable();
+}
+
+/////////////////////////////
+bool GifImage::SingleImage() const
+{
+  return GetImpl()->SingleImage();
 }
 
 ////////////////////////////

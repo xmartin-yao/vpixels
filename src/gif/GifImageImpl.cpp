@@ -24,8 +24,8 @@
 #include "Exception.h"
 
 ////////////////////////////////
-GifImageImpl::GifImageImpl( const GifImpl& rGifImpl )
- : m_GifImpl( rGifImpl ),
+GifImageImpl::GifImageImpl( const GifImpl& RefGifImpl )
+ : m_GifImpl( RefGifImpl ),
    m_pGraphicsControlExt( nullptr ),
    m_pImageDescriptor( nullptr )
 {
@@ -137,8 +137,10 @@ bool GifImageImpl::Interlaced() const
   return ImageDescriptor()->Interlaced();
 }
 
-/////////////////////////////////////////////
-bool GifImageImpl::CheckColorIndex( const uint8_t ColorIndex ) const
+/////////////////
+// get size of local or global color table
+///////////////////////////////////////////
+uint16_t GifImageImpl::CheckColorTable() const
 {
   uint16_t Size = 0;
   if( ImageDescriptor()->LocalColorTable() )
@@ -146,7 +148,13 @@ bool GifImageImpl::CheckColorIndex( const uint8_t ColorIndex ) const
   else
     Size = m_GifImpl.ColorTableSize();
 
-  return ColorIndex < Size;
+  return Size;
+}
+
+/////////////////////////////////////////////
+bool GifImageImpl::CheckColorIndex( const uint8_t ColorIndex ) const
+{
+  return ColorIndex < CheckColorTable();
 }
 
 /////////////////////////////////////////
@@ -178,39 +186,126 @@ uint8_t GifImageImpl::GetPixel( const uint16_t X, const uint16_t Y ) const
 }
 
 /////////////////////////////////////////////
-bool GifImageImpl::Delay( uint16_t MilliSec )
+void GifImageImpl::Delay( uint16_t Centisecond )
 {
-  if( m_pGraphicsControlExt == nullptr )
-    return false;
+#ifndef VP_EXTENSION
+  if( SingleImage() )
+    VP_THROW( "can not set delay time for single image" )
+#endif
 
-  GraphicsControlExt()->Delay( MilliSec );
-  return true;
+  GraphicsControlExt()->Delay( Centisecond );
 }
 
 /////////////////////////////////
 uint16_t GifImageImpl::Delay() const
 {
-  if( m_pGraphicsControlExt == nullptr )
-    return 0;
+#ifndef VP_EXTENSION
+  if( SingleImage() )
+    VP_THROW( "can not get delay time for single image" )
+#endif
 
   return GraphicsControlExt()->Delay();
 }
 
+/////////////////////////////////
+uint8_t GifImageImpl::DisposalMethod() const
+{
+#ifndef VP_EXTENSION
+  if( SingleImage() )
+    VP_THROW( "can not get disposal method for single image" )
+#endif
+
+  return GraphicsControlExt()->DisposalMethod();
+}
+
+////////////////////////////////////////
+void GifImageImpl::DisposalMethod( const uint8_t MethodID )
+{
+#ifndef VP_EXTENSION
+  if( SingleImage() )
+    VP_THROW( "can not get disposal method for single image" )
+#endif
+
+  return GraphicsControlExt()->DisposalMethod( MethodID );
+}
+
+/////////////////////////////////
+bool GifImageImpl::UserInput() const
+{
+#ifndef VP_EXTENSION
+  if( SingleImage() )
+    VP_THROW( "can not get user input for single image" )
+#endif
+
+  return GraphicsControlExt()->UserInput();
+}
+
+/////////////////////////////////
+bool GifImageImpl::HasTransColor() const
+{
+#ifndef VP_EXTENSION
+  if( SingleImage() )
+    VP_THROW( "single image has no transparent color" )
+#endif
+
+  return GraphicsControlExt()->HasTransColor();
+}
+
+/////////////////////////////////
+void GifImageImpl::HasTransColor( const bool TrunOn )
+{
+#ifndef VP_EXTENSION
+  if( SingleImage() )
+    VP_THROW( "can not set transparent color for single image" )
+#endif
+
+  GraphicsControlExt()->HasTransColor( TrunOn );
+}
+
+/////////////////////////////////
+void GifImageImpl::TransColor( const uint8_t ColorIndex )
+{
+#ifndef VP_EXTENSION
+  if( SingleImage() )
+    VP_THROW( "can not set transparent color for single image" )
+
+  if( !CheckColorIndex(ColorIndex) )
+    VP_THROW( "color index out of range" )
+#endif
+
+  GraphicsControlExt()->TransColor( ColorIndex );
+}
+
+/////////////////////////////////
+uint8_t GifImageImpl::TransColor() const
+{
+#ifndef VP_EXTENSION
+  if( SingleImage() )
+    VP_THROW( "single image has no transparent color" )
+#endif
+
+  return GraphicsControlExt()->TransColor();
+}
+
+/////////////////////////////////
 GifGraphicsControlExt* GifImageImpl::GraphicsControlExt()
 {
   return m_pGraphicsControlExt.get();
 }
 
+/////////////////////////////////
 const GifGraphicsControlExt* GifImageImpl::GraphicsControlExt() const
 {
   return m_pGraphicsControlExt.get();
 }
 
+/////////////////////////////////
 GifImageDescriptor* GifImageImpl::ImageDescriptor()
 {
   return m_pImageDescriptor.get();
 }
 
+/////////////////////////////////
 const GifImageDescriptor* GifImageImpl::ImageDescriptor() const
 {
   return m_pImageDescriptor.get();

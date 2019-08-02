@@ -37,6 +37,8 @@ class GifScreenDescriptorTest : public CPPUNIT_NS::TestCase
   CPPUNIT_TEST( testBpp7 );
   CPPUNIT_TEST( testBpp8 );
 
+  CPPUNIT_TEST( testBackgroundColor );
+
   CPPUNIT_TEST( testInput );
   CPPUNIT_TEST( testOutput );
 
@@ -50,6 +52,8 @@ protected:
   void testBpp6();
   void testBpp7();
   void testBpp8();
+
+  void testBackgroundColor();
 
   void testInput();
   void testOutput();

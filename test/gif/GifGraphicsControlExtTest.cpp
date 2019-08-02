@@ -19,6 +19,7 @@
 
 #include "GifGraphicsControlExtTest.h"
 #include "GifGraphicsControlExt.h"
+#include "Exception.h"
 
 CPPUNIT_TEST_SUITE_REGISTRATION( GifGraphicsControlExtTest );
 
@@ -57,6 +58,45 @@ void GifGraphicsControlExtTest::testCtors()
   CPPUNIT_ASSERT( gc3.HasTransColor() == false ); 
   CPPUNIT_ASSERT( gc3.TransColor() == 0 ); 
   CPPUNIT_ASSERT( gc3.Delay() == 522 );
+}
+
+void GifGraphicsControlExtTest::testDisposalMethod()
+{
+  GifGraphicsControlExt gc;
+
+  CPPUNIT_ASSERT( gc.DisposalMethod() == 1 );
+  gc.DisposalMethod( 2 );
+  CPPUNIT_ASSERT( gc.DisposalMethod() == 2 );
+  gc.DisposalMethod( 3 );
+  CPPUNIT_ASSERT( gc.DisposalMethod() == 3 );
+  gc.DisposalMethod( 0 );
+  CPPUNIT_ASSERT( gc.DisposalMethod() == 0 );
+
+  CPPUNIT_ASSERT_THROW( gc.DisposalMethod( 4 ), vp::Exception );
+}
+
+void GifGraphicsControlExtTest::testTransColor()
+{
+  GifGraphicsControlExt gc;
+
+  // default
+  CPPUNIT_ASSERT( gc.HasTransColor() == false );
+  CPPUNIT_ASSERT( gc.TransColor() == 0 );
+
+  // turn on 
+  gc.TransColor( 234 );
+  CPPUNIT_ASSERT( gc.HasTransColor() );
+  CPPUNIT_ASSERT( gc.TransColor() == 234 );
+
+  // turn off 
+  gc.HasTransColor( false );
+  CPPUNIT_ASSERT( gc.HasTransColor() == false );
+  CPPUNIT_ASSERT( gc.TransColor() == 0 );
+
+  // turn on again
+  gc.HasTransColor( true );
+  CPPUNIT_ASSERT( gc.HasTransColor() );
+  CPPUNIT_ASSERT( gc.TransColor() == 0 );
 }
 
 void GifGraphicsControlExtTest::testOutput()

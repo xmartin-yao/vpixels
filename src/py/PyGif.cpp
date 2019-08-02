@@ -49,6 +49,8 @@ namespace PyGifImpl
   PyObject* ColorTableSize( PyGifObject* self, PyObject* args );
   PyObject* SetColorTable( PyGifObject* self, PyObject* args );
   PyObject* GetColorTable( PyGifObject* self, PyObject* args );
+  PyObject* BackgroundColor( PyGifObject* self, PyObject* args );
+  PyObject* AspectRatio( PyGifObject* self );
   PyObject* GetImage( PyGifObject* self, PyObject* arg );
   PyObject* Images( PyGifObject* self );
 
@@ -75,6 +77,9 @@ namespace PyGifImpl
     MDef( setcolor,         SetColorTable,    METH_VARARGS, "set a color table entry." )
     MDef( getcolortable,    GetColorTable,    METH_VARARGS, "get a color table entry." )
     MDef( getcolor,         GetColorTable,    METH_VARARGS, "get a color table entry." )
+    MDef( backgroundcolor,  BackgroundColor,  METH_VARARGS, "get/set background color." )
+    MDef( background,       BackgroundColor,  METH_VARARGS, "get/set background color." )
+    MDef( aspectratio,      AspectRatio,      METH_NOARGS,  "get aspect ratio." )
     MDef( getimage,         GetImage,         METH_O,       "get an image object." )
     MDef( images,           Images,           METH_NOARGS,  "get the number of images." )
     { nullptr, nullptr, 0, nullptr } 
@@ -454,6 +459,43 @@ PyObject* PyGifImpl::GetColorTable( PyGifObject* self, PyObject* args )
   self->pGif->GetColorTable(Index, Red, Green, Blue);
 
   return Py_BuildValue( "BBB", Red, Green, Blue );
+}
+
+///////////////////
+// color_index = gif.BackgroundColor()
+// gif.BackgroundColor(color_index)
+/////////////////////////////////////////
+PyObject* PyGifImpl::BackgroundColor( PyGifObject* self, PyObject* args )
+{
+  if( PyTuple_Size( args ) == 0 )
+  {
+    return Py_BuildValue( "B", self->pGif->BackgroundColor() );
+  }
+  else
+  {
+    uint8_t Index;
+    if( !PyArg_ParseTuple( args, "b", &Index ) )
+      return nullptr;
+
+    if( !self->pGif->ColorTable() )
+    {
+      PyErr_SetString( PyExc_Exception, "no global color table, cannot set background color");
+      return nullptr;
+    }
+
+    Value_CheckUpper( 1, Index, self->pGif->ColorTableSize() )
+    self->pGif->BackgroundColor( Index );
+
+    Py_RETURN_NONE;
+  }
+}
+
+///////////////////
+// ratio = gif.AspectRatio()
+/////////////////////////////////////////
+PyObject* PyGifImpl::AspectRatio( PyGifObject* self )
+{
+  return Py_BuildValue( "B", self->pGif->AspectRatio() );
 }
 
 ///////////////////

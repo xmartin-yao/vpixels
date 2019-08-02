@@ -43,6 +43,8 @@ namespace LuaGifImpl
   int ColorTableSize( lua_State* L );
   int SetColorTable( lua_State* L );
   int GetColorTable( lua_State* L );
+  int BackgroundColor( lua_State* L );
+  int AspectRatio( lua_State* L );
   int Images( lua_State* L );
   int GetImage( lua_State* L );
 
@@ -78,6 +80,9 @@ namespace LuaGifImpl
     { "setcolor",       SetColorTable },
     { "getcolortable",  GetColorTable },
     { "getcolor",       GetColorTable },
+    { "backgroundcolor",BackgroundColor },
+    { "background",     BackgroundColor },
+    { "aspectratio",    AspectRatio },
     { "images",         Images },
     { "getimage",       GetImage },
     { nullptr, nullptr }
@@ -143,10 +148,7 @@ int LuaGif::New( lua_State* L )
 {
   vp::Gif* pGif = nullptr;
   if( lua_gettop( L ) != 0 )
-  {
-    LuaUtil::CheckArgs( L, 3, 2 );
     pGif = LuaGifImpl::NewGif( L );
-  }
   else // no argument
     pGif = new vp::Gif();
 
@@ -161,6 +163,8 @@ const char LuaGif::ID[] = "vp.gif";
 ///////////////////////////////////////
 vp::Gif* LuaGifImpl::NewGif( lua_State* L )
 {
+  LuaUtil::CheckArgs( L, 3, 2 );
+
   auto bpp = LuaUtil::CheckUint8( L, 1 );
   LuaUtil::CheckValueRange( L, 1, bpp, 2, 8 );
 
@@ -352,10 +356,10 @@ int LuaGifImpl::ColorTableSorted( lua_State* L )
 //////////////////////////////////
 int LuaGifImpl::ColorTableSize( lua_State* L ) 
 {
-  LuaUtil::CheckArgs( L, 1, 1 );
+  auto argc = LuaUtil::CheckArgs( L, 1, 1 );
 
   vp::Gif* pGif = CheckGif( L, 1 );
-  if( lua_gettop( L ) == 1 )
+  if( argc == 1 )
   {
     lua_pushunsigned( L, pGif->ColorTableSize() );
 
@@ -421,6 +425,47 @@ int LuaGifImpl::GetColorTable( lua_State* L )
   lua_pushunsigned( L, Blue );
 
   return 3;
+}
+
+/////////////////
+// color_index = gif:BackgroundColor()
+// gif:BackgroundColor(color_index)
+///////////////////////////////////////////
+int LuaGifImpl::BackgroundColor( lua_State* L ) 
+{
+  auto argc = LuaUtil::CheckArgs( L, 1, 1 );
+
+  auto pGif = CheckGif( L, 1 );
+  if( argc == 1 )
+  {
+    lua_pushunsigned( L, pGif->BackgroundColor() );
+
+    return 1;
+  }
+  else
+  {
+    auto ColorIndex = LuaUtil::CheckUint8( L, 2 );
+    if( !pGif->ColorTable() )
+      luaL_error( L, "no global color table, cannot set background color" );
+
+    LuaUtil::CheckValueUpper( L, 2, ColorIndex, pGif->ColorTableSize() );
+    pGif->BackgroundColor( ColorIndex );
+
+    return 0;
+  }
+}
+
+/////////////////
+// ratio = gif:AspectRatio()
+//////////////////////////////////
+int LuaGifImpl::AspectRatio( lua_State* L ) 
+{
+  LuaUtil::CheckArgs( L, 1 );
+
+  vp::Gif* pGif = CheckGif( L, 1 );
+  lua_pushunsigned( L, pGif->AspectRatio() );
+
+  return 1;
 }
 
 ////////////

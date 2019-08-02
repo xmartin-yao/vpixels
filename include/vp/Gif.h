@@ -77,6 +77,11 @@ namespace vp
     void     GetColorTable( const uint8_t Index, uint8_t& Red,
                             uint8_t& Green, uint8_t& Blue ) const;
 
+    void     BackgroundColor( const uint8_t ColorIndex );
+    uint8_t  BackgroundColor() const;
+
+    uint8_t  AspectRatio() const;
+
     // images
     size_t Images() const;
     GifImage& operator[]( const size_t Index ) &; 

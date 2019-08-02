@@ -128,6 +128,24 @@ void Gif::GetColorTable( const uint8_t Index, uint8_t& Red,
 }
 
 ////////////////////////////
+void Gif::BackgroundColor( const uint8_t ColorIndex )
+{
+  return GetImpl()->BackgroundColor( ColorIndex );
+}
+
+////////////////////////////
+uint8_t Gif::BackgroundColor() const
+{
+  return GetImpl()->BackgroundColor();
+}
+
+////////////////////////////
+uint8_t Gif::AspectRatio() const
+{
+  return GetImpl()->AspectRatio();
+}
+
+////////////////////////////
 size_t Gif::Images() const
 {
   return GetImpl()->Images();

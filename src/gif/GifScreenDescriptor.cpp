@@ -94,6 +94,10 @@ void GifScreenDescriptor::ColorTableSize( uint16_t Size )
 #endif
 
   m_ColorTable.Size( Size, m_PackedByte );
+
+  // set background color to 0, if no global color table
+  if( Size == 0 && m_BackgroundColor != 0 )
+    m_BackgroundColor = 0;
 }
 
 //////////////////////////////////////////////////////////////////////
@@ -108,6 +112,20 @@ void GifScreenDescriptor::GetColorTable( const uint8_t Index, uint8_t& Red,
                                          uint8_t& Green, uint8_t& Blue ) const
 {
   m_ColorTable.Get( Index, Red, Green, Blue);
+}
+
+////////////////////////////////////////////////////////
+void GifScreenDescriptor::BackgroundColor( const uint8_t ColorIndex )
+{
+#ifndef VP_EXTENSION
+  if( !GlobalColorTable() )
+    VP_THROW( "No global color table" );
+
+  if( ColorIndex >= ColorTableSize() )
+    VP_THROW( "ColorIndex exceeds color table size" );
+#endif
+
+  m_BackgroundColor = ColorIndex;
 }
 
 //////////////////////////////////////////////////////////////////////

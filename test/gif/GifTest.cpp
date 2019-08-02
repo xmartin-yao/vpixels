@@ -179,9 +179,22 @@ void GifTest::testOneImage()
   image.SetAllPixels( 1 );
   CPPUNIT_ASSERT( image.GetPixel( 1, 1 ) == 1 );
   CPPUNIT_ASSERT( image.Interlaced() == false );
-  CPPUNIT_ASSERT( image.Delay() == 0 );
-  CPPUNIT_ASSERT( image.Delay( 100 ) == false ); // unable for one image
+  CPPUNIT_ASSERT_THROW( image.Delay(), vp::Exception );  // single image
+  CPPUNIT_ASSERT_THROW( image.Delay( 100 ), vp::Exception );
+  CPPUNIT_ASSERT_THROW( image.DisposalMethod(), vp::Exception );
+  CPPUNIT_ASSERT_THROW( image.DisposalMethod(0), vp::Exception );
+  CPPUNIT_ASSERT_THROW( image.HasTransColor(), vp::Exception );
+  CPPUNIT_ASSERT_THROW( image.HasTransColor(true), vp::Exception );
+  CPPUNIT_ASSERT_THROW( image.TransColor(), vp::Exception );
+  CPPUNIT_ASSERT_THROW( image.TransColor(3), vp::Exception );
   CPPUNIT_ASSERT( image.ColorTable() == false );
+
+  CPPUNIT_ASSERT( gif.BackgroundColor() == 0 );
+  gif.BackgroundColor(3);
+  CPPUNIT_ASSERT( gif.BackgroundColor() == 3 );
+  CPPUNIT_ASSERT_THROW( gif.BackgroundColor(4), vp::Exception );  // exceeds
+  gif.ColorTableSize(0);  // disable color table
+  CPPUNIT_ASSERT( gif.BackgroundColor() == 0 );
 
   // exceed index range: 0 <= index < size
   CPPUNIT_ASSERT_THROW( gif[-1], vp::Exception );
@@ -217,10 +230,28 @@ void GifTest::testTwoImages()
     image.SetAllPixels( 1 );
     CPPUNIT_ASSERT( image.GetPixel( 1, 1 ) == 1 );
     CPPUNIT_ASSERT( image.Interlaced() == false );
-    CPPUNIT_ASSERT( image.Delay( 100 ) );
+    CPPUNIT_ASSERT( image.Delay() == 0 );
+    image.Delay( 100 );
     CPPUNIT_ASSERT( image.Delay() == 100 );
+    CPPUNIT_ASSERT( image.DisposalMethod() == 1 );
+    image.DisposalMethod(0);
+    CPPUNIT_ASSERT( image.DisposalMethod() == 0 );
+    CPPUNIT_ASSERT( image.HasTransColor() == false );
+    CPPUNIT_ASSERT( image.TransColor() == 0 );
+    image.TransColor(2);
+    CPPUNIT_ASSERT( image.HasTransColor() );
+    CPPUNIT_ASSERT( image.TransColor() == 2 );
+    image.HasTransColor(false);
+    CPPUNIT_ASSERT( image.TransColor() == 0 );
     CPPUNIT_ASSERT( image.ColorTable() == false );
   }
+
+  CPPUNIT_ASSERT( gif.BackgroundColor() == 0 );
+  gif.BackgroundColor(7);
+  CPPUNIT_ASSERT( gif.BackgroundColor() == 7 );
+  CPPUNIT_ASSERT_THROW( gif.BackgroundColor(8), vp::Exception );  // exceeds
+  gif.ColorTableSize(0);  // disable color table
+  CPPUNIT_ASSERT( gif.BackgroundColor() == 0 );
 
   // exceed index range: 0 <= index < size
   CPPUNIT_ASSERT_THROW( gif[-1], vp::Exception );

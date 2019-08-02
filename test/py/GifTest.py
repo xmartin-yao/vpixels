@@ -263,6 +263,30 @@ class TestGif( unittest.TestCase ):
     self.assertRaises( Exception, gif.getcolortable, 0 )
 
 
+  def testBackgroundColor( self ):
+    gif1 = vpixels.gif( 2, 3, 4, 5 )
+    self.assertEqual( gif1.backgroundcolor(), 0 )
+    gif1.backgroundcolor(1)
+    self.assertEqual( gif1.backgroundcolor(), 1 )
+    gif1.backgroundcolor(3)
+    self.assertEqual( gif1.backgroundcolor(), 3 )
+    self.assertRaises( ValueError, gif1.backgroundcolor, 4 )  # exceeds
+    gif1.colortablesize(0)  # disable
+    self.assertEqual( gif1.colortable(), False )
+    self.assertEqual( gif1.backgroundcolor(), 0 )
+    self.assertRaises( Exception, gif1.backgroundcolor, 0 )  # not allowed
+
+    gif2 = vpixels.gif( 3, 4, 5, 3, False )
+    self.assertEqual( gif2.colortable(), False )
+    self.assertEqual( gif2.background(), 0 )
+    gif2.colortablesize(4)  # enable
+    self.assertEqual( gif2.colortable(), True )
+    self.assertEqual( gif2.background(), 0 )
+    gif2.background(2)
+    self.assertEqual( gif2.background(), 2 )
+    self.assertRaises( ValueError, gif2.background, 4 )  # exceeds
+
+
   def testImportf( self ):
     gif = vpixels.gif( 3, 4, 5, 2 )
     img0 = gif[0]
@@ -510,8 +534,64 @@ class TestGifImage( unittest.TestCase ):
     # gif2 contains only one image, setting delay time not allowed
     gif2 = vpixels.gif( 2, 3, 4, 1 )
     img = gif2[0]
-    self.assertEqual( 0, img.delay() )
+    self.assertRaises( Exception, img.delay )
     self.assertRaises( Exception, img.delay, 100 )
+
+
+  def testDisposalMethod(self):
+    gif1 = vpixels.gif( 2, 3, 4, 5 )
+    img = gif1[0]
+    self.assertEqual( 1, img.disposalmethod() )
+    img.disposalmethod( 2 )
+    self.assertEqual( 2, img.disposalmethod() )
+    img.disposal( 3 )
+    self.assertEqual( 3, img.disposal() )
+    img.disposal( 0 )
+    self.assertEqual( 0, img.disposal() )
+    # value > 3
+    self.assertRaises( Exception, img.disposalmethod, 4 )
+    # value is not unsigned byte
+    self.assertRaises( OverflowError, img.disposalmethod, -1 ) 
+    self.assertRaises( OverflowError, img.disposalmethod, 256 )
+
+    # gif2 contains only one image, setting delay time not allowed
+    gif2 = vpixels.gif( 2, 3, 4, 1 )
+    img = gif2[0]
+    self.assertRaises( Exception, img.disposalmethod )
+    self.assertRaises( Exception, img.disposalmethod, 2 )
+
+
+  def testTransparentColor(self):
+    gif1 = vpixels.gif( 2, 3, 4, 5 )
+    img = gif1[0]
+    # default
+    self.assertEqual( False, img.hastransparentcolor() )
+    self.assertEqual( 0, img.transparentcolor() )
+    # turn on
+    img.transparentcolor( 3 )
+    self.assertEqual( True, img.hastransparentcolor() )
+    self.assertEqual( 3, img.transparentcolor() )
+    # turn off
+    img.hastranscolor( False )
+    self.assertEqual( False, img.hastranscolor() )
+    self.assertEqual( 0, img.transcolor() )
+    # turn on again
+    img.hastranscolor( True )
+    self.assertEqual( True, img.hastranscolor() )
+    self.assertEqual( 0, img.transcolor() )
+    # error cases
+    self.assertRaises( TypeError, img.hastranscolor, 1 ) # not boolean
+    self.assertRaises( ValueError, img.transcolor, 4 ) # exceed color table entry
+    self.assertRaises( OverflowError, img.transcolor, -1 ) # exceed unsigned byte
+    self.assertRaises( OverflowError, img.transcolor, 256 ) # exceed unsigned byte
+
+    # gif2 contains only one image, transparent color not allowed
+    gif2 = vpixels.gif( 2, 3, 4, 1 )
+    img = gif2[0]
+    self.assertRaises( Exception, img.hastranscolor )
+    self.assertRaises( Exception, img.hastranscolor, True )
+    self.assertRaises( Exception, img.transcolor )
+    self.assertRaises( Exception, img.transcolor, 2 )
 
 
   def testColorTable(self):

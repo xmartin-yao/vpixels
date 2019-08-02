@@ -294,6 +294,30 @@ function TestGif:testColorTable()
   lu.assertError( gif2.getcolortable, gif2, 0 )
 end
 
+function TestGif:testBackgroundColor()
+  local gif1 = vpixels.gif( 2, 3, 4, 5 )
+  lu.assertEquals( gif1:backgroundcolor(), 0 )
+  gif1:backgroundcolor(1)
+  lu.assertEquals( gif1:backgroundcolor(), 1 )
+  gif1:backgroundcolor(3)
+  lu.assertEquals( gif1:backgroundcolor(), 3 )
+  lu.assertError( gif1.backgroundcolor, gif1, 4 )  -- exceeds
+  gif1:colortablesize(0) -- disable
+  lu.assertEquals( gif1:colortable(), false )
+  lu.assertEquals( gif1:backgroundcolor(), 0 )
+  lu.assertError( gif1.backgroundcolor, gif1, 0 )  -- not allowed
+
+  local gif2 = vpixels.gif( 3, 4, 5, 3, false )
+  lu.assertEquals( gif2:background(), 0 )
+  lu.assertEquals( gif2:colortable(), false )
+  gif2:colortablesize(4) -- enable
+  lu.assertEquals( gif2:colortable(), true )
+  lu.assertEquals( gif2:background(), 0 )
+  gif2:backgroundcolor(3)
+  lu.assertEquals( gif2:background(), 3 )
+  lu.assertError( gif2.backgroundcolor, gif2, 4 )  -- exceeds
+end
+
 function TestGif:testIndexing()
   local gif = vpixels.gif( 2, 3, 4, 5 )
   local ret = nil
@@ -534,8 +558,64 @@ function TestGifImage:testDelay()
   -- not allowed, gif contains only one image
   gif = vpixels.gif( 2, 3, 4, 1 )
   img = gif[0]
-  lu.assertEquals( img:delay(), 0 )
+  lu.assertError( img.delay, img )
   lu.assertError( img.delay, img, 100 )
+end
+
+function TestGifImage:testDisposalMethod()
+  local gif1 = vpixels.gif( 2, 3, 4, 5 )
+  local img = gif1[0]
+  lu.assertEquals( img:disposalmethod(), 1 )
+  img:disposalmethod(2)
+  lu.assertEquals( img:disposalmethod(), 2 )
+  img:disposal(3)
+  lu.assertEquals( img:disposal(), 3 )
+  img:disposal(0)
+  lu.assertEquals( img:disposal(), 0 )
+  -- value > 3
+  lu.assertError( img.disposalmethod, img, 4 )
+  -- value is not unsigned byte
+  lu.assertError( img.disposalmethod, img, -1 )
+  lu.assertError( img.disposalmethod, 256 )
+
+  -- gif2 contains only one image, setting delay time not allowed
+  local gif2 = vpixels.gif( 2, 3, 4, 1 )
+  img = gif2[0]
+  lu.assertError( img.disposalmethod, img )
+  lu.assertError( img.disposalmethod, img, 256 )  
+end
+
+function TestGifImage:testTransparentColor()
+  local gif1 = vpixels.gif( 2, 3, 4, 5 )
+  local img = gif1[0]
+  -- default
+  lu.assertEquals( img:hastransparentcolor(), false )
+  lu.assertEquals( img:transparentcolor(), 0 )
+  -- turn on
+  img:transparentcolor( 3 )
+  lu.assertEquals( img:hastransparentcolor(), true )
+  lu.assertEquals( img:transparentcolor(), 3 )
+  -- turn off
+  img:hastransparentcolor( false )
+  lu.assertEquals( img:hastransparentcolor(), false )
+  lu.assertEquals( img:transparentcolor(), 0 )
+  -- turn on again
+  img:hastransparentcolor( true )
+  lu.assertEquals( img:hastranscolor(), true )
+  lu.assertEquals( img:transcolor(), 0 )
+  -- error cases
+  lu.assertError( img.hastransparentcolor, img, 1 ) -- not boolean
+  lu.assertError( img.transparentcolor, img, 4 )   -- exceed color table entry
+  lu.assertError( img.transparentcolor, img, -1 )  -- exceed unsigned byte
+  lu.assertError( img.transparentcolor, img, 256 ) -- exceed unsigned byte
+
+  --gif2 contains only one image, transparent color not allowed
+  local gif2 = vpixels.gif( 2, 3, 4, 1 )
+  img = gif2[0]
+  lu.assertError( img.hastransparentcolor, img )
+  lu.assertError( img.hastransparentcolor, img, true )
+  lu.assertError( img.transparentcolor, img )
+  lu.assertError( img.transparentcolor, img, 2 )
 end
 
 function TestGifImage:testColorTable()

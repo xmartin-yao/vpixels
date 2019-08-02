@@ -65,6 +65,9 @@ namespace PyGifImageImpl
   PyObject* ColorTableSize( PyGifImageObject* self, PyObject* args );
   PyObject* SetColorTable( PyGifImageObject* self, PyObject* args );
   PyObject* GetColorTable( PyGifImageObject* self, PyObject* args );
+  PyObject* DisposalMethod( PyGifImageObject* self, PyObject* args );
+  PyObject* HasTransColor( PyGifImageObject* self, PyObject* args );
+  PyObject* TransColor( PyGifImageObject* self, PyObject* args );
 
   // utils
   uint16_t CheckColorTable( PyGifImageObject* self );
@@ -90,9 +93,15 @@ namespace PyGifImageImpl
     MDef( colortablesorted, ColorTableSorted, METH_NOARGS,  "return True if color table sorted." )
     MDef( colortablesize,   ColorTableSize,   METH_VARARGS, "set/get color table size." )
     MDef( setcolortable,    SetColorTable,    METH_VARARGS, "set a color table entry." )
-    MDef( setcolor ,        SetColorTable,    METH_VARARGS, "set a color table entry." )
-    MDef( getcolortable,    GetColorTable,    METH_VARARGS, "Get a color table entry." )
-    MDef( getcolor ,        GetColorTable,    METH_VARARGS, "Get a color table entry." )
+    MDef( setcolor,         SetColorTable,    METH_VARARGS, "set a color table entry." )
+    MDef( getcolortable,    GetColorTable,    METH_VARARGS, "get a color table entry." )
+    MDef( getcolor,         GetColorTable,    METH_VARARGS, "get a color table entry." )
+    MDef( disposalmethod,   DisposalMethod,   METH_VARARGS, "set/get disposal method." )
+    MDef( disposal,         DisposalMethod,   METH_VARARGS, "set/get disposal method." )
+    MDef( hastransparentcolor, HasTransColor, METH_VARARGS, "query if image has transparent color, turn on/off transparent color." )
+    MDef( hastranscolor,    HasTransColor,    METH_VARARGS, "query if image has transparent color, turn on/off transparent color." )
+    MDef( transparentcolor, TransColor,       METH_VARARGS, "set/get transparent color." )
+    MDef( transcolor,       TransColor,       METH_VARARGS, "set/get transparent color." )
     { nullptr, nullptr, 0, nullptr } 
   };
 } //PyGifImageImpl
@@ -208,11 +217,11 @@ PyObject* PyGifImageImpl::Repr( PyGifImageObject* self )
 {
   GifImage_Check( self )
 
-  return PyString_FromFormat( "<%s object: bpp=%d (%d,%d) %dx%d delay=%d, colors=%d>",
+  return PyString_FromFormat( "<%s object: bpp=%d (%d,%d) %dx%d colors=%d>",
                               self->ob_type->tp_name, self->pGifImage->BitsPerPixel(),
                               self->pGifImage->Left(), self->pGifImage->Top(),
                               self->pGifImage->Width(), self->pGifImage->Height(),
-                              self->pGifImage->Delay(), self->pGifImage->ColorTableSize() );                            
+                              self->pGifImage->ColorTableSize() );
 }
 
 ///////////////////
@@ -329,20 +338,12 @@ PyObject* PyGifImageImpl::Crop( PyGifImageObject* self, PyObject* args )
 ////////////////////////////////////////////////////////
 uint16_t PyGifImageImpl::CheckColorTable( PyGifImageObject* self )
 {
-  uint16_t Size = 0; 
-  if( self->pGifImage->ColorTable() )
-    Size = self->pGifImage->ColorTableSize();
-  else
-    Size = self->pGifObject->pGif->ColorTableSize();
-
+  auto Size = self->pGifImage->CheckColorTable(); 
   if( Size == 0 )
-  {
     PyErr_SetString( PyExc_Exception, 
-                     "cannot set pixel, no global nor local color table");
-    return 0;
-  }
-  else
-    return Size;
+                     "there is neither global nor local color table");
+
+  return Size;
 }
 
 ///////////////////
@@ -352,7 +353,7 @@ PyObject* PyGifImageImpl::SetAllPixels( PyGifImageObject* self, PyObject* args )
 {
   GifImage_Check( self )
 
-  uint16_t Size = CheckColorTable( self );
+  auto Size = CheckColorTable( self );
   if( PyErr_Occurred() != nullptr )
     return nullptr;
 
@@ -374,7 +375,7 @@ PyObject* PyGifImageImpl::SetPixel( PyGifImageObject* self, PyObject* args )
 {
   GifImage_Check( self )
 
-  uint16_t Size = CheckColorTable( self );
+  auto Size = CheckColorTable( self );
   if( PyErr_Occurred() != nullptr )
     return nullptr;
 
@@ -422,12 +423,17 @@ PyObject* PyGifImageImpl::Interlaced( PyGifImageObject* self )
 }
 
 ///////////////////
-// milli_sec = img.Delay()
-// img.Delay( milli_sec )
+// centisecond = img.Delay()
+// img.Delay( centisecond )
 //////////////////////////////////////////////////////////
 PyObject* PyGifImageImpl::Delay( PyGifImageObject* self, PyObject* args )
 {
   GifImage_Check( self )
+  if( self->pGifImage->SingleImage() )
+  {
+    PyErr_SetString( PyExc_Exception, "cannot set/get delay time for single image" );
+    return nullptr;
+  }
 
   if( PyTuple_Size( args ) == 0 )
   {
@@ -435,21 +441,115 @@ PyObject* PyGifImageImpl::Delay( PyGifImageObject* self, PyObject* args )
   }
   else
   {
-    int16_t MilliSec;
-    if( !PyArg_ParseTuple( args, "h", &MilliSec ) )
+    int16_t Centisecond;
+    if( !PyArg_ParseTuple( args, "h", &Centisecond ) )
       return nullptr;
 
-    if( MilliSec < 0 )
+    if( Centisecond < 0 )
     {
       PyErr_SetString( PyExc_ValueError, "requires unsigned integer" );
       return nullptr;
     }
 
-    if( !self->pGifImage->Delay(MilliSec) )
-    {
-      PyErr_SetString( PyExc_Exception, "delay is not allowed" );
+    self->pGifImage->Delay( Centisecond );
+
+    Py_RETURN_NONE;
+  }
+}
+
+///////////////////
+// method_id = img.DisposalMethod()
+// img.DisposalMethod( method_id )
+///////////////////////////////////////////////////////
+PyObject* PyGifImageImpl::DisposalMethod( PyGifImageObject* self, PyObject* args )
+{
+  GifImage_Check( self )
+  if( self->pGifImage->SingleImage() )
+  {
+    PyErr_SetString( PyExc_Exception, "cannot set/get disposal method for single image" );
+    return nullptr;
+  }
+
+  if( PyTuple_Size( args ) == 0 )
+  {
+    return Py_BuildValue( "B", self->pGifImage->DisposalMethod() );
+  }
+  else
+  {
+    uint8_t MethodID;
+    if( !PyArg_ParseTuple( args, "b", &MethodID ) )
       return nullptr;
-    }
+
+    Value_CheckRange( 1, MethodID, 0, 3 )
+
+    self->pGifImage->DisposalMethod( MethodID );
+
+    Py_RETURN_NONE;
+  }
+}
+
+///////////////////
+// ret_bool = img.HasTransColor()
+// img.HasTransColor( True|False )
+/////////////////////////////////////////////////
+PyObject* PyGifImageImpl::HasTransColor( PyGifImageObject* self, PyObject* args )
+{
+  GifImage_Check( self )
+  if( self->pGifImage->SingleImage() )
+  {
+    PyErr_SetString( PyExc_Exception, "single image has no transparent color" );
+    return nullptr;
+  }
+
+  if( PyTuple_Size( args ) == 0 )
+  {
+    if( self->pGifImage->HasTransColor() )
+      Py_RETURN_TRUE;
+    else
+      Py_RETURN_FALSE;
+  }
+  else
+  {
+    PyObject* pyBool = Py_False;
+    if( !PyArg_ParseTuple(args, "O!", &PyBool_Type, &pyBool) )
+      return nullptr;
+
+    bool TrunOn = PyObject_IsTrue( pyBool );
+    self->pGifImage->HasTransColor( TrunOn );
+
+    Py_RETURN_NONE;
+  }
+}
+
+///////////////////
+// color_index = img.TransColor()
+// img.TransColor( color_index )
+///////////////////////////////////////////////////////
+PyObject* PyGifImageImpl::TransColor( PyGifImageObject* self, PyObject* args )
+{
+  GifImage_Check( self )
+  if( self->pGifImage->SingleImage() )
+  {
+    PyErr_SetString( PyExc_Exception, "cannot set/get transparent color for single image" );
+    return nullptr;
+  }
+
+  if( PyTuple_Size( args ) == 0 )
+  {
+    return Py_BuildValue( "B", self->pGifImage->TransColor() );
+  }
+  else
+  {
+    uint8_t ColorIndex;
+    if( !PyArg_ParseTuple( args, "b", &ColorIndex ) )
+      return nullptr;
+
+    auto Size = CheckColorTable( self );
+    if( PyErr_Occurred() != nullptr )
+      return nullptr;
+
+    Value_CheckRangeEx( 1, ColorIndex, 0, Size )
+    self->pGifImage->TransColor( ColorIndex );
 
     Py_RETURN_NONE;
   }

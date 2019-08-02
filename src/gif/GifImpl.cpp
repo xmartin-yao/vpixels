@@ -116,6 +116,24 @@ void GifImpl::GetColorTable( const uint8_t Index, uint8_t& Red,
   m_ScreenDescriptor.GetColorTable( Index, Red, Green, Blue );
 }
 
+//////////////////////////////////
+void GifImpl::BackgroundColor( const uint8_t ColorIndex )
+{
+  return m_ScreenDescriptor.BackgroundColor( ColorIndex );
+}
+
+//////////////////////////////////
+uint8_t GifImpl::BackgroundColor() const
+{
+  return m_ScreenDescriptor.BackgroundColor();
+}
+
+//////////////////////////////////
+uint8_t GifImpl::AspectRatio() const
+{
+  return m_ScreenDescriptor.AspectRatio();
+}
+
 ////////////////////////////
 size_t GifImpl::Images() const
 {

@@ -25,7 +25,7 @@
 GifGraphicsControlExt::GifGraphicsControlExt()
  : GifExtension( 0xF9 ),
    m_PackedByte( 0x04 ),   // 00000100: disposal method = 1
-   m_DelayTime( 0x0000 ),  // 0 millisecond
+   m_DelayTime( 0x0000 ),  // 0 centisecond
    m_TransColor( 0x00 )
 {
 }
@@ -85,4 +85,34 @@ void GifGraphicsControlExt::Write( std::ostream& os ) const
   Data += static_cast<uint8_t>(m_DelayTime >> 8);
   Data += m_TransColor;
   GifBlockIO::WriteSubBlocks( os, Data );
+}
+
+///////////////////////////////////
+void GifGraphicsControlExt::DisposalMethod( uint8_t MethodID )
+{
+#ifndef VP_EXTENSION
+  if( MethodID > 3 )
+    VP_THROW( "MethodID out of range [0, 3]" );
+#endif
+
+  m_PackedByte &= 0xE3;
+  m_PackedByte += (MethodID << 2);
+}
+
+/////////////////////////////////////
+void GifGraphicsControlExt::HasTransColor( const bool TrunOn )
+{
+  m_PackedByte &= 0xFE;
+  if( TrunOn )
+    m_PackedByte += 0x01;
+  else
+    m_TransColor = 0;
+}
+
+///////////////////////////////////////////////
+void GifGraphicsControlExt::TransColor( const uint8_t ColorIndex )
+{
+  m_TransColor = ColorIndex;
+  if( (m_PackedByte & 0x01) == 0 )
+    m_PackedByte += 0x01;
 }

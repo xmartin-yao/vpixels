@@ -29,12 +29,16 @@ class GifGraphicsControlExtTest : public CPPUNIT_NS::TestCase
 {
   CPPUNIT_TEST_SUITE( GifGraphicsControlExtTest );
   CPPUNIT_TEST( testCtors );
+  CPPUNIT_TEST( testDisposalMethod );
+  CPPUNIT_TEST( testTransColor );
   CPPUNIT_TEST( testOutput );
   CPPUNIT_TEST( testInput );
   CPPUNIT_TEST_SUITE_END();
 
 protected:
   void testCtors();
+  void testDisposalMethod();
+  void testTransColor();
   void testOutput();
   void testInput();
 };

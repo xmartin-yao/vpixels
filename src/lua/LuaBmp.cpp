@@ -133,10 +133,7 @@ int LuaBmp::New( lua_State* L )
 {
   vp::Bmp* pBmp = nullptr;
   if( lua_gettop( L ) != 0 )
-  {
-    LuaUtil::CheckArgs( L, 3 );
     pBmp = LuaBmpImpl::NewBmp( L );
-  }
   else // no argument
     pBmp = new vp::Bmp();
 
@@ -148,6 +145,8 @@ int LuaBmp::New( lua_State* L )
 //////////////////////////////////////////
 vp::Bmp* LuaBmpImpl::NewBmp( lua_State* L )
 {
+  LuaUtil::CheckArgs( L, 3 );
+
   auto bpp = CheckBpp( L, 1 );
 
   auto width = LuaUtil::CheckUint16( L, 2 );

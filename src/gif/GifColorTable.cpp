@@ -107,8 +107,8 @@ void GifColorTable::Size( uint16_t Size, uint8_t& PackedByte )
     return;
 
   // set packed byte
-  PackedByte |= 0x80;                 // set color table flag bit
-  PackedByte -= (PackedByte & 0x07);  // replace size bits
+  PackedByte |= 0x80;      // set color table flag bit
+  PackedByte &= 0xF8;      // replace size bits
   PackedByte += SizeBits;
 
   // new byte array, 

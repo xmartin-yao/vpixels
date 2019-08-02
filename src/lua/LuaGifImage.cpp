@@ -51,6 +51,9 @@ namespace LuaGifImageImpl
   int ColorTableSize( lua_State* L );
   int SetColorTable( lua_State* L );
   int GetColorTable( lua_State* L );
+  int DisposalMethod( lua_State* L );
+  int HasTransColor( lua_State* L );
+  int TransColor( lua_State* L );
 
   // meta methods
   int ToString( lua_State* L );
@@ -59,7 +62,7 @@ namespace LuaGifImageImpl
   // utils
   vp::GifImage* CheckGifImage( lua_State* L, int arg );
   LuaGifImageUD* CheckGifImageUD( lua_State* L, int arg );
-  uint16_t CheckColorTable( lua_State* L, LuaGifImageUD* pUD );
+  uint16_t CheckColorTable( lua_State* L, vp::GifImage* pGifImage );
 
   // methods of LuaGifImage
   const luaL_Reg Methods[] = {
@@ -85,6 +88,12 @@ namespace LuaGifImageImpl
     { "setcolor",         SetColorTable },
     { "getcolortable",    GetColorTable },
     { "getcolor",         GetColorTable },
+    { "disposalmethod",   DisposalMethod },
+    { "disposal",         DisposalMethod },
+    { "hastransparentcolor", HasTransColor },
+    { "hastranscolor",    HasTransColor },
+    { "transparentcolor", TransColor },
+    { "transcolor",       TransColor },
     { nullptr, nullptr }
   };
 } //LuaGifImageImpl
@@ -168,13 +177,13 @@ int LuaGifImageImpl::Clone( lua_State* L )
 {
   LuaUtil::CheckArgs( L, 2 );
 
-  LuaGifImageUD* pThisUD = CheckGifImageUD( L, 1 );
-  LuaGifImageUD* pOtherUD = CheckGifImageUD( L, 2 );
+  auto pThisGifImage = CheckGifImage( L, 1 );
+  auto pOtherGifImage = CheckGifImage( L, 2 );
 
   bool Error = false;
   try
   {
-    *(pThisUD->pGifImage) = *(pOtherUD->pGifImage);
+    *pThisGifImage = *pOtherGifImage;
   }
   catch( const vp::Exception& )
   {
@@ -311,13 +320,13 @@ int LuaGifImageImpl::SetAllPixels( lua_State* L )
 {
   LuaUtil::CheckArgs( L, 2 );
 
-  LuaGifImageUD* pUD = CheckGifImageUD( L, 1 );
+  auto pGifImage = CheckGifImage( L, 1 );
 
   auto ColorIndex = LuaUtil::CheckUint8( L, 2 );
-  auto Size = CheckColorTable( L, pUD );
+  auto Size = CheckColorTable( L, pGifImage );
   LuaUtil::CheckValueUpper( L, 2, ColorIndex, Size );
 
-  pUD->pGifImage->SetAllPixels( ColorIndex );
+  pGifImage->SetAllPixels( ColorIndex );
 
   return 0;  
 }
@@ -329,8 +338,7 @@ int LuaGifImageImpl::SetPixel( lua_State* L )
 {
   LuaUtil::CheckArgs( L, 4 );
 
-  LuaGifImageUD* pUD = CheckGifImageUD( L, 1 );
-  vp::GifImage* pGifImage = pUD->pGifImage;
+  auto pGifImage = CheckGifImage( L, 1 );
 
   auto X = LuaUtil::CheckUint16( L, 2 );
   LuaUtil::CheckValueUpper( L, 2, X, pGifImage->Width() );
@@ -339,7 +347,7 @@ int LuaGifImageImpl::SetPixel( lua_State* L )
   LuaUtil::CheckValueUpper( L, 3, Y, pGifImage->Height() );
 
   auto ColorIndex = LuaUtil::CheckUint8( L, 4 );
-  auto Size = CheckColorTable( L, pUD );
+  auto Size = CheckColorTable( L, pGifImage );
   LuaUtil::CheckValueUpper( L, 4, ColorIndex, Size );
 
   pGifImage->SetPixel( X, Y, ColorIndex );
@@ -380,15 +388,18 @@ int LuaGifImageImpl::Interlaced( lua_State* L )
 }
 
 ///////////////////////
-// milli_sec = image:Delay()
-// image:Delay( milli_sec )
+// centisecond = image:Delay()
+// image:Delay( centisecond )
 ///////////////////////////////////////
 int LuaGifImageImpl::Delay( lua_State* L )
 {
-  LuaUtil::CheckArgs( L, 1, 1 );
-  vp::GifImage* pGifImage = CheckGifImage( L, 1 );
+  auto argc = LuaUtil::CheckArgs( L, 1, 1 );
 
-  if( lua_gettop(L) == 1 )
+  auto pGifImage = CheckGifImage( L, 1 );
+  if( pGifImage->SingleImage() )
+    return luaL_error( L, "cannot set/get delay time for single image" );
+
+  if( argc == 1 )
   {
     lua_pushunsigned( L, pGifImage->Delay() );
 
@@ -396,9 +407,8 @@ int LuaGifImageImpl::Delay( lua_State* L )
   }
   else
   {
-    auto MilliSec = LuaUtil::CheckUint16( L, 2 );
-    if( !pGifImage->Delay( MilliSec ) )
-      luaL_error( L, "delay is not allowed" );
+    auto Centisecond = LuaUtil::CheckUint16( L, 2 );
+    pGifImage->Delay( Centisecond );
 
     return 0;  
   }
@@ -422,10 +432,10 @@ int LuaGifImageImpl::ColorTable( lua_State* L )
 ///////////////////////////////////////////
 int LuaGifImageImpl::ColorTableSize( lua_State* L )
 {
-  LuaUtil::CheckArgs( L, 1, 1 );
-  vp::GifImage* pGifImage = CheckGifImage( L, 1 );
+  auto argc = LuaUtil::CheckArgs( L, 1, 1 );
 
-  if( lua_gettop(L) == 1 )
+  auto pGifImage = CheckGifImage( L, 1 );
+  if( argc == 1 )
   {
     lua_pushunsigned( L, pGifImage->ColorTableSize() );
 
@@ -506,17 +516,103 @@ int LuaGifImageImpl::GetColorTable( lua_State* L )
   return 3;
 }
 
+/////////////
+// method_id = image:DisposalMethod()
+// image.DisposalMethod( method_id )
+///////////////////////////////////////////
+int LuaGifImageImpl::DisposalMethod( lua_State* L )
+{
+  auto argc = LuaUtil::CheckArgs( L, 1, 1 );
+
+  auto pGifImage = CheckGifImage( L, 1 );
+  if( pGifImage->SingleImage() )
+    return luaL_error( L, "cannot set/get disposal method for single image" );
+
+  if( argc == 1 )
+  {
+    lua_pushunsigned( L, pGifImage->DisposalMethod() );
+
+    return 1;
+  }
+  else
+  {
+    auto MethodID = LuaUtil::CheckUint8( L, 2 );
+    LuaUtil::CheckValueRange( L, 2, MethodID, 0, 3 );
+
+    pGifImage->DisposalMethod( MethodID );
+
+    return 0;
+  }
+}
+
+/////////////////
+// ret_bool = image:HasTransColor()
+// img.HasTransColor( true|false )
+//////////////////////////////////
+int LuaGifImageImpl::HasTransColor( lua_State* L )
+{
+  auto argc = LuaUtil::CheckArgs( L, 1, 1 );
+
+  auto pGifImage = CheckGifImage( L, 1 );
+  if( pGifImage->SingleImage() )
+    return luaL_error( L, "single image has no transparent color" );
+
+  if( argc == 1 )
+  {
+    lua_pushboolean( L, pGifImage->HasTransColor() );
+
+    return 1;
+  }
+  else
+  {
+    bool TurnOn = LuaUtil::CheckBoolean( L, 2 );
+    pGifImage->HasTransColor( TurnOn );
+
+    return 0;
+  }
+}
+
+/////////////
+// color_index = image:TransColor()
+// image:TransColor( color_index )
+///////////////////////////////////////////
+int LuaGifImageImpl::TransColor( lua_State* L )
+{
+  auto argc = LuaUtil::CheckArgs( L, 1, 1 );
+
+  auto pGifImage = CheckGifImage( L, 1 );
+  if( pGifImage->SingleImage() )
+    return luaL_error( L, "single image has no transparent color" );
+
+  if( argc == 1 )
+  {
+    lua_pushunsigned( L, pGifImage->TransColor() );
+
+    return 1;
+  }
+  else
+  {
+    auto ColorIndex = LuaUtil::CheckUint8( L, 2 );
+    auto Size = CheckColorTable( L, pGifImage );
+    LuaUtil::CheckValueUpper( L, 2, ColorIndex, Size );
+
+    pGifImage->TransColor( ColorIndex );
+
+    return 0;
+  }
+}
+
 ///////////////
 // meta method __tostring
 ////////////////////////////////////
 int LuaGifImageImpl::ToString( lua_State* L )
 {
   vp::GifImage* pGifImage = CheckGifImage( L, 1 );
-  lua_pushfstring( L, "%s: bpp=%d (%d,%d) %dx%d delay=%d colors=%d",
+  lua_pushfstring( L, "%s: bpp=%d (%d,%d) %dx%d colors=%d",
                    ID, pGifImage->BitsPerPixel(),
                    pGifImage->Left(),  pGifImage->Top(),
                    pGifImage->Width(), pGifImage->Height(),
-                   pGifImage->Delay(), pGifImage->ColorTableSize() );
+                   pGifImage->ColorTableSize() );
   return 1;
 }
 
@@ -591,16 +687,11 @@ vp::GifImage* LuaGifImageImpl::CheckGifImage( lua_State* L, int arg )
 }
 
 //////////////////////////////////////////////////////
-uint16_t LuaGifImageImpl::CheckColorTable( lua_State* L, LuaGifImageUD* pUD )
+uint16_t LuaGifImageImpl::CheckColorTable( lua_State* L, vp::GifImage* pGifImage )
 {
-  uint16_t Size = 0; 
-  if( pUD->pGifImage->ColorTable() )
-    Size = pUD->pGifImage->ColorTableSize();
-  else
-    Size = pUD->pGifUD->pGif->ColorTableSize();
-
+  auto Size = pGifImage->CheckColorTable();
   if( Size == 0 )
-    luaL_error( L, "cannot set pixel(there is neither global nor local color table)" );
+    return luaL_error( L, "there is neither global nor local color table" );
 
   return Size;
 }

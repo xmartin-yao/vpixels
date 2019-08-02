@@ -37,11 +37,16 @@ public:
   virtual ~GifGraphicsControlExt() {}
 
   uint8_t DisposalMethod() const { return( (m_PackedByte & 0x1C) >> 2 ); }
-  bool    UserInput() const      { return( (m_PackedByte & 0x02) != 0 ); }
-  bool    HasTransColor() const  { return( (m_PackedByte & 0x01) != 0 ); }
-  uint8_t TransColor() const     { return m_TransColor; }
+  void    DisposalMethod( const uint8_t MethodID );
 
-  void     Delay( uint16_t MilliSecond ) { m_DelayTime = MilliSecond; }
+  bool    UserInput() const { return( (m_PackedByte & 0x02) != 0 ); }
+
+  bool    HasTransColor() const { return( (m_PackedByte & 0x01) != 0 ); }
+  void    HasTransColor( const bool TrunOn );
+  void    TransColor( const uint8_t ColorIndex );
+  uint8_t TransColor() const { return m_TransColor; }
+
+  void     Delay( uint16_t Centisecond ) { m_DelayTime = Centisecond; }
   uint16_t Delay() const                 { return m_DelayTime; }
 
   // overrides
@@ -61,8 +66,9 @@ private:
 //   User Input Flag         1 Bit
 //   Transparent Color Flag  1 Bit
 // Disposal Method
+//   0: disposal method not specified
 //   1: next image is drawn on top of previous
-//   2: next image is drawn after screen is restored to background
+//   2: next image is drawn after screen is restored to background color
 //   3: next image is drawn after screen is restored to previous state 
 
 #endif //GifGraphicsControlExt_h

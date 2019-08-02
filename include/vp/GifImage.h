@@ -65,7 +65,7 @@ namespace vp
 
     // delay
     uint16_t Delay() const;
-    bool     Delay( const uint16_t MilliSec );
+    void     Delay( const uint16_t Centisecond );
 
     // local color table
     bool     ColorTable() const;
@@ -76,6 +76,22 @@ namespace vp
                             const uint8_t Green, const uint8_t Blue );
     void     GetColorTable( const uint8_t Index, uint8_t& Red,
                             uint8_t& Green, uint8_t& Blue ) const;
+
+    // disposal method
+    uint8_t DisposalMethod() const;
+    void    DisposalMethod( const uint8_t MethodID );
+
+    // transparent color
+    bool    HasTransColor() const;
+    void    HasTransColor( const bool TrunOn );
+    uint8_t TransColor() const;
+    void    TransColor( const uint8_t ColorIndex );
+
+    bool UserInput() const;
+
+    // utils
+    uint16_t CheckColorTable() const;
+    bool     SingleImage() const;
 
   private:
     // ctor

@@ -150,6 +150,32 @@ void GifScreenDescriptorTest::Verify( const uint8_t& Bpp, const uint16_t& Size )
   CPPUNIT_ASSERT_THROW( sd4.ColorTableSize(-1), vp::Exception );
 }
 
+void GifScreenDescriptorTest::testBackgroundColor()
+{
+  GifScreenDescriptor sd1( 3, 5, 7 );
+  CPPUNIT_ASSERT( sd1.BackgroundColor() == 0 );
+  sd1.BackgroundColor(1);
+  CPPUNIT_ASSERT( sd1.BackgroundColor() == 1 );
+  sd1.BackgroundColor(7);
+  CPPUNIT_ASSERT( sd1.BackgroundColor() == 7 );
+  CPPUNIT_ASSERT_THROW( sd1.BackgroundColor(8), vp::Exception ); // index exceeds
+  sd1.ColorTableSize(0);  // disable color table
+  CPPUNIT_ASSERT( sd1.GlobalColorTable() == false );
+  CPPUNIT_ASSERT( sd1.BackgroundColor() == 0 );
+  CPPUNIT_ASSERT_THROW( sd1.BackgroundColor(0), vp::Exception ); // can't set background color
+
+  GifScreenDescriptor sd2( 2, 4, 6, false );
+  CPPUNIT_ASSERT( sd2.GlobalColorTable() == false );
+  CPPUNIT_ASSERT( sd2.BackgroundColor() == 0 );
+  CPPUNIT_ASSERT_THROW( sd2.BackgroundColor(0), vp::Exception ); // can't set background color
+  sd2.ColorTableSize(2); // enable color table
+  CPPUNIT_ASSERT( sd2.GlobalColorTable() );
+  CPPUNIT_ASSERT( sd2.BackgroundColor() == 0 );
+  sd2.BackgroundColor(1);
+  CPPUNIT_ASSERT( sd2.BackgroundColor() == 1 );
+  CPPUNIT_ASSERT_THROW( sd2.BackgroundColor(2), vp::Exception ); // index exceeds
+}
+
 void GifScreenDescriptorTest::testInput()
 {
   uint8_t R, G, B;

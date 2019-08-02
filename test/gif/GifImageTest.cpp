@@ -42,10 +42,18 @@ void GifImageTest::testOneComponent()
   CPPUNIT_ASSERT( img.ColorTableSize() == 0 );
   img.ColorTableSize(4);                       // enable local color table
   CPPUNIT_ASSERT( img.ColorTableSize() == 4 );
+  CPPUNIT_ASSERT( img.CheckColorTable() == 4 );
 
-  CPPUNIT_ASSERT( img.Delay() == 0 );
-  CPPUNIT_ASSERT( img.Delay( 100 ) == false ); // cannot set delay
-  CPPUNIT_ASSERT( img.Delay() == 0 );
+  // single image
+  CPPUNIT_ASSERT( img.SingleImage() );
+  CPPUNIT_ASSERT_THROW( img.Delay(), vp::Exception );
+  CPPUNIT_ASSERT_THROW( img.Delay( 100 ), vp::Exception );
+  CPPUNIT_ASSERT_THROW( img.DisposalMethod(), vp::Exception );
+  CPPUNIT_ASSERT_THROW( img.DisposalMethod( 1 ), vp::Exception );
+  CPPUNIT_ASSERT_THROW( img.HasTransColor(), vp::Exception );
+  CPPUNIT_ASSERT_THROW( img.HasTransColor( true ), vp::Exception );
+  CPPUNIT_ASSERT_THROW( img.TransColor(), vp::Exception );
+  CPPUNIT_ASSERT_THROW( img.TransColor( 1 ), vp::Exception );
 }
 
 void GifImageTest::testTwoComponents()
@@ -64,10 +72,23 @@ void GifImageTest::testTwoComponents()
   CPPUNIT_ASSERT( img.ColorTableSize() == 0 );
   img.ColorTableSize(4);                       // enable local color table
   CPPUNIT_ASSERT( img.ColorTableSize() == 4 );
+  CPPUNIT_ASSERT( img.CheckColorTable() == 4 );
 
+  // multiple images
+  CPPUNIT_ASSERT( img.SingleImage() == false );
   CPPUNIT_ASSERT( img.Delay() == 0 );
-  CPPUNIT_ASSERT( img.Delay( 100 ) ); // set delay
+  img.Delay( 100 ); // set delay
   CPPUNIT_ASSERT( img.Delay() == 100 );
+  CPPUNIT_ASSERT( img.DisposalMethod() == 1 );
+  img.DisposalMethod( 2 );
+  CPPUNIT_ASSERT( img.DisposalMethod() == 2 );
+  CPPUNIT_ASSERT( img.HasTransColor() == false );
+  CPPUNIT_ASSERT( img.TransColor() == 0 );
+  img.TransColor( 2 );
+  CPPUNIT_ASSERT( img.TransColor() == 2 );
+  img.HasTransColor( false );
+  CPPUNIT_ASSERT( img.HasTransColor() == false );
+  CPPUNIT_ASSERT( img.TransColor() == 0 );
 }
 
 
@@ -78,7 +99,7 @@ void GifImageTest::testAssignment()
   // image 0
   vp::GifImage& img0 = gif[0];
   img0.SetPixel( 1, 1, 3 );
-  CPPUNIT_ASSERT( img0.Delay( 500 ) );
+  img0.Delay( 500 );
 
   // image 1
   vp::GifImage& img1 = gif[1];

@@ -168,8 +168,8 @@ void GifImplTest::testReadOneImage()
   CPPUNIT_ASSERT( image.Height() == 2 );
   CPPUNIT_ASSERT( image.GetPixel( 1, 1 ) == 7 );
   CPPUNIT_ASSERT( image.Interlaced() == false );
-  CPPUNIT_ASSERT( image.Delay() == 0 );
-  CPPUNIT_ASSERT( image.Delay( 100 ) == false ); // unable for one image
+  CPPUNIT_ASSERT_THROW( image.Delay(), vp::Exception );  // single image
+  CPPUNIT_ASSERT_THROW( image.Delay( 100 ), vp::Exception );
   CPPUNIT_ASSERT( image.ColorTable() == false );
 
   // exceed index range: 0 <= index < size
@@ -295,7 +295,7 @@ void GifImplTest::testReadTwoImages()
   CPPUNIT_ASSERT( image.GetPixel( 1, 1 ) == 3 );
   CPPUNIT_ASSERT( image.Interlaced() == false );
   CPPUNIT_ASSERT( image.Delay() == 0 );
-  CPPUNIT_ASSERT( image.Delay( 100 ) );
+  image.Delay( 100 );
   CPPUNIT_ASSERT( image.Delay() == 100 );
   CPPUNIT_ASSERT( image.ColorTable() == false );
 
@@ -308,7 +308,7 @@ void GifImplTest::testReadTwoImages()
   CPPUNIT_ASSERT( image.GetPixel( 1, 1 ) == 5 );
   CPPUNIT_ASSERT( image.Interlaced() == false );
   CPPUNIT_ASSERT( image.Delay() == 0 );
-  CPPUNIT_ASSERT( image.Delay( 200 ) );
+  image.Delay( 200 );
   CPPUNIT_ASSERT( image.Delay() == 200 );
   CPPUNIT_ASSERT( image.ColorTable() == false );
 
