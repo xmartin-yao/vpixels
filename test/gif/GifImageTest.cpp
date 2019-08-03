@@ -128,6 +128,96 @@ void GifImageTest::testAssignment()
   CPPUNIT_ASSERT_THROW( gif4[0] = img0, vp::Exception );
 }
 
+void GifImageTest::testGetPixel()
+{
+  vp::Gif gif( 2, 5, 5, 2 );
+  vp::GifImage& img = gif[0];
+  uint8_t R, G, B;
+
+  // default values
+  CPPUNIT_ASSERT( img.GetPixel( 0, 0 ) == 0 );
+  CPPUNIT_ASSERT( img.GetPixel( 4, 4 ) == 0 );
+  img.GetPixel( 0, 0, R, G, B );
+  CPPUNIT_ASSERT( R == 255 );
+  CPPUNIT_ASSERT( G == 255 );
+  CPPUNIT_ASSERT( B == 255 );
+  img.GetPixel( 4, 4, R, G, B );
+  CPPUNIT_ASSERT( R == 255 );
+  CPPUNIT_ASSERT( G == 255 );
+  CPPUNIT_ASSERT( B == 255 );
+
+  // modify global color table
+  gif.SetColorTable( 0, 252, 253, 254 );
+  CPPUNIT_ASSERT( img.GetPixel( 0, 0 ) == 0 );
+  CPPUNIT_ASSERT( img.GetPixel( 4, 4 ) == 0 );
+  img.GetPixel( 0, 0, R, G, B );
+  CPPUNIT_ASSERT( R == 252 );
+  CPPUNIT_ASSERT( G == 253 );
+  CPPUNIT_ASSERT( B == 254 );
+  img.GetPixel( 4, 4, R, G, B );
+  CPPUNIT_ASSERT( R == 252 );
+  CPPUNIT_ASSERT( G == 253 );
+  CPPUNIT_ASSERT( B == 254 );
+
+  // RGB values from local color table
+  img.ColorTableSize(2);  // enable local color table
+  CPPUNIT_ASSERT( img.GetPixel( 0, 0 ) == 0 );
+  CPPUNIT_ASSERT( img.GetPixel( 4, 4 ) == 0 );
+  img.GetPixel( 0, 0, R, G, B );
+  CPPUNIT_ASSERT( R == 255 );
+  CPPUNIT_ASSERT( G == 255 );
+  CPPUNIT_ASSERT( B == 255 );
+  img.GetPixel( 4, 4, R, G, B );
+  CPPUNIT_ASSERT( R == 255 );
+  CPPUNIT_ASSERT( G == 255 );
+  CPPUNIT_ASSERT( B == 255 );
+
+  // modify local color table
+  img.SetColorTable( 0, 52, 53, 54 );
+  CPPUNIT_ASSERT( img.GetPixel( 0, 0 ) == 0 );
+  CPPUNIT_ASSERT( img.GetPixel( 4, 4 ) == 0 );
+  img.GetPixel( 0, 0, R, G, B );
+  CPPUNIT_ASSERT( R == 52 );
+  CPPUNIT_ASSERT( G == 53 );
+  CPPUNIT_ASSERT( B == 54 );
+  img.GetPixel( 4, 4, R, G, B );
+  CPPUNIT_ASSERT( R == 52 );
+  CPPUNIT_ASSERT( G == 53 );
+  CPPUNIT_ASSERT( B == 54 );
+
+  // again, RGB values from global color table
+  img.ColorTableSize(0);  // disable local color table
+  CPPUNIT_ASSERT( img.ColorTable() == false );
+  CPPUNIT_ASSERT( img.GetPixel( 0, 0 ) == 0 );
+  CPPUNIT_ASSERT( img.GetPixel( 4, 4 ) == 0 );
+  img.GetPixel( 0, 0, R, G, B );
+  CPPUNIT_ASSERT( R == 252 );
+  CPPUNIT_ASSERT( G == 253 );
+  CPPUNIT_ASSERT( B == 254 );
+  img.GetPixel( 4, 4, R, G, B );
+  CPPUNIT_ASSERT( R == 252 );
+  CPPUNIT_ASSERT( G == 253 );
+  CPPUNIT_ASSERT( B == 254 );
+
+  // coordinate X or Y exceeds
+  CPPUNIT_ASSERT_THROW( img.GetPixel( -1, 0 ), vp::Exception );
+  CPPUNIT_ASSERT_THROW( img.GetPixel( 0, -1 ), vp::Exception );
+  CPPUNIT_ASSERT_THROW( img.GetPixel( 5, 4 ), vp::Exception );
+  CPPUNIT_ASSERT_THROW( img.GetPixel( 4, 5 ), vp::Exception );
+  CPPUNIT_ASSERT_THROW( img.GetPixel( -1, 0, R, G, B ), vp::Exception );
+  CPPUNIT_ASSERT_THROW( img.GetPixel( 0, -1, R, G, B ), vp::Exception );
+  CPPUNIT_ASSERT_THROW( img.GetPixel( 5, 4, R, G, B ), vp::Exception );
+  CPPUNIT_ASSERT_THROW( img.GetPixel( 4, 5, R, G, B ), vp::Exception );
+
+  // there's neither global nor local color table
+  gif.ColorTableSize(0);  // disable global color table
+  CPPUNIT_ASSERT( gif.ColorTable() == false );
+  CPPUNIT_ASSERT( img.GetPixel( 0, 0 ) == 0 );
+  CPPUNIT_ASSERT( img.GetPixel( 4, 4 ) == 0 );
+  CPPUNIT_ASSERT_THROW( img.GetPixel( 0, 0, R, G, B ), vp::Exception );
+  CPPUNIT_ASSERT_THROW( img.GetPixel( 4, 4, R, G, B ), vp::Exception );
+}
+
 void GifImageTest::testSetPixel()
 {
   vp::Gif gif( 2, 5, 5, 2 );

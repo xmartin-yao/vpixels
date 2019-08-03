@@ -30,6 +30,7 @@ class GifImageTest : public CPPUNIT_NS::TestCase
   CPPUNIT_TEST( testOneComponent );
   CPPUNIT_TEST( testTwoComponents );
   CPPUNIT_TEST( testAssignment );
+  CPPUNIT_TEST( testGetPixel );
   CPPUNIT_TEST( testSetPixel );
   CPPUNIT_TEST( testSetAllPixels );
 
@@ -39,6 +40,7 @@ protected:
   void testOneComponent();
   void testTwoComponents();
   void testAssignment();
+  void testGetPixel();
   void testSetPixel();
   void testSetAllPixels();
 };

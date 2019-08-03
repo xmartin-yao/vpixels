@@ -185,6 +185,22 @@ uint8_t GifImageImpl::GetPixel( const uint16_t X, const uint16_t Y ) const
   return ImageDescriptor()->GetPixel( X, Y );
 }
 
+///////////////////////////////////////////////
+void GifImageImpl::GetPixel( const uint16_t X, const uint16_t Y,
+                             uint8_t& Red, uint8_t& Green, uint8_t& Blue ) const
+{
+#ifndef VP_EXTENSION
+  if( !(ImageDescriptor()->LocalColorTable() || m_GifImpl.ColorTable()) )
+    VP_THROW( "there's neither global nor local color table" )
+#endif
+
+  auto Index = GetPixel( X, Y );
+  if( ColorTable() )
+    GetColorTable( Index, Red, Green, Blue );
+  else
+    m_GifImpl.GetColorTable( Index, Red, Green, Blue );
+}
+
 /////////////////////////////////////////////
 void GifImageImpl::Delay( uint16_t Centisecond )
 {

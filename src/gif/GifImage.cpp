@@ -139,6 +139,13 @@ uint8_t GifImage::GetPixel( const uint16_t X, const uint16_t Y ) const
   return GetImpl()->GetPixel( X, Y );
 }
 
+////////////////////////////////////////////////////////////////
+void GifImage::GetPixel( const uint16_t X, const uint16_t Y,
+                            uint8_t& Red, uint8_t& Green, uint8_t& Blue ) const
+{
+  GetImpl()->GetPixel( X, Y, Red, Green, Blue);
+}
+
 /////////////////////////////////////////////
 void GifImage::Delay( uint16_t Centisecond )
 {
