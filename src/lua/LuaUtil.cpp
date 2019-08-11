@@ -75,8 +75,8 @@ uint8_t LuaUtil::CheckUint8( lua_State* L, int arg )
 {
   luaL_checktype( L, arg, LUA_TNUMBER );
   lua_Number n = lua_tonumber( L, arg );
-  luaL_argcheck( L, n == floor(n), arg, "integer expected, got float" );
-  luaL_argcheck( L, (n >= 0 && n <= 0xFF), arg, "unsigned char expected" );
+  luaL_argcheck( L, (n >= 0 && n == floor(n)), arg, "unsigned integer expected" );
+  CheckValueRange( L, arg, n, 0, 0xFF );
 
   return static_cast<uint8_t>(n);
 }
@@ -94,8 +94,8 @@ uint16_t LuaUtil::CheckUint16( lua_State* L, int arg )
 {
   luaL_checktype( L, arg, LUA_TNUMBER );
   lua_Number n = lua_tonumber( L, arg );
-  luaL_argcheck( L, n == floor(n), arg, "integer expected, got float" );
-  luaL_argcheck( L, (n >= 0 && n <= 0xFFFF), arg, "unsigned short expected" );
+  luaL_argcheck( L, (n >= 0 && n == floor(n)), arg, "unsigned integer expected" );
+  CheckValueRange( L, arg, n, 0, 0xFFFF );
 
   return static_cast<uint16_t>(n);
 }

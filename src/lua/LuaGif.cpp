@@ -390,14 +390,9 @@ int LuaGifImpl::SetColorTable( lua_State* L )
   auto Index = LuaUtil::CheckUint8( L, 2 );
   LuaUtil::CheckValueUpper( L, 2, Index, pGif->ColorTableSize() );
 
-  auto Red = LuaUtil::CheckUint8( L, 3 );
-  LuaUtil::CheckValueUpper( L, 3, Red, 256 );
-
+  auto Red   = LuaUtil::CheckUint8( L, 3 );
   auto Green = LuaUtil::CheckUint8( L, 4 );
-  LuaUtil::CheckValueUpper( L, 4, Green, 256 );
-
-  auto Blue = LuaUtil::CheckUint8( L, 5 );
-  LuaUtil::CheckValueUpper( L, 5, Blue, 256 );
+  auto Blue  = LuaUtil::CheckUint8( L, 5 );
 
   pGif->SetColorTable( Index, Red, Green, Blue );
 

@@ -311,14 +311,9 @@ int LuaBmpImpl::SetColorTable( lua_State* L )
   auto Index = LuaUtil::CheckUint8( L, 2 );
   LuaUtil::CheckValueUpper( L, 2, Index, Size );
 
-  auto Blue = LuaUtil::CheckUint8( L, 3 );
-  LuaUtil::CheckValueUpper( L, 3, Blue, 256 );
-
+  auto Blue  = LuaUtil::CheckUint8( L, 3 );
   auto Green = LuaUtil::CheckUint8( L, 4 );
-  LuaUtil::CheckValueUpper( L, 4, Green, 256 );
-
-  auto Red = LuaUtil::CheckUint8( L, 5 );
-  LuaUtil::CheckValueUpper( L, 5, Red, 256 );
+  auto Red   = LuaUtil::CheckUint8( L, 5 );
 
   pBmp->SetColorTable( Index, Blue, Green, Red );
 
@@ -371,14 +366,9 @@ int LuaBmpImpl::SetAllPixels( lua_State* L )
   {
     LuaUtil::CheckArgs( L, 4 );
 
-    auto Blue = LuaUtil::CheckUint8( L, 2 );
-    LuaUtil::CheckValueUpper( L, 2, Blue, 256 );
-
+    auto Blue  = LuaUtil::CheckUint8( L, 2 );
     auto Green = LuaUtil::CheckUint8( L, 3 );
-    LuaUtil::CheckValueUpper( L, 3, Green, 256 );
-
-    auto Red = LuaUtil::CheckUint8( L, 4 );
-    LuaUtil::CheckValueUpper( L, 4, Red, 256 );
+    auto Red   = LuaUtil::CheckUint8( L, 4 );
 
     pBmp->SetAllPixels( Blue, Green, Red );
   }
@@ -414,14 +404,9 @@ int LuaBmpImpl::SetPixel( lua_State* L )
   {
     LuaUtil::CheckArgs( L, 6 );
 
-    auto Blue = LuaUtil::CheckUint8( L, 4 );
-    LuaUtil::CheckValueUpper( L, 4, Blue, 256 );
-
+    auto Blue  = LuaUtil::CheckUint8( L, 4 );
     auto Green = LuaUtil::CheckUint8( L, 5 );
-    LuaUtil::CheckValueUpper( L, 5, Green, 256 );
-
-    auto Red = LuaUtil::CheckUint8( L, 6 );
-    LuaUtil::CheckValueUpper( L, 6, Red, 256 );
+    auto Red   = LuaUtil::CheckUint8( L, 6 );
 
     pBmp->SetPixel( X, Y, Blue, Green, Red );
   }
