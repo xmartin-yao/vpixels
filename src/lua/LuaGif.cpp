@@ -368,7 +368,7 @@ int LuaGifImpl::ColorTableSize( lua_State* L )
   else
   {
     auto Size = LuaUtil::CheckUint16( L, 2 );
-    LuaUtil::CheckValueUpper( L, 2, Size, (1 << pGif->BitsPerPixel()) + 1 );
+    LuaUtil::CheckValueRange( L, 2, Size, 0, 256 );
 
     pGif->ColorTableSize( Size );
 

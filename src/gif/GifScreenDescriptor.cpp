@@ -88,12 +88,16 @@ uint16_t GifScreenDescriptor::ColorTableSize() const
 void GifScreenDescriptor::ColorTableSize( uint16_t Size )
 {
 #ifndef VP_EXTENSION
-  // size exceeds limit ( 2^BitsPerPixel )
-  if( Size > (1 << ColorResolution()) )
-    VP_THROW( "size exceeds limit" );
+  if( Size > 256 )
+    VP_THROW( "exceeds maximum size: 256" );
 #endif
 
   m_ColorTable.Size( Size, m_PackedByte );
+
+  // modify resolution bits
+  uint8_t SizeBits = (m_PackedByte & 0x07);
+  m_PackedByte &= 0x8F;
+  m_PackedByte |= (SizeBits << 4);
 
   // set background color to 0, if no global color table
   if( Size == 0 && m_BackgroundColor != 0 )

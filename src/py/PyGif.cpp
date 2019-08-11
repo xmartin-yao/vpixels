@@ -408,7 +408,7 @@ PyObject* PyGifImpl::ColorTableSize( PyGifObject* self, PyObject* args )
     if( !PyArg_ParseTuple( args, "h", &Size ) )
       return nullptr;
 
-    Value_CheckRange( 1, Size, 0, (1 << self->pGif->BitsPerPixel()) )
+    Value_CheckRange( 1, Size, 0, 256 )
 
     self->pGif->ColorTableSize( Size );
 

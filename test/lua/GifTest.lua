@@ -256,11 +256,13 @@ function TestGif:testColorTableSize()
   lu.assertEquals( gif:colortablesize(), 2 )
 
   -- increase to maximum size
-  gif:colortablesize( 8 )
+  gif:colortablesize( 256 )
   lu.assertTrue( gif:colortable() )
-  lu.assertEquals( gif:colortablesize(), 8 )
+  lu.assertEquals( gif:colortablesize(), 256 )
+  lu.assertEquals( gif:bpp(), 8 )
 
-  lu.assertError( gif.colortablesize, gif, 9 )
+  -- size out of range
+  lu.assertError( gif.colortablesize, gif, 257 )
   lu.assertError( gif.colortablesize, gif, -2 )
 end
 

@@ -223,10 +223,12 @@ class TestGif( unittest.TestCase ):
     self.assertRaises( OverflowError,  gif.setcolortable, -1, 25, 26, 27 )
     self.assertRaises( OverflowError,  gif.getcolortable, -1 )
     # increase to maximum size
-    gif.colortablesize( 4 )
-    self.assertEqual( 4, gif.colortablesize() )
+    gif.colortablesize( 256 )
+    self.assertEqual( True, gif.colortable() )
+    self.assertEqual( 256, gif.colortablesize() )
+    self.assertEqual( 8, gif.bpp() )
     # size exceeds limit
-    self.assertRaises( Exception, gif.colortablesize, 5 )
+    self.assertRaises( Exception, gif.colortablesize, 257 )
     # disable color table
     gif.colortablesize( 0 )
     self.assertEqual( False, gif.colortable() )
@@ -248,7 +250,7 @@ class TestGif( unittest.TestCase ):
     self.assertRaises( OverflowError,  gif.setcolortable, -1, 25, 26, 27 )
     self.assertRaises( OverflowError,  gif.getcolortable, -1 )
     # size exceeds limit
-    self.assertRaises( ValueError, gif.colortablesize, 17 )
+    self.assertRaises( ValueError, gif.colortablesize, 257 )
     # downsize 
     gif.colortablesize( 8 )
     self.assertEqual( True, gif.colortable() )

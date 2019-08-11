@@ -118,13 +118,22 @@ void GifScreenDescriptorTest::Verify( const uint8_t& Bpp, const uint16_t& Size )
   CPPUNIT_ASSERT( G == 255 );
   CPPUNIT_ASSERT( B == 255 );
 
-  CPPUNIT_ASSERT_THROW( sd3.ColorTableSize(-1), vp::Exception );
-  CPPUNIT_ASSERT_THROW( sd3.ColorTableSize( Size + 1 ), vp::Exception );
-  sd3.ColorTableSize( Size - 1 );
+  // change color table size
+  CPPUNIT_ASSERT_THROW( sd3.ColorTableSize(-1), vp::Exception );  // less than minimum size
+  if( Size == 256 )
+    CPPUNIT_ASSERT_THROW( sd3.ColorTableSize( Size + 1 ), vp::Exception );  // exceed maximum size
+  else
+  {
+    sd3.ColorTableSize( Size + 1 );
+    // resolution and color table size increased
+    CPPUNIT_ASSERT( sd3.ColorResolution() == Bpp + 1 );
+    CPPUNIT_ASSERT( sd3.ColorTableSize() == (1 << sd3.ColorResolution()) );
+  }
+  sd3.ColorTableSize( Size - 1 );  // no effect
   CPPUNIT_ASSERT( sd3.ColorTableSize() == Size );
-  sd3.ColorTableSize( 1 );
+  sd3.ColorTableSize( 1 );  // roundup to 2
   CPPUNIT_ASSERT( sd3.ColorTableSize() == 2 );
-  sd3.ColorTableSize( 0 );
+  sd3.ColorTableSize( 0 );  // disable color table
   CPPUNIT_ASSERT( sd3.GlobalColorTable() == false );
   CPPUNIT_ASSERT_THROW( sd3.GetColorTable( 1, R, G, B ), vp::Exception );
 
