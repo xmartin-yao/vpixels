@@ -87,6 +87,7 @@ namespace vp
     bool    HasTransColor() const;
     void    HasTransColor( const bool TrunOn );
     uint8_t TransColor() const;
+    void    TransColor( uint8_t& Red, uint8_t& Green, uint8_t& Blue ) const;
     void    TransColor( const uint8_t ColorIndex );
 
     bool UserInput() const;

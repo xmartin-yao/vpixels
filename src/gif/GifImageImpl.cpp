@@ -304,6 +304,16 @@ uint8_t GifImageImpl::TransColor() const
 }
 
 /////////////////////////////////
+void GifImageImpl::TransColor( uint8_t& Red, uint8_t& Green, uint8_t& Blue ) const
+{
+  auto Index = TransColor();
+  if( ColorTable() )
+    GetColorTable( Index, Red, Green, Blue );
+  else
+    m_GifImpl.GetColorTable( Index, Red, Green, Blue );
+}
+
+/////////////////////////////////
 GifGraphicsControlExt* GifImageImpl::GraphicsControlExt()
 {
   return m_pGraphicsControlExt.get();

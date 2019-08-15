@@ -194,6 +194,12 @@ uint8_t GifImage::TransColor() const
   return GetImpl()->TransColor();
 }
 
+/////////////////////////////////////////////////////
+void GifImage::TransColor( uint8_t& Red, uint8_t& Green, uint8_t& Blue ) const
+{
+  GetImpl()->TransColor( Red, Green, Blue );
+}
+
 /////////////////////////////////
 bool GifImage::UserInput() const
 {

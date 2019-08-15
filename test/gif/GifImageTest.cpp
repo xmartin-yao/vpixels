@@ -82,11 +82,25 @@ void GifImageTest::testTwoComponents()
   CPPUNIT_ASSERT( img.DisposalMethod() == 1 );
   img.DisposalMethod( 2 );
   CPPUNIT_ASSERT( img.DisposalMethod() == 2 );
+  // transparent color
   CPPUNIT_ASSERT( img.HasTransColor() == false );
   CPPUNIT_ASSERT( img.TransColor() == 0 );
-  img.TransColor( 2 );
+  img.TransColor( 2 ); // turn on and set transparent color
+  CPPUNIT_ASSERT( img.HasTransColor() );
   CPPUNIT_ASSERT( img.TransColor() == 2 );
-  img.HasTransColor( false );
+  gif.SetColorTable( 2, 23, 24, 25 );
+  img.SetColorTable( 2, 123, 124, 125 );
+  uint8_t R, G, B;
+  img.TransColor( R, G, B );  // RGB from local color table
+  CPPUNIT_ASSERT( R == 123 );
+  CPPUNIT_ASSERT( G == 124 );
+  CPPUNIT_ASSERT( B == 125 );
+  img.ColorTableSize( 0 );    // disable local color table
+  img.TransColor( R, G, B );  // RGB from global color table
+  CPPUNIT_ASSERT( R == 23 );
+  CPPUNIT_ASSERT( G == 24 );
+  CPPUNIT_ASSERT( B == 25 );
+  img.HasTransColor( false ); // turn of transparent color
   CPPUNIT_ASSERT( img.HasTransColor() == false );
   CPPUNIT_ASSERT( img.TransColor() == 0 );
 }
