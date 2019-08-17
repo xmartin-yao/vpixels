@@ -180,14 +180,14 @@ void GifColorTableTest::testSize()
   }
   
   // change size to 3, actually round up to 4 = 2^2
-  ct.Size( 3, PackeByte );
+  CPPUNIT_ASSERT( ct.Size( 3, PackeByte ) );
   CPPUNIT_ASSERT( ct.Size() == 4 );
   CPPUNIT_ASSERT( PackeByte == 0xB1 );  // 10110001
   for( i = 0; i < 4; ++i )
     ct.Set( i, 0xF1, 0xF2, 0xF3 );
 
   // change size to 5, actually round up to 8 = 2^3
-  ct.Size( 5, PackeByte );
+  CPPUNIT_ASSERT( ct.Size( 5, PackeByte ) );
   CPPUNIT_ASSERT( ct.Size() == 8 );
   CPPUNIT_ASSERT( PackeByte == 0xB2 );  // 101100010
   for( i = 0; i < 8; ++i )
@@ -207,15 +207,41 @@ void GifColorTableTest::testSize()
     }
   }
 
+  // change size to 6, no effect
+  CPPUNIT_ASSERT( ct.Size( 6, PackeByte ) == false );
+  CPPUNIT_ASSERT( ct.Size() == 8 );
+  CPPUNIT_ASSERT( PackeByte == 0xB2 );  // 101100010
+  for( i = 0; i < 8; ++i )
+  {
+    ct.Get( i, R, G, B );
+    if( i < 4)
+    {
+      CPPUNIT_ASSERT( R == 0xF1 );
+      CPPUNIT_ASSERT( G == 0xF2 );
+      CPPUNIT_ASSERT( B == 0xF3 );
+    }
+    else
+    {
+      CPPUNIT_ASSERT( R == 0xFF );
+      CPPUNIT_ASSERT( G == 0xFF );
+      CPPUNIT_ASSERT( B == 0xFF );
+    }
+  }
+
   // change size to 0
-  ct.Size( 0, PackeByte );
+  CPPUNIT_ASSERT( ct.Size( 0, PackeByte ) );
   CPPUNIT_ASSERT( ct.Size() == 0 );
   CPPUNIT_ASSERT( PackeByte == 0x30 );  // 00110000
   CPPUNIT_ASSERT_THROW( ct.Set( 0, 0xF1, 0xF2, 0xF3 ), vp::Exception );
   CPPUNIT_ASSERT_THROW( ct.Get( 0, R, G, B ), vp::Exception );
 
+  // change size to 0, no effect
+  CPPUNIT_ASSERT( ct.Size( 0, PackeByte ) == false );
+  CPPUNIT_ASSERT( ct.Size() == 0 );
+  CPPUNIT_ASSERT( PackeByte == 0x30 );  // 00110000
+
   // change size to 2
-  ct.Size( 2, PackeByte );
+  CPPUNIT_ASSERT( ct.Size( 2, PackeByte ) );
   CPPUNIT_ASSERT( PackeByte == 0xB0 );  // 101100000
   CPPUNIT_ASSERT( ct.Size() == 2 );
   for( i = 0; i < 2; ++i )

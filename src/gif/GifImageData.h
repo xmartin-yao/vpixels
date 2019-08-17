@@ -41,6 +41,7 @@ public:
 
   // bpp
   uint8_t BitsPerPixel() const { return m_BitsPerPixel; }
+  void    BitsPerPixel( const uint8_t Bpp ) { m_BitsPerPixel = Bpp; }
 
   // size
   size_t Size() const { return m_Pixels.size(); }

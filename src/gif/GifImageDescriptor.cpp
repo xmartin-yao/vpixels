@@ -160,15 +160,27 @@ uint16_t GifImageDescriptor::ColorTableSize() const
 }
 
 ////////////////////////////////////////////////
-void GifImageDescriptor::ColorTableSize( uint16_t Size )
+bool GifImageDescriptor::ColorTableSize( uint16_t Size )
 {
 #ifndef VP_EXTENSION
-  // size exceeds limit ( 2^BitsPerPixel )
-  if( Size > (1 << m_ImageData.BitsPerPixel()) )
-    VP_THROW( "size exceeds limit" );
+  if( Size > 256 )
+    VP_THROW( "exceeds maximum size: 256" );
 #endif
 
-  m_ColorTable.Size( Size, m_PackedByte );
+  // size not changed
+  if( !m_ColorTable.Size( Size, m_PackedByte ) )
+    return false;
+
+  // if color table enabled, set bpp based on m_PackedByte
+  if( LocalColorTable() )
+  {
+    uint8_t Bpp = (m_PackedByte & 0x07) + 1;
+    if( Bpp == 1 ) Bpp = 2;  // special case when size = 2
+
+    m_ImageData.BitsPerPixel( Bpp );
+  }
+
+  return true;
 }
 
 ///////////////////////////////////////////////////////////////
@@ -191,7 +203,15 @@ uint8_t GifImageDescriptor::BitsPerPixel() const
   return m_ImageData.BitsPerPixel();
 }
 
+//////////////////////////////////////
+void GifImageDescriptor::BitsPerPixel( const uint8_t Bpp )
+{
+  m_ImageData.BitsPerPixel( Bpp );
+}
+
+/////////////////////
 // coordinate to index of image data
+///////////////////////////////////////////////////////
 uint32_t GifImageDescriptor::PixelIndex( const uint16_t X, const uint16_t Y ) const
 {
 #ifndef VP_EXTENSION

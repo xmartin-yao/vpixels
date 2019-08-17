@@ -84,17 +84,21 @@ void GifColorTable::Size( uint16_t Size )
 // Change size of color table and modify the 1st and 
 // the last 3 bits of PackedByte accordingly.
 // Size will be rounded up to the next highest power of 2.
+// Return true, if size is changed; false, if not.
 ////////////////////////////////////////////////////////////
-void GifColorTable::Size( uint16_t Size, uint8_t& PackedByte )
+bool GifColorTable::Size( uint16_t Size, uint8_t& PackedByte )
 {
   // disable color table
   if( Size == 0 )
   {
+    if( m_ArraySize == 0 )
+      return false;
+
     PackedByte &= 0x78;  // 01111000
     m_ArraySize = 0;
     m_ByteArray.reset();
 
-    return;
+    return true;
   }
 
   // round up size
@@ -104,7 +108,7 @@ void GifColorTable::Size( uint16_t Size, uint8_t& PackedByte )
   // no change
   Size *= 3;  // size of byte array
   if( Size == m_ArraySize )
-    return;
+    return false;
 
   // set packed byte
   PackedByte |= 0x80;      // set color table flag bit
@@ -124,6 +128,8 @@ void GifColorTable::Size( uint16_t Size, uint8_t& PackedByte )
   // set member data
   m_ByteArray = std::move(ByteArray);
   m_ArraySize = Size;
+
+  return true;
 }
 
 /////////////////////////////////////////////////////

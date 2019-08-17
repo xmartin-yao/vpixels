@@ -597,16 +597,18 @@ class TestGifImage( unittest.TestCase ):
 
 
   def testColorTable(self):
-    gif1 = vpixels.gif( 2, 3, 4 )
+    gif1 = vpixels.gif( 3, 4, 5 )
     img = gif1[0]
 
     # no color table by default
+    self.assertEqual( 3, img.bpp() )
     self.assertEqual( False, img.colortable() )
     self.assertEqual( False, img.colortablesorted() )
     self.assertEqual( 0, img.colortablesize() )
 
     # enable color table
     img.colortablesize( 2 )
+    self.assertEqual( 2, img.bpp() )  # changed
     self.assertEqual( True, img.colortable() )
     self.assertEqual( False, img.colortablesorted() )
     self.assertEqual( 2, img.colortablesize() )
@@ -615,14 +617,30 @@ class TestGifImage( unittest.TestCase ):
     img.setcolortable( 1, 25, 26, 27 )
     self.assertEqual( (25, 26, 27), img.getcolortable( 1 ) )
 
-    # increase to maximum size
+    # increase to maximum size for bpp = 2
     img.colortablesize( 4 )
+    self.assertEqual( 2, img.bpp() )  # not changed
     self.assertEqual( True, img.colortable() )
+    self.assertEqual( False, img.colortablesorted() )
     self.assertEqual( 4, img.colortablesize() )
+
+    # increase to maximum size 256
+    img.colortablesize( 256 )
+    self.assertEqual( 8, img.bpp() )  # changed
+    self.assertEqual( True, img.colortable() )
+    self.assertEqual( False, img.colortablesorted() )
+    self.assertEqual( 256, img.colortablesize() )
+
+    # disable color table
+    img.colortablesize( 0 )
+    self.assertEqual( 3, img.bpp() )  # changed back
+    self.assertEqual( False, img.colortable() )
+    self.assertEqual( False, img.colortablesorted() )
+    self.assertEqual( 0, img.colortablesize() )
 
     # bad args
     self.assertRaises( Exception, img.colortablesize, -1 )
-    self.assertRaises( Exception, img.colortablesize, 5 )  # max size = 4
+    self.assertRaises( Exception, img.colortablesize, 257 )  # exceed max 256
 
     self.assertRaises( Exception, img.getcolortable, -1 )
     self.assertRaises( Exception, img.getcolortable, 4 )

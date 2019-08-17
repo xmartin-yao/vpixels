@@ -621,16 +621,18 @@ function TestGifImage:testTransparentColor()
 end
 
 function TestGifImage:testColorTable()
-  local gif = vpixels.gif( 2, 3, 4 )
+  local gif = vpixels.gif( 3, 4, 5 )
   local img = gif[0]
 
   -- no color table by default
+  lu.assertEquals( img:bpp(), gif:bpp() )
   lu.assertFalse( img:colortable() )
   lu.assertFalse( img:colortablesorted() )
   lu.assertEquals( img:colortablesize(), 0 )
 
   -- enable color table
   img:colortablesize( 2 )
+  lu.assertEquals( img:bpp(), 2 )  -- changed
   lu.assertTrue( img:colortable() )
   lu.assertFalse( img:colortablesorted() )
   lu.assertEquals( img:colortablesize(), 2 )
@@ -648,15 +650,30 @@ function TestGifImage:testColorTable()
   lu.assertEquals( g, 26 )
   lu.assertEquals( b, 27 )
 
-  -- increase to maximum size
+  -- increase to maximum size for bpp = 2
   img:colortablesize( 4 )
+  lu.assertEquals( img:bpp(), 2 )  -- not changed
   lu.assertTrue( img:colortable() )
   lu.assertFalse( img:colortablesorted() )
   lu.assertEquals( img:colortablesize(), 4 )
 
+  -- increase to maximum size 256
+  img:colortablesize( 256 )
+  lu.assertEquals( img:bpp(), 8 )  -- changed
+  lu.assertTrue( img:colortable() )
+  lu.assertFalse( img:colortablesorted() )
+  lu.assertEquals( img:colortablesize(), 256 )
+
+  -- disable color table
+  img:colortablesize( 0 )
+  lu.assertEquals( img:bpp(), gif:bpp() )  -- changed back
+  lu.assertFalse( img:colortable() )
+  lu.assertFalse( img:colortablesorted() )
+  lu.assertEquals( img:colortablesize(), 0 )
+
   -- bad args
   lu.assertError( img.colortablesize, img, -1 )
-  lu.assertError( img.colortablesize, img, 5 )  -- max size = 4
+  lu.assertError( img.colortablesize, img, 257 )  -- exceed max 256
 
   lu.assertError( img.getcolortable, img, -1 )
   lu.assertError( img.getcolortable, img, 4 )

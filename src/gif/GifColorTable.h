@@ -42,7 +42,7 @@ public:
 
   uint16_t Size() const { return m_ArraySize/3; }
   void     Size( uint16_t Size );
-  void     Size( uint16_t Size, uint8_t& PackedByte );
+  bool     Size( uint16_t Size, uint8_t& PackedByte );
 
   void Set( const uint8_t Index, const uint8_t Red, const uint8_t Green, const uint8_t Blue );
   void Get( const uint8_t Index, uint8_t& Red, uint8_t& Green, uint8_t& Blue ) const;

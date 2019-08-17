@@ -108,7 +108,14 @@ uint16_t GifImageImpl::ColorTableSize() const
 ///////////////////////////////////////
 void GifImageImpl::ColorTableSize( uint16_t Size )
 {
-  ImageDescriptor()->ColorTableSize( Size );
+  // size not changed
+  if( !ImageDescriptor()->ColorTableSize( Size ) )
+    return;
+
+  // if color table disabled
+  // set bpp using the value stored in GifScreenDescriptor
+  if( !ImageDescriptor()->LocalColorTable() )
+    ImageDescriptor()->BitsPerPixel( m_GifImpl.BitsPerPixel() );
 }
 
 ///////////////////////////////////////

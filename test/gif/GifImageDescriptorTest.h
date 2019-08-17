@@ -29,6 +29,7 @@ class GifImageDescriptorTest : public CPPUNIT_NS::TestCase
 {
   CPPUNIT_TEST_SUITE( GifImageDescriptorTest );
   CPPUNIT_TEST( testCtors );
+  CPPUNIT_TEST( testColorTableSize );
   CPPUNIT_TEST( testPixelIndex );
   CPPUNIT_TEST( testCrop );
   CPPUNIT_TEST( testOutput );
@@ -37,6 +38,7 @@ class GifImageDescriptorTest : public CPPUNIT_NS::TestCase
 
 protected:
   void testCtors();
+  void testColorTableSize();
   void testPixelIndex();
   void testCrop();
   void testOutput();

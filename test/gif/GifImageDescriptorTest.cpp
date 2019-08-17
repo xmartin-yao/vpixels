@@ -44,23 +44,6 @@ void GifImageDescriptorTest::testCtors()
   CPPUNIT_ASSERT_THROW( id1.GetPixel( 0, 0 ), vp::Exception );
   CPPUNIT_ASSERT_THROW( id1.SetPixel( 0, 0, 0 ), vp::Exception );
 
-  id1.ColorTableSize( 4 );          // enable color table
-  CPPUNIT_ASSERT( id1.LocalColorTable() );
-  CPPUNIT_ASSERT( id1.ColorTableSize() == 4 );
-  id1.GetColorTable( 0, R, G, B );
-  CPPUNIT_ASSERT( R == 255 );
-  CPPUNIT_ASSERT( G == 255 );
-  CPPUNIT_ASSERT( G == 255 );
-
-  CPPUNIT_ASSERT_THROW( id1.ColorTableSize(5), vp::Exception );  // exceed limit
-  CPPUNIT_ASSERT( id1.ColorTableSize() == 4 );        // size is not changed
-
-  id1.ColorTableSize(0);  // disable color table
-  CPPUNIT_ASSERT( id1.LocalColorTable() == false );
-  CPPUNIT_ASSERT( id1.ColorTableSize() == 0 );
-  CPPUNIT_ASSERT_THROW( id1.GetColorTable( 0, R, G, B ), vp::Exception );
-  CPPUNIT_ASSERT_THROW( id1.SetColorTable( 0, R, G, B ), vp::Exception );
-
   // ctor
   GifImageDescriptor id2( 2, 8, 8, 0, 0, true );
   CPPUNIT_ASSERT( id2.ID() == 0x2C );
@@ -119,6 +102,69 @@ void GifImageDescriptorTest::testCtors()
   CPPUNIT_ASSERT( id1.BitsPerPixel() == 2 );
   CPPUNIT_ASSERT( id1.ColorTableSorted() == false );
   CPPUNIT_ASSERT( id1.GetPixel( 0, 0 ) == 3 );
+}
+
+void GifImageDescriptorTest::testColorTableSize()
+{
+  GifImageDescriptor id( 8, 10, 15 );
+  CPPUNIT_ASSERT( id.BitsPerPixel() == 8 );
+  CPPUNIT_ASSERT( id.ID() == 0x2C );
+  CPPUNIT_ASSERT( id.Label() == 0x00 );
+  CPPUNIT_ASSERT( id.Width() == 10 );
+  CPPUNIT_ASSERT( id.Height() == 15 );
+  CPPUNIT_ASSERT( id.Left() == 0 );
+  CPPUNIT_ASSERT( id.Top() == 0 );
+  CPPUNIT_ASSERT( id.LocalColorTable() == false );
+  CPPUNIT_ASSERT( id.ColorTableSorted() == false );
+  CPPUNIT_ASSERT( id.ColorTableSize() == 0 );
+
+  // set size to 0, no effect
+  CPPUNIT_ASSERT( id.ColorTableSize(0) == false );
+  CPPUNIT_ASSERT( id.LocalColorTable() == false );
+  CPPUNIT_ASSERT( id.ColorTableSize() == 0 );
+  CPPUNIT_ASSERT( id.BitsPerPixel() == 8 );
+
+  // set size to 1, enable color table
+  CPPUNIT_ASSERT( id.ColorTableSize(1) );
+  CPPUNIT_ASSERT( id.LocalColorTable() );
+  CPPUNIT_ASSERT( id.ColorTableSize() == 2 );  // actual size = 2
+  CPPUNIT_ASSERT( id.BitsPerPixel() == 2 );    // bpp changed
+
+  // set size to 3
+  CPPUNIT_ASSERT( id.ColorTableSize(3) );
+  CPPUNIT_ASSERT( id.LocalColorTable() );
+  CPPUNIT_ASSERT( id.ColorTableSize() == 4 );  // actual size = 4
+  CPPUNIT_ASSERT( id.BitsPerPixel() == 2 );    // bpp not changed
+
+  // set size to 6
+  CPPUNIT_ASSERT( id.ColorTableSize(6) );
+  CPPUNIT_ASSERT( id.LocalColorTable() );
+  CPPUNIT_ASSERT( id.ColorTableSize() == 8 );  // actual size = 8
+  CPPUNIT_ASSERT( id.BitsPerPixel() == 3 );    // bpp changed
+
+  // set size to 7, no effect
+  CPPUNIT_ASSERT( id.ColorTableSize(7) == false );
+  CPPUNIT_ASSERT( id.LocalColorTable() );
+  CPPUNIT_ASSERT( id.ColorTableSize() == 8 );  // size not changed
+  CPPUNIT_ASSERT( id.BitsPerPixel() == 3 );    // bpp not changed
+
+  // enlarge to maximum size: 256
+  CPPUNIT_ASSERT( id.ColorTableSize(256) );
+  CPPUNIT_ASSERT( id.LocalColorTable() );
+  CPPUNIT_ASSERT( id.ColorTableSize() == 256 );  // size changed
+  CPPUNIT_ASSERT( id.BitsPerPixel() == 8 );      // bpp changed
+
+  // exceed maximum size: 256
+  CPPUNIT_ASSERT_THROW( id.ColorTableSize(257), vp::Exception );
+  CPPUNIT_ASSERT( id.LocalColorTable() );
+  CPPUNIT_ASSERT( id.ColorTableSize() == 256 );  // size not changed
+  CPPUNIT_ASSERT( id.BitsPerPixel() == 8 );      // bpp not changed
+
+  // disable color table
+  CPPUNIT_ASSERT( id.ColorTableSize(0) );
+  CPPUNIT_ASSERT( id.LocalColorTable() == false );
+  CPPUNIT_ASSERT( id.ColorTableSize() == 0 );  // size = 0
+  CPPUNIT_ASSERT( id.BitsPerPixel() == 8 );    // bpp not changed
 }
 
 void GifImageDescriptorTest::testPixelIndex()

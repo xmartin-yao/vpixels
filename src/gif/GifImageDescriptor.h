@@ -53,7 +53,7 @@ public:
   // local color table
   bool     LocalColorTable() const;
   uint16_t ColorTableSize() const;
-  void     ColorTableSize( uint16_t );
+  bool     ColorTableSize( uint16_t );
   bool     ColorTableSorted() const;
   void     SetColorTable( const uint8_t Index, const uint8_t Red,
                           const uint8_t Green, const uint8_t Blue );
@@ -62,6 +62,7 @@ public:
 
   // image data
   uint8_t  BitsPerPixel() const;
+  void     BitsPerPixel( const uint8_t Bpp );
   void     SetAllPixels( const uint8_t ColorIndex );
   void     SetPixel( uint16_t X, uint16_t Y, uint8_t  Index );
   uint8_t  GetPixel( uint16_t X, uint16_t Y ) const;

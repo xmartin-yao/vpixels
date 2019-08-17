@@ -29,22 +29,33 @@ CPPUNIT_TEST_SUITE_REGISTRATION( GifImageTest );
 void GifImageTest::testOneComponent()
 {
   // gif contains one image
-  vp::Gif gif( 2, 3, 4 );
+  vp::Gif gif( 3, 3, 4 );
   vp::GifImage& img = gif[0];
 
-  CPPUNIT_ASSERT( img.BitsPerPixel() == 2 );
+  CPPUNIT_ASSERT( img.BitsPerPixel() == gif.BitsPerPixel() );
   CPPUNIT_ASSERT( img.Left() == 0 );
   CPPUNIT_ASSERT( img.Top() == 0 );
   CPPUNIT_ASSERT( img.Width() == 3 );
   CPPUNIT_ASSERT( img.Height() == 4 );
 
-  CPPUNIT_ASSERT( img.ColorTable() == false ); // no local color table
+  // no local color table
+  CPPUNIT_ASSERT( img.ColorTable() == false );
   CPPUNIT_ASSERT( img.ColorTableSize() == 0 );
-  img.ColorTableSize(4);                       // enable local color table
+  CPPUNIT_ASSERT( img.CheckColorTable() == gif.ColorTableSize() );
+  // enable local color table
+  img.ColorTableSize(4);
+  CPPUNIT_ASSERT( img.ColorTable() );
   CPPUNIT_ASSERT( img.ColorTableSize() == 4 );
-  CPPUNIT_ASSERT( img.CheckColorTable() == 4 );
+  CPPUNIT_ASSERT( img.CheckColorTable() == img.ColorTableSize() );
+  CPPUNIT_ASSERT( img.BitsPerPixel() == 2 );  // bpp changed accordingly
+  // disable local color table
+  img.ColorTableSize(0);
+  CPPUNIT_ASSERT( img.ColorTable() == false );
+  CPPUNIT_ASSERT( img.ColorTableSize() == 0 );
+  CPPUNIT_ASSERT( img.CheckColorTable() == gif.ColorTableSize() );
+  CPPUNIT_ASSERT( img.BitsPerPixel() == gif.BitsPerPixel() );
 
-  // single image
+  // single image, these methods throw exceptions
   CPPUNIT_ASSERT( img.SingleImage() );
   CPPUNIT_ASSERT_THROW( img.Delay(), vp::Exception );
   CPPUNIT_ASSERT_THROW( img.Delay( 100 ), vp::Exception );
@@ -59,20 +70,31 @@ void GifImageTest::testOneComponent()
 void GifImageTest::testTwoComponents()
 {
   // gif contains three images
-  vp::Gif gif( 2, 3, 4, 3 );
+  vp::Gif gif( 5, 3, 4, 3 );
   vp::GifImage& img = gif[0];
 
-  CPPUNIT_ASSERT( img.BitsPerPixel() == 2 );
+  CPPUNIT_ASSERT( img.BitsPerPixel() == 5 );
   CPPUNIT_ASSERT( img.Left() == 0 );
   CPPUNIT_ASSERT( img.Top() == 0 );
   CPPUNIT_ASSERT( img.Width() == 3 );
   CPPUNIT_ASSERT( img.Height() == 4 );
 
-  CPPUNIT_ASSERT( img.ColorTable() == false ); // no local color table
+  // no local color table
+  CPPUNIT_ASSERT( img.ColorTable() == false );
   CPPUNIT_ASSERT( img.ColorTableSize() == 0 );
-  img.ColorTableSize(4);                       // enable local color table
+  CPPUNIT_ASSERT( img.CheckColorTable() == gif.ColorTableSize() );
+  // enable local color table
+  img.ColorTableSize(4);
+  CPPUNIT_ASSERT( img.ColorTable() );
   CPPUNIT_ASSERT( img.ColorTableSize() == 4 );
-  CPPUNIT_ASSERT( img.CheckColorTable() == 4 );
+  CPPUNIT_ASSERT( img.CheckColorTable() == img.ColorTableSize() );
+  CPPUNIT_ASSERT( img.BitsPerPixel() == 2 );  // bpp changed accordingly
+  // disable local color table
+  img.ColorTableSize(0);
+  CPPUNIT_ASSERT( img.ColorTable() == false );
+  CPPUNIT_ASSERT( img.ColorTableSize() == 0 );
+  CPPUNIT_ASSERT( img.CheckColorTable() == gif.ColorTableSize() );
+  CPPUNIT_ASSERT( img.BitsPerPixel() == gif.BitsPerPixel() );
 
   // multiple images
   CPPUNIT_ASSERT( img.SingleImage() == false );
@@ -88,8 +110,9 @@ void GifImageTest::testTwoComponents()
   img.TransColor( 2 ); // turn on and set transparent color
   CPPUNIT_ASSERT( img.HasTransColor() );
   CPPUNIT_ASSERT( img.TransColor() == 2 );
-  gif.SetColorTable( 2, 23, 24, 25 );
+  img.ColorTableSize(4);
   img.SetColorTable( 2, 123, 124, 125 );
+  gif.SetColorTable( 2, 23, 24, 25 );
   uint8_t R, G, B;
   img.TransColor( R, G, B );  // RGB from local color table
   CPPUNIT_ASSERT( R == 123 );
