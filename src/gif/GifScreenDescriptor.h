@@ -42,13 +42,14 @@ public:
   GifScreenDescriptor& operator=( GifScreenDescriptor&& ) = delete;
 
   uint8_t  ColorResolution() const;
+  void     ColorResolution( const uint8_t Bpp );
 
   uint16_t Width() const  { return m_ScreenWidth; }
   uint16_t Height() const { return m_ScreenHeight; }
 
   bool     GlobalColorTable() const;
   uint16_t ColorTableSize() const;
-  void     ColorTableSize( uint16_t Size );
+  bool     ColorTableSize( uint16_t Size );
   bool     ColorTableSorted() const;
   void     SetColorTable( const uint8_t Index, const uint8_t Red,
                           const uint8_t Green, const uint8_t Blue );

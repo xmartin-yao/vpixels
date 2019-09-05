@@ -48,7 +48,7 @@ namespace PyGifImageImpl
 
   // methods GifImage_Type (exposed to Python)
   PyObject* Clone( PyGifImageObject* self, PyObject* arg );
-  PyObject* BitsPerPixel( PyGifImageObject* self );
+  PyObject* BitsPerPixel( PyGifImageObject* self, PyObject* args );
   PyObject* Left( PyGifImageObject* self );
   PyObject* Top( PyGifImageObject* self );
   PyObject* Width( PyGifImageObject* self );
@@ -75,8 +75,8 @@ namespace PyGifImageImpl
   // type methods
   PyMethodDef Methods[] = {
     MDef( clone,            Clone,            METH_O,       "clone other image." )
-    MDef( bitsperpixel,     BitsPerPixel,     METH_NOARGS,  "get color resolution." )
-    MDef( bpp,              BitsPerPixel,     METH_NOARGS,  "get color resolution." )
+    MDef( bitsperpixel,     BitsPerPixel,     METH_VARARGS, "get/set color resolution." )
+    MDef( bpp,              BitsPerPixel,     METH_VARARGS, "get/set color resolution." )
     MDef( left,             Left,             METH_NOARGS,  "get left position of the image." )
     MDef( top,              Top,              METH_NOARGS,  "get top position of the image." )
     MDef( width,            Width,            METH_NOARGS,  "get image width." )
@@ -257,11 +257,34 @@ PyObject* PyGifImageImpl::Clone( PyGifImageObject* self, PyObject* arg )
 
 ///////////////////
 // bpp = img.BitsPerPixel()
+// img.BitsPerPixel( bpp )
 ///////////////////////////////////////////////////////
-PyObject* PyGifImageImpl::BitsPerPixel( PyGifImageObject* self )
+PyObject* PyGifImageImpl::BitsPerPixel( PyGifImageObject* self, PyObject* args )
 {
   GifImage_Check( self )
-  return Py_BuildValue( "B", self->pGifImage->BitsPerPixel() );
+  if( PyTuple_Size( args ) == 0 )
+  {
+    return Py_BuildValue( "B", self->pGifImage->BitsPerPixel() );
+  }
+  else
+  {
+    uint8_t bpp;
+    if( !PyArg_ParseTuple( args, "b", &bpp ) )
+      return nullptr;
+
+    if( self->pGifImage->ColorTable() )
+    {
+      Value_CheckRange( 1, bpp, 2, 8 )
+    }
+    else
+    {
+      Value_CheckRange( 1, bpp, 2, self->pGifObject->pGif->BitsPerPixel() )
+    }
+
+    self->pGifImage->BitsPerPixel( bpp );
+
+    Py_RETURN_NONE;
+  }
 }
 
 ///////////////////
@@ -429,11 +452,6 @@ PyObject* PyGifImageImpl::Interlaced( PyGifImageObject* self )
 PyObject* PyGifImageImpl::Delay( PyGifImageObject* self, PyObject* args )
 {
   GifImage_Check( self )
-  if( self->pGifImage->SingleImage() )
-  {
-    PyErr_SetString( PyExc_Exception, "cannot set/get delay time for single image" );
-    return nullptr;
-  }
 
   if( PyTuple_Size( args ) == 0 )
   {
@@ -441,6 +459,12 @@ PyObject* PyGifImageImpl::Delay( PyGifImageObject* self, PyObject* args )
   }
   else
   {
+    if( self->pGifImage->SingleImage() )
+    {
+      PyErr_SetString( PyExc_Exception, "cannot set delay time for single image" );
+      return nullptr;
+    }
+
     int16_t Centisecond;
     if( !PyArg_ParseTuple( args, "h", &Centisecond ) )
       return nullptr;
@@ -464,11 +488,6 @@ PyObject* PyGifImageImpl::Delay( PyGifImageObject* self, PyObject* args )
 PyObject* PyGifImageImpl::DisposalMethod( PyGifImageObject* self, PyObject* args )
 {
   GifImage_Check( self )
-  if( self->pGifImage->SingleImage() )
-  {
-    PyErr_SetString( PyExc_Exception, "cannot set/get disposal method for single image" );
-    return nullptr;
-  }
 
   if( PyTuple_Size( args ) == 0 )
   {
@@ -476,6 +495,12 @@ PyObject* PyGifImageImpl::DisposalMethod( PyGifImageObject* self, PyObject* args
   }
   else
   {
+    if( self->pGifImage->SingleImage() )
+    {
+      PyErr_SetString( PyExc_Exception, "cannot set disposal method for single image" );
+      return nullptr;
+    }
+
     uint8_t MethodID;
     if( !PyArg_ParseTuple( args, "b", &MethodID ) )
       return nullptr;
@@ -495,11 +520,6 @@ PyObject* PyGifImageImpl::DisposalMethod( PyGifImageObject* self, PyObject* args
 PyObject* PyGifImageImpl::HasTransColor( PyGifImageObject* self, PyObject* args )
 {
   GifImage_Check( self )
-  if( self->pGifImage->SingleImage() )
-  {
-    PyErr_SetString( PyExc_Exception, "single image has no transparent color" );
-    return nullptr;
-  }
 
   if( PyTuple_Size( args ) == 0 )
   {
@@ -510,6 +530,12 @@ PyObject* PyGifImageImpl::HasTransColor( PyGifImageObject* self, PyObject* args 
   }
   else
   {
+    if( self->pGifImage->SingleImage() )
+    {
+      PyErr_SetString( PyExc_Exception, "cannot turn on transparent color for single image" );
+      return nullptr;
+    }
+
     PyObject* pyBool = Py_False;
     if( !PyArg_ParseTuple(args, "O!", &PyBool_Type, &pyBool) )
       return nullptr;
@@ -530,7 +556,7 @@ PyObject* PyGifImageImpl::TransColor( PyGifImageObject* self, PyObject* args )
   GifImage_Check( self )
   if( self->pGifImage->SingleImage() )
   {
-    PyErr_SetString( PyExc_Exception, "cannot set/get transparent color for single image" );
+    PyErr_SetString( PyExc_Exception, "single image has no transparent color" );
     return nullptr;
   }
 

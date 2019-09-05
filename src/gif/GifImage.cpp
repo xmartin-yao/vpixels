@@ -47,6 +47,12 @@ uint8_t GifImage::BitsPerPixel() const
 }
 
 //////////////////////
+void GifImage::BitsPerPixel( const uint8_t Bpp )
+{
+  GetImpl()->BitsPerPixel( Bpp );
+}
+
+//////////////////////
 uint16_t GifImage::Left() const
 {
   return GetImpl()->Left();

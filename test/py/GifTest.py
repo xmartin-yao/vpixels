@@ -187,6 +187,7 @@ class TestGif( unittest.TestCase ):
     self.assertRaises( TypeError, vpixels.gif, height = 5, width = 6 )
     self.assertRaises( TypeError, vpixels.gif, 2, height = 5, width = 6, colortable = 4 )
 
+
   def testClone( self ):
     gif = vpixels.gif( 2, 3, 4, 5 )
     other = gif.clone()
@@ -201,6 +202,160 @@ class TestGif( unittest.TestCase ):
     self.assertEqual( 4, other.colortablesize() )
 
     self.assertEqual( 5, other.images() )
+
+
+  def testBitsPerpixel( self ):
+    gif = vpixels.gif( 2, 3, 4, 3 )
+    img0 = gif[0]
+    img1 = gif[1]
+    img2 = gif[2]
+    self.assertEqual( gif.bitsperpixel(), 2 )
+    self.assertEqual( gif.colortablesize(), 4 )
+    self.assertEqual( img0.bitsperpixel(), 2 )
+    self.assertEqual( img1.bitsperpixel(), 2 )
+    self.assertEqual( img2.bitsperpixel(), 2 )
+
+    # change bpp
+    gif.bitsperpixel( 7 )
+    self.assertEqual( gif.bitsperpixel(), 7 )
+    self.assertEqual( gif.colortablesize(), 128 )
+    self.assertEqual( img0.bitsperpixel(), 7 )
+    self.assertEqual( img1.bitsperpixel(), 7 )
+    self.assertEqual( img2.bitsperpixel(), 7 )
+
+    # change bpp of images to smaller value
+    img0.bitsperpixel( 3 )
+    img1.bitsperpixel( 4 )
+    img2.bitsperpixel( 5 )
+    self.assertEqual( gif.bitsperpixel(), 7 )
+    self.assertEqual( gif.colortablesize(), 128 )
+    self.assertEqual( img0.bitsperpixel(), 3 )
+    self.assertEqual( img1.bitsperpixel(), 4 )
+    self.assertEqual( img2.bitsperpixel(), 5 )
+
+    # change bpp of images to larger value
+    self.assertRaises( ValueError, img0.bitsperpixel, 8 )
+    self.assertRaises( ValueError, img1.bitsperpixel, 8 )
+    self.assertRaises( ValueError, img1.bitsperpixel, 8 )
+
+    # enable local color table of img1
+    img1.colortablesize( 32 )
+    self.assertEqual( img1.colortablesize(), 32 )
+    self.assertEqual( img1.bitsperpixel(), 5 )
+    self.assertEqual( gif.bitsperpixel(), 7 )
+    self.assertEqual( gif.colortablesize(), 128 )
+    self.assertEqual( img0.bitsperpixel(), 3 )
+    self.assertEqual( img2.bitsperpixel(), 5 )
+
+    # change bpp of img1
+    img1.bitsperpixel( 8 )
+    self.assertEqual( img1.bitsperpixel(), 8 )
+    self.assertEqual( img1.colortablesize(), 256 )
+    self.assertEqual( gif.bitsperpixel(), 7 )
+    self.assertEqual( gif.colortablesize(), 128 )
+    self.assertEqual( img0.bitsperpixel(), 3 )
+    self.assertEqual( img2.bitsperpixel(), 5 )
+
+    # bpp out of range
+    self.assertRaises( ValueError, gif.bitsperpixel, 1 )
+    self.assertRaises( ValueError, gif.bitsperpixel, 9 )
+    self.assertRaises( ValueError, img0.bitsperpixel, 1 )
+    self.assertRaises( ValueError, img0.bitsperpixel, 9 )
+    self.assertRaises( ValueError, img1.bitsperpixel, 1 )
+    self.assertRaises( ValueError, img1.bitsperpixel, 9 )
+    self.assertRaises( ValueError, img2.bitsperpixel, 1 )
+    self.assertRaises( ValueError, img2.bitsperpixel, 9 )
+
+
+  def testColorTableSize( self ):
+    gif = vpixels.gif( 3, 3, 4, 3 )
+    self.assertEqual( gif.colortable(), True )
+    self.assertEqual( gif.colortablesorted(), False )
+    self.assertEqual( gif.colortablesize(), 8 )
+    self.assertEqual( gif.bpp(), 3)
+
+    img0 = gif[0]
+    img1 = gif[1]
+    img2 = gif[2]
+    self.assertEqual( img0.colortablesize(), 0 )
+    self.assertEqual( img1.colortablesize(), 0 )
+    self.assertEqual( img2.colortablesize(), 0 )
+    self.assertEqual( img0.bpp(), 3 )
+    self.assertEqual( img1.bpp(), 3 )
+    self.assertEqual( img2.bpp(), 3 )
+
+    # img1 enables local color table
+    img1.colortablesize(16)
+    self.assertEqual( img1.colortable(), True )
+    self.assertEqual( img1.colortablesize(), 16 )
+    self.assertEqual( img1.bpp(), 4 )
+
+    # disable color table
+    gif.colortablesize( 0 )
+    self.assertEqual( gif.colortable(), False )
+    self.assertEqual( gif.colortablesize(), 0 )
+    self.assertEqual( gif.bpp(), 2 )
+
+    self.assertEqual( img0.colortable(), False )
+    self.assertEqual( img1.colortable(), True )
+    self.assertEqual( img2.colortable(), False )
+    self.assertEqual( img0.colortablesize(), 0 )
+    self.assertEqual( img1.colortablesize(), 16 )
+    self.assertEqual( img2.colortablesize(), 0 )
+    self.assertEqual( img0.bpp(), 2 )
+    self.assertEqual( img1.bpp(), 4 )
+    self.assertEqual( img2.bpp(), 2 )
+
+    self.assertRaises( Exception, gif.setcolor, gif, 0, 21, 22, 23 )
+    self.assertRaises( Exception, img0.setpixel, img0, 0, 0, 0 )
+    img1.setpixel( 0, 0, 0 )
+    self.assertRaises( Exception, img2.setpixel, img0, 0, 0, 0 )
+
+    # enable color table again
+    gif.colortablesize( 2 )
+    self.assertEqual( gif.colortable(), True )
+    self.assertEqual( gif.colortablesize(), 2 )
+    self.assertEqual( gif.bpp(), 2 )
+
+    self.assertEqual( img0.colortable(), False )
+    self.assertEqual( img1.colortable(), True )
+    self.assertEqual( img2.colortable(), False )
+    self.assertEqual( img0.colortablesize(), 0 )
+    self.assertEqual( img1.colortablesize(), 16 )
+    self.assertEqual( img2.colortablesize(), 0 )
+    self.assertEqual( img0.bpp(), 2 )
+    self.assertEqual( img1.bpp(), 4 )
+    self.assertEqual( img2.bpp(), 2 )
+
+    # increase to maximum size
+    gif.colortablesize( 256 )
+    self.assertEqual( gif.colortable(), True )
+    self.assertEqual( gif.colortablesize(), 256 )
+    self.assertEqual( gif.bpp(), 8 )
+
+    self.assertEqual( img0.colortable(), False )
+    self.assertEqual( img1.colortable(), True )
+    self.assertEqual( img2.colortable(), False )
+    self.assertEqual( img0.colortablesize(), 0 )
+    self.assertEqual( img1.colortablesize(), 16 )
+    self.assertEqual( img2.colortablesize(), 0 )
+    self.assertEqual( img0.bpp(), 8 )
+    self.assertEqual( img1.bpp(), 4 )
+    self.assertEqual( img2.bpp(), 8 )
+
+    # size out of range
+    self.assertRaises( ValueError, gif.colortablesize, 257 )
+    self.assertRaises( ValueError, gif.colortablesize, -2 )
+
+    self.assertEqual( img0.colortable(), False )
+    self.assertEqual( img1.colortable(), True )
+    self.assertEqual( img2.colortable(), False )
+    self.assertEqual( img0.colortablesize(), 0 )
+    self.assertEqual( img1.colortablesize(), 16 )
+    self.assertEqual( img2.colortablesize(), 0 )
+    self.assertEqual( img0.bpp(), 8 )
+    self.assertEqual( img1.bpp(), 4 )
+    self.assertEqual( img2.bpp(), 8 )
 
 
   def testColorTable( self ):
@@ -536,7 +691,7 @@ class TestGifImage( unittest.TestCase ):
     # gif2 contains only one image, setting delay time not allowed
     gif2 = vpixels.gif( 2, 3, 4, 1 )
     img = gif2[0]
-    self.assertRaises( Exception, img.delay )
+    self.assertEqual( 0, img.delay() )
     self.assertRaises( Exception, img.delay, 100 )
 
 
@@ -559,7 +714,7 @@ class TestGifImage( unittest.TestCase ):
     # gif2 contains only one image, setting delay time not allowed
     gif2 = vpixels.gif( 2, 3, 4, 1 )
     img = gif2[0]
-    self.assertRaises( Exception, img.disposalmethod )
+    self.assertEqual( 0, img.disposalmethod() )
     self.assertRaises( Exception, img.disposalmethod, 2 )
 
 
@@ -590,7 +745,7 @@ class TestGifImage( unittest.TestCase ):
     # gif2 contains only one image, transparent color not allowed
     gif2 = vpixels.gif( 2, 3, 4, 1 )
     img = gif2[0]
-    self.assertRaises( Exception, img.hastranscolor )
+    self.assertEqual( False, img.hastranscolor() )
     self.assertRaises( Exception, img.hastranscolor, True )
     self.assertRaises( Exception, img.transcolor )
     self.assertRaises( Exception, img.transcolor, 2 )

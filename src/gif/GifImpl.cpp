@@ -66,6 +66,27 @@ uint8_t GifImpl::BitsPerPixel() const
   return m_ScreenDescriptor.ColorResolution();
 }
 
+/////////////////////////////////
+void GifImpl::BitsPerPixel( const uint8_t Bpp )
+{
+#ifndef VP_EXTENSION
+  if( Bpp < 2 || Bpp > 8 )
+    VP_THROW( "color resolution not supported" );
+#endif
+
+  // set bpp
+  m_ScreenDescriptor.ColorResolution( Bpp );
+  for( auto& pImage : m_ImageVec )
+  {
+    if( !pImage->ColorTable() )
+      pImage->BitsPerPixel( Bpp );
+  }
+
+  // set global color table size
+  if( m_ScreenDescriptor.GlobalColorTable() )
+    m_ScreenDescriptor.ColorTableSize( 1 << Bpp );
+}
+
 //////////////////////////
 uint16_t GifImpl::Width() const
 {
@@ -91,9 +112,18 @@ uint16_t GifImpl::ColorTableSize() const
 }
 
 ////////////////////////////////////////
-void GifImpl::ColorTableSize( uint16_t& Size )
+void GifImpl::ColorTableSize( uint16_t Size )
 {
-  m_ScreenDescriptor.ColorTableSize( Size );
+  // change size
+  if( !m_ScreenDescriptor.ColorTableSize( Size ) )
+    return;
+
+  // set bpp of images that have no local color table
+  for( auto& pImage : m_ImageVec )
+  {
+    if( !pImage->ColorTable() )
+      pImage->BitsPerPixel( m_ScreenDescriptor.ColorResolution() );
+  }
 }
 
 //////////////////////////////////

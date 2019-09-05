@@ -175,7 +175,9 @@ bool GifImageDescriptor::ColorTableSize( uint16_t Size )
   if( LocalColorTable() )
   {
     uint8_t Bpp = (m_PackedByte & 0x07) + 1;
-    if( Bpp == 1 ) Bpp = 2;  // special case when size = 2
+
+    // special case when color table size set to 0 or 2
+    if( Bpp == 1 ) Bpp = 2;
 
     m_ImageData.BitsPerPixel( Bpp );
   }

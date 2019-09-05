@@ -48,6 +48,7 @@ namespace vp
 
     // bpp
     uint8_t  BitsPerPixel() const;
+    void     BitsPerPixel( const uint8_t Bpp );
 
     // dimension
     uint16_t Left() const;
@@ -104,7 +105,7 @@ namespace vp
     // std::make_unique() should be friend. see GifImageVecBuilder
     friend std::unique_ptr<vp::GifImage>
     std::make_unique<vp::GifImage>( std::unique_ptr<GifImageImpl>&& );
-    
+
     const GifImageImpl* GetImpl() const;
     GifImageImpl*       GetImpl();
 

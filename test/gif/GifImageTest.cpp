@@ -55,13 +55,13 @@ void GifImageTest::testOneComponent()
   CPPUNIT_ASSERT( img.CheckColorTable() == gif.ColorTableSize() );
   CPPUNIT_ASSERT( img.BitsPerPixel() == gif.BitsPerPixel() );
 
-  // single image, these methods throw exceptions
+  // single image, some methods throw exceptions
   CPPUNIT_ASSERT( img.SingleImage() );
-  CPPUNIT_ASSERT_THROW( img.Delay(), vp::Exception );
+  CPPUNIT_ASSERT( img.Delay() == 0 );
   CPPUNIT_ASSERT_THROW( img.Delay( 100 ), vp::Exception );
-  CPPUNIT_ASSERT_THROW( img.DisposalMethod(), vp::Exception );
+  CPPUNIT_ASSERT( img.DisposalMethod() == 0 );
   CPPUNIT_ASSERT_THROW( img.DisposalMethod( 1 ), vp::Exception );
-  CPPUNIT_ASSERT_THROW( img.HasTransColor(), vp::Exception );
+  CPPUNIT_ASSERT( img.HasTransColor() == false );
   CPPUNIT_ASSERT_THROW( img.HasTransColor( true ), vp::Exception );
   CPPUNIT_ASSERT_THROW( img.TransColor(), vp::Exception );
   CPPUNIT_ASSERT_THROW( img.TransColor( 1 ), vp::Exception );

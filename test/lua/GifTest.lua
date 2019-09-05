@@ -229,7 +229,6 @@ function TestGif:testImport()
   lu.assertNotIsNil( img1 )
   lu.assertError( img0.bpp, img0 )
   lu.assertError( img1.bpp, img1 )
-
 end
 
 function TestGif:testExport()
@@ -240,20 +239,64 @@ function TestGif:testExport()
 end
 
 function TestGif:testColorTableSize()
-  local gif = vpixels.gif( 3, 3, 4 )
+  local gif = vpixels.gif( 3, 3, 4, 3 )
   lu.assertTrue( gif:colortable() )
   lu.assertFalse( gif:colorsorted() )
   lu.assertEquals( gif:colortablesize(), 8 )
+  lu.assertEquals( gif:bpp(), 3 )
+
+  local img0 = gif[0]
+  local img1 = gif[1]
+  local img2 = gif[2]
+  lu.assertEquals( img0:colortablesize(), 0 )
+  lu.assertEquals( img1:colortablesize(), 0 )
+  lu.assertEquals( img2:colortablesize(), 0 )
+  lu.assertEquals( img0:bpp(), 3 )
+  lu.assertEquals( img1:bpp(), 3 )
+  lu.assertEquals( img2:bpp(), 3 )
+
+  -- img1 enables local color table
+  img1:colortablesize(16)
+  lu.assertTrue( img1:colortable() )
+  lu.assertEquals( img1:colortablesize(), 16 )
+  lu.assertEquals( img1:bpp(), 4 )
 
   -- disable color table
   gif:colortablesize( 0 )
   lu.assertFalse( gif:colortable() )
   lu.assertEquals( gif:colortablesize(), 0 )
+  lu.assertEquals( gif:bpp(), 2 )
+
+  lu.assertFalse( img0:colortable() )
+  lu.assertTrue( img1:colortable() )
+  lu.assertFalse( img2:colortable() )
+  lu.assertEquals( img0:colortablesize(), 0 )
+  lu.assertEquals( img1:colortablesize(), 16 )
+  lu.assertEquals( img2:colortablesize(), 0 )
+  lu.assertEquals( img0:bpp(), 2 )
+  lu.assertEquals( img1:bpp(), 4 )
+  lu.assertEquals( img2:bpp(), 2 )
+
+  lu.assertError( gif.setcolor, gif, 0, 21, 22, 23 )
+  lu.assertError( img0.setpixel, img0, 0, 0, 0 )
+  img1:setpixel( 0, 0, 0 )
+  lu.assertError( img2.setpixel, img0, 0, 0, 0 )
 
   -- enable color table again
   gif:colortablesize( 2 )
   lu.assertTrue( gif:colortable() )
   lu.assertEquals( gif:colortablesize(), 2 )
+  lu.assertEquals( gif:bpp(), 2 )
+
+  lu.assertFalse( img0:colortable() )
+  lu.assertTrue( img1:colortable() )
+  lu.assertFalse( img2:colortable() )
+  lu.assertEquals( img0:colortablesize(), 0 )
+  lu.assertEquals( img1:colortablesize(), 16 )
+  lu.assertEquals( img2:colortablesize(), 0 )
+  lu.assertEquals( img0:bpp(), 2 )
+  lu.assertEquals( img1:bpp(), 4 )
+  lu.assertEquals( img2:bpp(), 2 )
 
   -- increase to maximum size
   gif:colortablesize( 256 )
@@ -261,9 +304,29 @@ function TestGif:testColorTableSize()
   lu.assertEquals( gif:colortablesize(), 256 )
   lu.assertEquals( gif:bpp(), 8 )
 
+  lu.assertFalse( img0:colortable() )
+  lu.assertTrue( img1:colortable() )
+  lu.assertFalse( img2:colortable() )
+  lu.assertEquals( img0:colortablesize(), 0 )
+  lu.assertEquals( img1:colortablesize(), 16 )
+  lu.assertEquals( img2:colortablesize(), 0 )
+  lu.assertEquals( img0:bpp(), 8 )
+  lu.assertEquals( img1:bpp(), 4 )
+  lu.assertEquals( img2:bpp(), 8 )
+
   -- size out of range
   lu.assertError( gif.colortablesize, gif, 257 )
   lu.assertError( gif.colortablesize, gif, -2 )
+
+  lu.assertFalse( img0:colortable() )
+  lu.assertTrue( img1:colortable() )
+  lu.assertFalse( img2:colortable() )
+  lu.assertEquals( img0:colortablesize(), 0 )
+  lu.assertEquals( img1:colortablesize(), 16 )
+  lu.assertEquals( img2:colortablesize(), 0 )
+  lu.assertEquals( img0:bpp(), 8 )
+  lu.assertEquals( img1:bpp(), 4 )
+  lu.assertEquals( img2:bpp(), 8 )
 end
 
 function TestGif:testColorTable()
@@ -274,7 +337,6 @@ function TestGif:testColorTable()
   lu.assertEquals( gif:getcolortable( 0 ), 255, 26, 27 )
   lu.assertEquals( gif:getcolor( 1 ), 28, 29, 30 )
 
-  
   lu.assertError( gif.setcolortable, gif, 4, 25, 26, 27 )
   lu.assertError( gif.setcolortable, gif, -1, 25, 26, 27 )
   lu.assertError( gif.setcolortable, gif, 1, -25, 26, 27 )
@@ -481,6 +543,69 @@ function TestGifImage:testClone()
   lu.assertError( img5.clone, img5, img0 )
 end
 
+function TestGifImage:testBitsPerpixel()
+  local gif = vpixels.gif( 2, 3, 4, 3 )
+  local img0 = gif[0]
+  local img1 = gif[1]
+  local img2 = gif[2]
+  lu.assertEquals( gif:bitsperpixel(), 2 )
+  lu.assertEquals( gif:colortablesize(), 4 )
+  lu.assertEquals( img0:bitsperpixel(), 2 )
+  lu.assertEquals( img1:bitsperpixel(), 2 )
+  lu.assertEquals( img2:bitsperpixel(), 2 )
+
+  -- change bpp
+  gif:bitsperpixel( 7 )
+  lu.assertEquals( gif:bitsperpixel(), 7 )
+  lu.assertEquals( gif:colortablesize(), 128 )
+  lu.assertEquals( img0:bitsperpixel(), 7 )
+  lu.assertEquals( img1:bitsperpixel(), 7 )
+  lu.assertEquals( img2:bitsperpixel(), 7 )
+
+  -- change bpp of images to smaller value
+  img0:bitsperpixel( 3 )
+  img1:bitsperpixel( 4 )
+  img2:bitsperpixel( 5 )
+  lu.assertEquals( gif:bitsperpixel(), 7 )
+  lu.assertEquals( gif:colortablesize(), 128 )
+  lu.assertEquals( img0:bitsperpixel(), 3 )
+  lu.assertEquals( img1:bitsperpixel(), 4 )
+  lu.assertEquals( img2:bitsperpixel(), 5 )
+
+  -- change bpp of images to larger value
+  lu.assertError( img0.bitsperpixel, img0, 8 )
+  lu.assertError( img1.bitsperpixel, img1, 8 )
+  lu.assertError( img1.bitsperpixel, img1, 8 )
+
+  -- enable local color table of img1
+  img1:colortablesize( 32 )
+  lu.assertEquals( img1:colortablesize(), 32 )
+  lu.assertEquals( img1:bitsperpixel(), 5 )
+  lu.assertEquals( gif:bitsperpixel(), 7 )
+  lu.assertEquals( gif:colortablesize(), 128 )
+  lu.assertEquals( img0:bitsperpixel(), 3 )
+  lu.assertEquals( img2:bitsperpixel(), 5 )
+
+  -- change bpp of img1
+  img1:bitsperpixel( 8 )
+  lu.assertEquals( img1:bitsperpixel(), 8 )
+  lu.assertEquals( img1:colortablesize(), 256 )
+  lu.assertEquals( gif:bitsperpixel(), 7 )
+  lu.assertEquals( gif:colortablesize(), 128 )
+  lu.assertEquals( img0:bitsperpixel(), 3 )
+  lu.assertEquals( img2:bitsperpixel(), 5 )
+
+  -- bpp out of range
+  lu.assertError( gif.bitsperpixel, gif, 1 )
+  lu.assertError( gif.bitsperpixel, gif, 9 )
+  lu.assertError( img0.bitsperpixel, img0, 1 )
+  lu.assertError( img0.bitsperpixel, img0, 9 )
+  lu.assertError( img1.bitsperpixel, img1, 1 )
+  lu.assertError( img1.bitsperpixel, img1, 9 )
+  lu.assertError( img2.bitsperpixel, img2, 1 )
+  lu.assertError( img2.bitsperpixel, img2, 9 )
+end
+
 function TestGifImage:testPixels()
   local gif = vpixels.gif(2, 3, 4, 5)
 
@@ -557,10 +682,10 @@ function TestGifImage:testDelay()
   -- negative number
   lu.assertError( img.delay, img, -100 )
 
-  -- not allowed, gif contains only one image
-  gif = vpixels.gif( 2, 3, 4, 1 )
-  img = gif[0]
-  lu.assertError( img.delay, img )
+  -- gif2 contains only one image, setting delay time is not allowed
+  local gif2 = vpixels.gif( 2, 3, 4, 1 )
+  img = gif2[0]
+  lu.assertEquals( img:delay(), 0 )
   lu.assertError( img.delay, img, 100 )
 end
 
@@ -580,10 +705,10 @@ function TestGifImage:testDisposalMethod()
   lu.assertError( img.disposalmethod, img, -1 )
   lu.assertError( img.disposalmethod, 256 )
 
-  -- gif2 contains only one image, setting delay time not allowed
+  -- gif2 contains only one image, setting disposal method is not allowed
   local gif2 = vpixels.gif( 2, 3, 4, 1 )
   img = gif2[0]
-  lu.assertError( img.disposalmethod, img )
+  lu.assertEquals( img:disposalmethod(), 0 )
   lu.assertError( img.disposalmethod, img, 256 )  
 end
 
@@ -611,10 +736,10 @@ function TestGifImage:testTransparentColor()
   lu.assertError( img.transparentcolor, img, -1 )  -- exceed unsigned byte
   lu.assertError( img.transparentcolor, img, 256 ) -- exceed unsigned byte
 
-  --gif2 contains only one image, transparent color not allowed
+  --gif2 contains only one image, setting transparent color is not allowed
   local gif2 = vpixels.gif( 2, 3, 4, 1 )
   img = gif2[0]
-  lu.assertError( img.hastransparentcolor, img )
+  lu.assertFalse( img:hastransparentcolor() )
   lu.assertError( img.hastransparentcolor, img, true )
   lu.assertError( img.transparentcolor, img )
   lu.assertError( img.transparentcolor, img, 2 )

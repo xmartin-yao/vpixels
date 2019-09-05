@@ -63,6 +63,23 @@ uint8_t GifImageImpl::BitsPerPixel() const
 }
 
 //////////////////////
+void GifImageImpl::BitsPerPixel( uint8_t Bpp )
+{
+#ifndef VP_EXTENSION
+  if( Bpp < 2 || Bpp > 8 )
+    VP_THROW( "color resolution not supported" );
+
+  // Bpp is larger than global Bpp
+  if( !ImageDescriptor()->LocalColorTable() && Bpp > m_GifImpl.BitsPerPixel() )
+    VP_THROW( "color resolution incompatible" );
+#endif
+
+  ImageDescriptor()->BitsPerPixel( Bpp );
+  if( ImageDescriptor()->LocalColorTable() )
+    ImageDescriptor()->ColorTableSize( (1 << Bpp) );
+}
+
+//////////////////////
 uint16_t GifImageImpl::Left() const
 {
   return ImageDescriptor()->Left();
@@ -212,7 +229,7 @@ void GifImageImpl::GetPixel( const uint16_t X, const uint16_t Y,
 void GifImageImpl::Delay( uint16_t Centisecond )
 {
 #ifndef VP_EXTENSION
-  if( SingleImage() )
+  if( m_pGraphicsControlExt == nullptr )
     VP_THROW( "can not set delay time for single image" )
 #endif
 
@@ -222,63 +239,55 @@ void GifImageImpl::Delay( uint16_t Centisecond )
 /////////////////////////////////
 uint16_t GifImageImpl::Delay() const
 {
-#ifndef VP_EXTENSION
-  if( SingleImage() )
-    VP_THROW( "can not get delay time for single image" )
-#endif
-
-  return GraphicsControlExt()->Delay();
+  if( m_pGraphicsControlExt == nullptr )
+    return 0;
+  else
+    return GraphicsControlExt()->Delay();
 }
 
 /////////////////////////////////
 uint8_t GifImageImpl::DisposalMethod() const
 {
-#ifndef VP_EXTENSION
-  if( SingleImage() )
-    VP_THROW( "can not get disposal method for single image" )
-#endif
-
-  return GraphicsControlExt()->DisposalMethod();
+  if( m_pGraphicsControlExt == nullptr )
+    return 0;
+  else
+    return GraphicsControlExt()->DisposalMethod();
 }
 
 ////////////////////////////////////////
 void GifImageImpl::DisposalMethod( const uint8_t MethodID )
 {
 #ifndef VP_EXTENSION
-  if( SingleImage() )
+  if( m_pGraphicsControlExt == nullptr )
     VP_THROW( "can not get disposal method for single image" )
 #endif
 
-  return GraphicsControlExt()->DisposalMethod( MethodID );
+  GraphicsControlExt()->DisposalMethod( MethodID );
 }
 
 /////////////////////////////////
 bool GifImageImpl::UserInput() const
 {
-#ifndef VP_EXTENSION
-  if( SingleImage() )
-    VP_THROW( "can not get user input for single image" )
-#endif
-
-  return GraphicsControlExt()->UserInput();
+  if( m_pGraphicsControlExt == nullptr )
+    return false;
+  else
+    return GraphicsControlExt()->UserInput();
 }
 
 /////////////////////////////////
 bool GifImageImpl::HasTransColor() const
 {
-#ifndef VP_EXTENSION
-  if( SingleImage() )
-    VP_THROW( "single image has no transparent color" )
-#endif
-
-  return GraphicsControlExt()->HasTransColor();
+  if( m_pGraphicsControlExt == nullptr )
+    return false;
+  else
+    return GraphicsControlExt()->HasTransColor();
 }
 
 /////////////////////////////////
 void GifImageImpl::HasTransColor( const bool TrunOn )
 {
 #ifndef VP_EXTENSION
-  if( SingleImage() )
+  if( m_pGraphicsControlExt == nullptr )
     VP_THROW( "can not set transparent color for single image" )
 #endif
 
@@ -289,7 +298,7 @@ void GifImageImpl::HasTransColor( const bool TrunOn )
 void GifImageImpl::TransColor( const uint8_t ColorIndex )
 {
 #ifndef VP_EXTENSION
-  if( SingleImage() )
+  if( m_pGraphicsControlExt == nullptr )
     VP_THROW( "can not set transparent color for single image" )
 
   if( !CheckColorIndex(ColorIndex) )
@@ -303,7 +312,7 @@ void GifImageImpl::TransColor( const uint8_t ColorIndex )
 uint8_t GifImageImpl::TransColor() const
 {
 #ifndef VP_EXTENSION
-  if( SingleImage() )
+  if( m_pGraphicsControlExt == nullptr )
     VP_THROW( "single image has no transparent color" )
 #endif
 

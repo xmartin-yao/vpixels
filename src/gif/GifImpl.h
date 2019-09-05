@@ -53,6 +53,7 @@ struct GifImpl
 
   // bpp
   uint8_t  BitsPerPixel() const;
+  void     BitsPerPixel( const uint8_t Bpp );
 
   // dimension
   uint16_t Width() const;
@@ -61,7 +62,7 @@ struct GifImpl
   // color table
   bool     ColorTable() const;
   uint16_t ColorTableSize() const;
-  void     ColorTableSize( uint16_t& Size );
+  void     ColorTableSize( uint16_t Size );
   bool     ColorTableSorted() const;
   void     SetColorTable( const uint8_t Index, const uint8_t Red,
                           const uint8_t Green, const uint8_t Blue );

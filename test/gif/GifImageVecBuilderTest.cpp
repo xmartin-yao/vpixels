@@ -35,7 +35,7 @@ void GifImageVecBuilderTest::testOneImage()
   iv[0]->SetAllPixels( 1 );
   CPPUNIT_ASSERT( iv[0]->GetPixel( 1, 1 ) == 1 );
   CPPUNIT_ASSERT( iv[0]->Interlaced() == false );
-  CPPUNIT_ASSERT_THROW( iv[0]->Delay(), vp::Exception );
+  CPPUNIT_ASSERT( iv[0]->Delay() == 0 );
   CPPUNIT_ASSERT_THROW( iv[0]->Delay( 100 ), vp::Exception );
   CPPUNIT_ASSERT( iv[0]->ColorTable() == false );
 }

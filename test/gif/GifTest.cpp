@@ -179,11 +179,11 @@ void GifTest::testOneImage()
   image.SetAllPixels( 1 );
   CPPUNIT_ASSERT( image.GetPixel( 1, 1 ) == 1 );
   CPPUNIT_ASSERT( image.Interlaced() == false );
-  CPPUNIT_ASSERT_THROW( image.Delay(), vp::Exception );  // single image
-  CPPUNIT_ASSERT_THROW( image.Delay( 100 ), vp::Exception );
-  CPPUNIT_ASSERT_THROW( image.DisposalMethod(), vp::Exception );
-  CPPUNIT_ASSERT_THROW( image.DisposalMethod(0), vp::Exception );
-  CPPUNIT_ASSERT_THROW( image.HasTransColor(), vp::Exception );
+  CPPUNIT_ASSERT( image.Delay() == 0 );
+  CPPUNIT_ASSERT_THROW( image.Delay( 100 ), vp::Exception );  // single image
+  CPPUNIT_ASSERT( image.DisposalMethod() == 0 );
+  CPPUNIT_ASSERT_THROW( image.DisposalMethod(1), vp::Exception );
+  CPPUNIT_ASSERT( image.HasTransColor() == false );
   CPPUNIT_ASSERT_THROW( image.HasTransColor(true), vp::Exception );
   CPPUNIT_ASSERT_THROW( image.TransColor(), vp::Exception );
   CPPUNIT_ASSERT_THROW( image.TransColor(3), vp::Exception );
@@ -276,4 +276,185 @@ void GifTest::testExport()
 
   // export to new file
   CPPUNIT_ASSERT( gif.Export( "export_new.gif" ) );
+}
+
+void GifTest::testColorTableSize()
+{
+  vp::Gif gif( 3, 10, 10, 3, true );
+  CPPUNIT_ASSERT( gif.ColorTable() );
+  CPPUNIT_ASSERT( gif.ColorTableSize() == 8 );
+  CPPUNIT_ASSERT( gif.BitsPerPixel() == 3 );
+  gif.SetColorTable( 0, 23, 24, 25 );
+
+  vp::GifImage& img0 = gif[0];
+  vp::GifImage& img1 = gif[1];
+  vp::GifImage& img2 = gif[2];
+
+  // images have no local color table
+  CPPUNIT_ASSERT( img0.ColorTable() == false );
+  CPPUNIT_ASSERT( img1.ColorTable() == false );
+  CPPUNIT_ASSERT( img2.ColorTable() == false );
+  CPPUNIT_ASSERT( img0.ColorTableSize() == 0 );
+  CPPUNIT_ASSERT( img1.ColorTableSize() == 0 );
+  CPPUNIT_ASSERT( img2.ColorTableSize() == 0 );
+  CPPUNIT_ASSERT( img0.BitsPerPixel() == 3 );
+  CPPUNIT_ASSERT( img1.BitsPerPixel() == 3 );
+  CPPUNIT_ASSERT( img2.BitsPerPixel() == 3 );
+
+  // enable local color table of img1
+  img1.ColorTableSize(32);
+  CPPUNIT_ASSERT( img1.ColorTable() );
+  CPPUNIT_ASSERT( img1.ColorTableSize() == 32 );
+  CPPUNIT_ASSERT( img1.BitsPerPixel() == 5 );
+
+  // change global color table size, img1 is not affected
+  gif.ColorTableSize(2);
+  CPPUNIT_ASSERT( gif.ColorTable() );
+  CPPUNIT_ASSERT( gif.ColorTableSize() == 2 );
+  CPPUNIT_ASSERT( gif.BitsPerPixel() == 2 );
+  gif.SetColorTable( 1, 23, 24, 25 );
+
+  CPPUNIT_ASSERT( img0.ColorTable() == false );
+  CPPUNIT_ASSERT( img1.ColorTable() );
+  CPPUNIT_ASSERT( img2.ColorTable() == false );
+  CPPUNIT_ASSERT( img0.ColorTableSize() == 0 );
+  CPPUNIT_ASSERT( img1.ColorTableSize() == 32 );
+  CPPUNIT_ASSERT( img2.ColorTableSize() == 0 );
+  CPPUNIT_ASSERT( img0.BitsPerPixel() == 2 );
+  CPPUNIT_ASSERT( img1.BitsPerPixel() == 5 );
+  CPPUNIT_ASSERT( img2.BitsPerPixel() == 2 );
+
+  // disable global color table, some calls throw exception
+  gif.ColorTableSize(0);
+  CPPUNIT_ASSERT( gif.ColorTable() == false );
+  CPPUNIT_ASSERT( gif.ColorTableSize() == 0 );
+  CPPUNIT_ASSERT( gif.BitsPerPixel() == 2 );
+  CPPUNIT_ASSERT_THROW( gif.SetColorTable( 0, 23, 24, 25 ), vp::Exception );
+
+  CPPUNIT_ASSERT( img0.ColorTable() == false );
+  CPPUNIT_ASSERT( img1.ColorTable() );
+  CPPUNIT_ASSERT( img2.ColorTable() == false );
+  CPPUNIT_ASSERT( img0.ColorTableSize() == 0 );
+  CPPUNIT_ASSERT( img1.ColorTableSize() == 32 );
+  CPPUNIT_ASSERT( img2.ColorTableSize() == 0 );
+  CPPUNIT_ASSERT( img0.BitsPerPixel() == 2 );
+  CPPUNIT_ASSERT( img1.BitsPerPixel() == 5 );
+  CPPUNIT_ASSERT( img2.BitsPerPixel() == 2 );
+
+  CPPUNIT_ASSERT_THROW( img0.SetPixel( 0, 0, 1 ), vp::Exception );
+  img1.SetPixel( 0, 0, 1 );
+  CPPUNIT_ASSERT_THROW( img2.SetPixel( 0, 0, 1 ), vp::Exception );
+
+  CPPUNIT_ASSERT( img0.GetPixel( 0, 0 ) == 0 );
+  CPPUNIT_ASSERT( img1.GetPixel( 0, 0 ) == 1 );
+  CPPUNIT_ASSERT( img2.GetPixel( 0, 0 ) == 0 );
+
+  uint8_t R, G, B;
+  CPPUNIT_ASSERT_THROW( img0.GetPixel( 0, 0, R, G, B ), vp::Exception );
+  img1.GetPixel( 0, 0, R, G, B );
+  CPPUNIT_ASSERT_THROW( img2.GetPixel( 0, 0, R, G, B ), vp::Exception );
+
+  // enlarge to max size
+  gif.ColorTableSize(256);
+  CPPUNIT_ASSERT( gif.ColorTable() );
+  CPPUNIT_ASSERT( gif.ColorTableSize() == 256 );
+  CPPUNIT_ASSERT( gif.BitsPerPixel() == 8 );
+
+  CPPUNIT_ASSERT( img0.ColorTable() == false );
+  CPPUNIT_ASSERT( img1.ColorTable() );
+  CPPUNIT_ASSERT( img2.ColorTable() == false );
+  CPPUNIT_ASSERT( img0.ColorTableSize() == 0 );
+  CPPUNIT_ASSERT( img1.ColorTableSize() == 32 );
+  CPPUNIT_ASSERT( img2.ColorTableSize() == 0 );
+  CPPUNIT_ASSERT( img0.BitsPerPixel() == 8 );
+  CPPUNIT_ASSERT( img1.BitsPerPixel() == 5 );
+  CPPUNIT_ASSERT( img2.BitsPerPixel() == 8 );
+
+  // size exceeds 256, no change
+  CPPUNIT_ASSERT_THROW( gif.ColorTableSize(257), vp::Exception );
+  CPPUNIT_ASSERT( gif.ColorTable() );
+  CPPUNIT_ASSERT( gif.ColorTableSize() == 256 );
+  CPPUNIT_ASSERT( gif.BitsPerPixel() == 8 );
+
+  CPPUNIT_ASSERT( img0.ColorTable() == false );
+  CPPUNIT_ASSERT( img1.ColorTable() );
+  CPPUNIT_ASSERT( img2.ColorTable() == false );
+  CPPUNIT_ASSERT( img0.ColorTableSize() == 0 );
+  CPPUNIT_ASSERT( img1.ColorTableSize() == 32 );
+  CPPUNIT_ASSERT( img2.ColorTableSize() == 0 );
+  CPPUNIT_ASSERT( img0.BitsPerPixel() == 8 );
+  CPPUNIT_ASSERT( img1.BitsPerPixel() == 5 );
+  CPPUNIT_ASSERT( img2.BitsPerPixel() == 8 );
+}
+
+// test Gif::BitsPerPixel() and GifImage::BitsPerPixel() 
+void GifTest::testBitsPerPixel()
+{
+  vp::Gif gif( 3, 10, 10, 3, true );
+  vp::GifImage& img0 = gif[0];
+  vp::GifImage& img1 = gif[1];
+  vp::GifImage& img2 = gif[2];
+
+  // bpp = 3
+  CPPUNIT_ASSERT( gif.BitsPerPixel() == 3 );
+  CPPUNIT_ASSERT( gif.ColorTableSize() == 8 );
+  CPPUNIT_ASSERT( img0.BitsPerPixel() == 3 );
+  CPPUNIT_ASSERT( img1.BitsPerPixel() == 3 );
+  CPPUNIT_ASSERT( img2.BitsPerPixel() == 3 );
+
+  // change bpp
+  gif.BitsPerPixel(6);
+  CPPUNIT_ASSERT( gif.BitsPerPixel() == 6 );
+  CPPUNIT_ASSERT( gif.ColorTableSize() == 64 );
+  CPPUNIT_ASSERT( img0.BitsPerPixel() == 6 );
+  CPPUNIT_ASSERT( img1.BitsPerPixel() == 6 );
+  CPPUNIT_ASSERT( img2.BitsPerPixel() == 6 );
+
+  // bpp of images may be smaller
+  img0.BitsPerPixel(5);
+  img1.BitsPerPixel(4);
+  img2.BitsPerPixel(3);
+  CPPUNIT_ASSERT( gif.BitsPerPixel() == 6 );
+  CPPUNIT_ASSERT( gif.ColorTableSize() == 64 );
+  CPPUNIT_ASSERT( img0.BitsPerPixel() == 5 );
+  CPPUNIT_ASSERT( img1.BitsPerPixel() == 4 );
+  CPPUNIT_ASSERT( img2.BitsPerPixel() == 3 );
+
+  // bpp of images cannot be larger
+  CPPUNIT_ASSERT_THROW( img0.BitsPerPixel( 7 ), vp::Exception );
+  CPPUNIT_ASSERT_THROW( img1.BitsPerPixel( 7 ), vp::Exception );
+  CPPUNIT_ASSERT_THROW( img2.BitsPerPixel( 8 ), vp::Exception );
+  CPPUNIT_ASSERT( gif.BitsPerPixel() == 6 );
+  CPPUNIT_ASSERT( gif.ColorTableSize() == 64 );
+  CPPUNIT_ASSERT( img0.BitsPerPixel() == 5 );
+  CPPUNIT_ASSERT( img1.BitsPerPixel() == 4 );
+  CPPUNIT_ASSERT( img2.BitsPerPixel() == 3 );
+
+  // enable local color table of img1
+  img1.ColorTableSize(2);
+  CPPUNIT_ASSERT( img1.BitsPerPixel() == 2 );
+  CPPUNIT_ASSERT( img1.ColorTableSize() == 2 );
+  CPPUNIT_ASSERT( gif.BitsPerPixel() == 6 );
+  CPPUNIT_ASSERT( gif.ColorTableSize() == 64 );
+  CPPUNIT_ASSERT( img0.BitsPerPixel() == 5 );
+  CPPUNIT_ASSERT( img2.BitsPerPixel() == 3 );
+
+  // change bpp of img1
+  img1.BitsPerPixel(3);
+  CPPUNIT_ASSERT( img1.BitsPerPixel() == 3 );
+  CPPUNIT_ASSERT( img1.ColorTableSize() == 8 );
+  CPPUNIT_ASSERT( gif.BitsPerPixel() == 6 );
+  CPPUNIT_ASSERT( gif.ColorTableSize() == 64 );
+  CPPUNIT_ASSERT( img0.BitsPerPixel() == 5 );
+  CPPUNIT_ASSERT( img2.BitsPerPixel() == 3 );
+
+  // bpp out of range
+  CPPUNIT_ASSERT_THROW( gif.BitsPerPixel( 1 ), vp::Exception );
+  CPPUNIT_ASSERT_THROW( gif.BitsPerPixel( 9 ), vp::Exception );
+  CPPUNIT_ASSERT_THROW( img0.BitsPerPixel( 1 ), vp::Exception );
+  CPPUNIT_ASSERT_THROW( img0.BitsPerPixel( 9 ), vp::Exception );
+  CPPUNIT_ASSERT_THROW( img1.BitsPerPixel( 1 ), vp::Exception );
+  CPPUNIT_ASSERT_THROW( img1.BitsPerPixel( 9 ), vp::Exception );
+  CPPUNIT_ASSERT_THROW( img2.BitsPerPixel( 1 ), vp::Exception );
+  CPPUNIT_ASSERT_THROW( img2.BitsPerPixel( 9 ), vp::Exception );
 }

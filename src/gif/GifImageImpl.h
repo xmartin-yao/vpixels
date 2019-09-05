@@ -61,6 +61,7 @@ struct GifImageImpl
 
   // bpp
   uint8_t  BitsPerPixel() const;
+  void     BitsPerPixel( const uint8_t bpp );
 
   // dimension
   uint16_t Left() const;

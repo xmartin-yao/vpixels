@@ -89,6 +89,12 @@ uint8_t Gif::BitsPerPixel() const
   return GetImpl()->BitsPerPixel();
 }
 
+/////////////////////////////////
+void Gif::BitsPerPixel( const uint8_t Bpp )
+{
+  GetImpl()->BitsPerPixel( Bpp );
+}
+
 //////////////////////////////////
 bool Gif::ColorTable() const
 {

@@ -62,6 +62,7 @@ namespace vp
 
     // bpp
     uint8_t  BitsPerPixel() const;
+    void     BitsPerPixel( const uint8_t Bpp );
 
     // dimension
     uint16_t Width() const;

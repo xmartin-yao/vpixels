@@ -205,15 +205,30 @@ int LuaGifImageImpl::Clone( lua_State* L )
 
 /////////////
 // bpp = image:BitsPerPixel()
+// image:BitsPerPixel( bpp )
 ///////////////////////////////////////////
 int LuaGifImageImpl::BitsPerPixel( lua_State* L )
 {
-  LuaUtil::CheckArgs( L, 1 );
+  auto argc = LuaUtil::CheckArgs( L, 1, 1 );
+  LuaGifImageUD* pImageUD = CheckGifImageUD( L, 1 );
+  if( argc == 1 )
+  {
+    lua_pushunsigned( L, pImageUD->pGifImage->BitsPerPixel() );
 
-  vp::GifImage* pGifImage = CheckGifImage( L, 1 );
-  lua_pushunsigned( L, pGifImage->BitsPerPixel() );
+    return 1;
+  }
+  else
+  {
+    auto bpp = LuaUtil::CheckUint8( L, 2 );
+    if( pImageUD->pGifImage->ColorTable() )
+      LuaUtil::CheckValueRange( L, 2, bpp, 2, 8 );
+    else
+      LuaUtil::CheckValueRange( L, 2, bpp, 2, pImageUD->pGifUD->pGif->BitsPerPixel() );
 
-  return 1;  
+    pImageUD->pGifImage->BitsPerPixel( bpp );
+
+    return 0;
+  }
 }
 
 ////////////
@@ -394,11 +409,7 @@ int LuaGifImageImpl::Interlaced( lua_State* L )
 int LuaGifImageImpl::Delay( lua_State* L )
 {
   auto argc = LuaUtil::CheckArgs( L, 1, 1 );
-
   auto pGifImage = CheckGifImage( L, 1 );
-  if( pGifImage->SingleImage() )
-    return luaL_error( L, "cannot set/get delay time for single image" );
-
   if( argc == 1 )
   {
     lua_pushunsigned( L, pGifImage->Delay() );
@@ -407,6 +418,9 @@ int LuaGifImageImpl::Delay( lua_State* L )
   }
   else
   {
+    if( pGifImage->SingleImage() )
+      return luaL_error( L, "cannot set delay time for single image" );
+
     auto Centisecond = LuaUtil::CheckUint16( L, 2 );
     pGifImage->Delay( Centisecond );
 
@@ -518,11 +532,7 @@ int LuaGifImageImpl::GetColorTable( lua_State* L )
 int LuaGifImageImpl::DisposalMethod( lua_State* L )
 {
   auto argc = LuaUtil::CheckArgs( L, 1, 1 );
-
   auto pGifImage = CheckGifImage( L, 1 );
-  if( pGifImage->SingleImage() )
-    return luaL_error( L, "cannot set/get disposal method for single image" );
-
   if( argc == 1 )
   {
     lua_pushunsigned( L, pGifImage->DisposalMethod() );
@@ -531,9 +541,11 @@ int LuaGifImageImpl::DisposalMethod( lua_State* L )
   }
   else
   {
+    if( pGifImage->SingleImage() )
+      return luaL_error( L, "cannot set disposal method for single image" );
+
     auto MethodID = LuaUtil::CheckUint8( L, 2 );
     LuaUtil::CheckValueRange( L, 2, MethodID, 0, 3 );
-
     pGifImage->DisposalMethod( MethodID );
 
     return 0;
@@ -547,11 +559,7 @@ int LuaGifImageImpl::DisposalMethod( lua_State* L )
 int LuaGifImageImpl::HasTransColor( lua_State* L )
 {
   auto argc = LuaUtil::CheckArgs( L, 1, 1 );
-
   auto pGifImage = CheckGifImage( L, 1 );
-  if( pGifImage->SingleImage() )
-    return luaL_error( L, "single image has no transparent color" );
-
   if( argc == 1 )
   {
     lua_pushboolean( L, pGifImage->HasTransColor() );
@@ -560,6 +568,9 @@ int LuaGifImageImpl::HasTransColor( lua_State* L )
   }
   else
   {
+    if( pGifImage->SingleImage() )
+      return luaL_error( L, "cannot turn on transparent color for single image" );
+
     bool TurnOn = LuaUtil::CheckBoolean( L, 2 );
     pGifImage->HasTransColor( TurnOn );
 

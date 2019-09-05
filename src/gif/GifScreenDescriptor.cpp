@@ -74,7 +74,20 @@ bool GifScreenDescriptor::ColorTableSorted() const
 uint8_t GifScreenDescriptor::ColorResolution() const
 {
   uint8_t ResBits = m_PackedByte & 0x70;  // 0x70 = 01110000
-  return (ResBits >> 4) + 1;
+  uint8_t Bpp = (ResBits >> 4) + 1;
+
+  // special case when color table size set to 0 or 2
+  if( Bpp == 1 ) Bpp = 2;
+
+  return Bpp;
+}
+
+////////////////////////////////////////////////
+void GifScreenDescriptor::ColorResolution( const uint8_t Bpp )
+{
+  // set resolution bits
+  m_PackedByte &= 0x8F;
+  m_PackedByte |= (Bpp - 1) << 4;
 }
 
 ///////////////////////////////////////////////
@@ -85,14 +98,15 @@ uint16_t GifScreenDescriptor::ColorTableSize() const
 
 // change color table size
 ///////////////////////////////////////////////
-void GifScreenDescriptor::ColorTableSize( uint16_t Size )
+bool GifScreenDescriptor::ColorTableSize( uint16_t Size )
 {
 #ifndef VP_EXTENSION
   if( Size > 256 )
     VP_THROW( "exceeds maximum size: 256" );
 #endif
 
-  m_ColorTable.Size( Size, m_PackedByte );
+  if( !m_ColorTable.Size( Size, m_PackedByte ) )
+    return false;
 
   // modify resolution bits
   uint8_t SizeBits = (m_PackedByte & 0x07);
@@ -102,6 +116,8 @@ void GifScreenDescriptor::ColorTableSize( uint16_t Size )
   // set background color to 0, if no global color table
   if( Size == 0 && m_BackgroundColor != 0 )
     m_BackgroundColor = 0;
+
+  return true;
 }
 
 //////////////////////////////////////////////////////////////////////

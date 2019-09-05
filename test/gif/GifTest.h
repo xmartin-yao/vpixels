@@ -35,6 +35,9 @@ class GifTest : public CPPUNIT_NS::TestCase
   CPPUNIT_TEST( testImport );
   CPPUNIT_TEST( testExport );
 
+  CPPUNIT_TEST( testColorTableSize );
+  CPPUNIT_TEST( testBitsPerPixel );
+
   CPPUNIT_TEST_SUITE_END();
 
 protected:
@@ -43,5 +46,7 @@ protected:
   void testTwoImages();
   void testImport();
   void testExport();
+  void testColorTableSize();
+  void testBitsPerPixel();
 };
 #endif //GifTest_h

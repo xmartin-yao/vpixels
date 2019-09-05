@@ -40,7 +40,7 @@ namespace PyGifImpl
   PyObject* Export( PyGifObject* self, PyObject* args );
   PyObject* Clone( PyGifObject* self );
   PyObject* Version( PyGifObject* self );
-  PyObject* BitsPerPixel( PyGifObject* self );
+  PyObject* BitsPerPixel( PyGifObject* self, PyObject* args );
   PyObject* Width( PyGifObject* self );
   PyObject* Height( PyGifObject* self );
   PyObject* Dimension( PyGifObject* self );
@@ -65,8 +65,8 @@ namespace PyGifImpl
     MDef( export,           Export,           METH_VARARGS, "export to GIF file." )
     MDef( clone,            Clone,            METH_NOARGS,  "clone itself and create a new object." )
     MDef( version,          Version,          METH_NOARGS,  "get GIF version." )
-    MDef( bitsperpixel,     BitsPerPixel,     METH_NOARGS,  "get color resolution." )
-    MDef( bpp,              BitsPerPixel,     METH_NOARGS,  "get color resolution." )
+    MDef( bitsperpixel,     BitsPerPixel,     METH_VARARGS, "get/set color resolution." )
+    MDef( bpp,              BitsPerPixel,     METH_VARARGS, "get/set color resolution." )
     MDef( width,            Width,            METH_NOARGS,  "get width." )
     MDef( height,           Height,           METH_NOARGS,  "get height." )
     MDef( dimension,        Dimension,        METH_NOARGS,  "get width and height." )
@@ -339,11 +339,28 @@ PyObject* PyGifImpl::Version( PyGifObject* self )
   return Py_BuildValue( "s", self->pGif->Version().c_str() );
 }
 
+///////////////////////
 // bpp = gif.BitsPerPixel()
+// gif.BitsPerPixel( bpp )
 ////////////////////////////////////////////////
-PyObject* PyGifImpl::BitsPerPixel( PyGifObject* self )
+PyObject* PyGifImpl::BitsPerPixel( PyGifObject* self, PyObject* args )
 {
-  return Py_BuildValue( "B", self->pGif->BitsPerPixel() );
+  if( PyTuple_Size( args ) == 0 )
+  {
+    return Py_BuildValue( "B", self->pGif->BitsPerPixel() );
+  }
+  else
+  {
+    uint8_t bpp;
+    if( !PyArg_ParseTuple( args, "b", &bpp ) )
+      return nullptr;
+
+    Value_CheckRange( 1, bpp, 2, 8 )
+
+    self->pGif->BitsPerPixel( bpp );
+
+    Py_RETURN_NONE;
+  }
 }
 
 ///////////////////

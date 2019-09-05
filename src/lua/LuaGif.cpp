@@ -273,15 +273,26 @@ int LuaGifImpl::Version( lua_State* L )
 
 //////////
 // bpp = gif:BitsPerPixel()
+// gif:BitsPerPixel( bpp )
 //////////////////////////////////
 int LuaGifImpl::BitsPerPixel( lua_State* L ) 
 {
-  LuaUtil::CheckArgs( L, 1 );
-
+  auto argc = LuaUtil::CheckArgs( L, 1, 1 );
   vp::Gif* pGif = CheckGif( L, 1 );
-  lua_pushunsigned( L, pGif->BitsPerPixel() );
+  if( argc == 1 )
+  {
+    lua_pushunsigned( L, pGif->BitsPerPixel() );
 
-  return 1;
+    return 1;
+  }
+  else
+  {
+    auto bpp = LuaUtil::CheckUint8( L, 2 );
+    LuaUtil::CheckValueRange( L, 2, bpp, 2, 8 );
+    pGif->BitsPerPixel( bpp );
+
+    return 0;
+  }
 }
 
 /////////////////
