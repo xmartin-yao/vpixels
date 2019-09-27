@@ -40,6 +40,18 @@ GifImage& GifImage::operator=( const GifImage& other )
   return *this;
 }
 
+///////////////////////////////////////////////
+bool GifImage::operator==( const GifImage& other ) const
+{
+  return *m_pImpl == *other.m_pImpl;
+}
+
+///////////////////////////////////////////////
+bool GifImage::operator!=( const GifImage& other ) const
+{
+  return !(*m_pImpl == *other.m_pImpl);
+}
+
 //////////////////////
 uint8_t GifImage::BitsPerPixel() const
 {
@@ -147,9 +159,15 @@ uint8_t GifImage::GetPixel( const uint16_t X, const uint16_t Y ) const
 
 ////////////////////////////////////////////////////////////////
 void GifImage::GetPixel( const uint16_t X, const uint16_t Y,
-                            uint8_t& Red, uint8_t& Green, uint8_t& Blue ) const
+                         uint8_t& Red, uint8_t& Green, uint8_t& Blue ) const
 {
   GetImpl()->GetPixel( X, Y, Red, Green, Blue);
+}
+
+////////////////////////////////////////////////////////////////
+bool GifImage::Transparent( const uint16_t X, const uint16_t Y ) const
+{
+  return GetImpl()->Transparent( X, Y );
 }
 
 /////////////////////////////////////////////

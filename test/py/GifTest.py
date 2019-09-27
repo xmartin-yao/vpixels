@@ -616,16 +616,29 @@ class TestGifImage( unittest.TestCase ):
     self.assertEqual( 3, img.getpixel(0, 0) )
     img.setpixel( 1, 1, 2 )
     self.assertEqual( 2, img.getpixel(1, 1) )
+    self.assertEqual( False, img.transparent(1, 1) )
+    img.transcolor( 2 )
+    self.assertEqual( True, img.transparent(1, 1) )
+    self.assertEqual( False, img.transparent(0, 0) )
+    img.transcolor( 3 )
+    self.assertEqual( False, img.transparent(1, 1) )
+    self.assertEqual( True, img.transparent(0, 0) )
 
     # wrong args
     self.assertRaises( OverflowError, img.setallpixels, -2 )
     self.assertRaises( ValueError, img.setallpixels, 4 )
     self.assertRaises( ValueError, img.setpixel, -1, 1, 2 )
     self.assertRaises( ValueError, img.setpixel, 3, 1, 2 )
+
     self.assertRaises( ValueError, img.getpixel, -1, 1 )
     self.assertRaises( ValueError, img.getpixel, 1, -1 )
     self.assertRaises( ValueError, img.getpixel, 3, 1 )
     self.assertRaises( ValueError, img.getpixel, 1, 4 )
+
+    self.assertRaises( ValueError, img.transparent, -1, 1 )
+    self.assertRaises( ValueError, img.transparent, 1, -1 )
+    self.assertRaises( ValueError, img.trans, 3, 1 )
+    self.assertRaises( ValueError, img.trans, 1, 4 )
 
 
   def testCrop(self):
@@ -807,6 +820,80 @@ class TestGifImage( unittest.TestCase ):
     self.assertRaises( Exception, img.setcolortable, 1, 256, 26, 27 )
     self.assertRaises( Exception, img.setcolortable, 1, 25, 256, 27 )
     self.assertRaises( Exception, img.setcolortable, 1, 25, 26, 256 )
+
+
+  def testRichCompare(self):
+    gif = vpixels.gif( 2, 8, 5, 2 )
+    for i in range( 0, 4 ):
+      gif.setcolor( i, i, i, i )
+
+    img0 = gif[0]
+    img1 = gif[1]
+
+    # same object
+    self.assertEqual( True, img0 == img0 )
+
+    # different objects
+    self.assertEqual( True, img0 == img1 )
+    self.assertEqual( True, img1 == img0 )
+
+    # set to two different colors
+    img0.setpixel( 3, 2, 1 )
+    img1.setpixel( 3, 2, 2 )
+    self.assertEqual( True, img0 != img1 )
+    self.assertEqual( True, img1 != img0 )
+
+    # set the two colors transparent
+    img0.transcolor( 1 )
+    img1.transcolor( 2 )
+    self.assertEqual( True, img0 == img1 )
+    self.assertEqual( True, img1 == img0 )
+
+    # crop img0
+    img0.crop( 0, 1, 8, 4 )
+    self.assertEqual( True, img0 != img1 )
+    self.assertEqual( True, img1 != img0 )
+
+    # crop img1
+    img1.crop( 1, 0, 7, 5 )
+    self.assertEqual( True, img0 != img1 )
+    self.assertEqual( True, img1 != img0 )
+
+    # crop both
+    img0.crop( 1, 1, 7, 4 )
+    img1.crop( 1, 1, 7, 4 )
+    self.assertEqual( True, img0 == img1 )
+    self.assertEqual( True, img1 == img0 )
+
+    # compare with other objects than vp.image
+    self.assertEqual( True, img0 != 0 )
+    self.assertEqual( True, 0 != img0 )
+    self.assertEqual( True, img0 != None )
+    self.assertEqual( True, None != img0 )
+    self.assertEqual( True, img0 != "img0" )
+    self.assertEqual( True, "img0" != img0 )
+
+    # not supported
+    # operator <
+    self.assertRaises( Exception, img0.__lt__, img1 )
+    self.assertRaises( Exception, img0.__lt__, 0 )
+    self.assertRaises( Exception, img0.__lt__, None )
+    self.assertRaises( Exception, img0.__lt__, "img0" )
+    # operator <=
+    self.assertRaises( Exception, img0.__le__, img1 )
+    self.assertRaises( Exception, img0.__le__, 0 )
+    self.assertRaises( Exception, img0.__le__, None )
+    self.assertRaises( Exception, img0.__le__, "img0" )
+    # operator >
+    self.assertRaises( Exception, img0.__gt__, img1 )
+    self.assertRaises( Exception, img0.__gt__, 0 )
+    self.assertRaises( Exception, img0.__gt__, None )
+    self.assertRaises( Exception, img0.__gt__, "img0" )
+    # operator >=
+    self.assertRaises( Exception, img0.__ge__, img1 )
+    self.assertRaises( Exception, img0.__ge__, 0 )
+    self.assertRaises( Exception, img0.__ge__, None )
+    self.assertRaises( Exception, img0.__ge__, "img0" )
 
 
 if __name__ == '__main__':

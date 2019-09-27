@@ -128,7 +128,6 @@ void GifImageTest::testTwoComponents()
   CPPUNIT_ASSERT( img.TransColor() == 0 );
 }
 
-
 void GifImageTest::testAssignment()
 {
   vp::Gif gif( 2, 3, 3, 2 );
@@ -163,6 +162,71 @@ void GifImageTest::testAssignment()
   CPPUNIT_ASSERT_THROW( gif3[0] = img0, vp::Exception );
   vp::Gif gif4( 2, 3, 2, 2 ); // different height
   CPPUNIT_ASSERT_THROW( gif4[0] = img0, vp::Exception );
+}
+
+void GifImageTest::testCompare()
+{
+  vp::Gif gif1( 2, 10, 20, 10 );
+  for( uint8_t i = 0; i < 4; ++i )
+    gif1.SetColorTable( i, i, i, i );
+
+  // different origin
+  gif1[0].Crop( 0, 2, 5, 10 );
+  gif1[1].Crop( 2, 0, 5, 10 );
+  // different dimension
+  gif1[2].Crop( 2, 2, 5, 8 );
+  gif1[3].Crop( 2, 2, 8, 5 );
+  // one pixel different
+  gif1[4].SetPixel( 4, 9, 2 );
+  gif1[5].SetPixel( 4, 9, 3 );
+  // transparent pixel,
+  gif1[6].TransColor( 2 );
+  gif1[6].SetPixel( 4, 9, 2 );
+  gif1[7].TransColor( 3 );
+  gif1[7].SetPixel( 4, 9, 3 );
+  // local color table
+  gif1[8].ColorTableSize(8);
+  for( uint8_t i = 0; i < 8; ++i )
+    gif1[8].SetColorTable( i, i, i, i );
+
+  // identical GIF object
+  vp::Gif gif2 = gif1;
+
+  // same object
+  CPPUNIT_ASSERT( gif1[0] == gif1[0] );
+  CPPUNIT_ASSERT( gif1[1] == gif1[1] );
+  // two images are the same
+  CPPUNIT_ASSERT( gif1[8] == gif1[9] );
+  CPPUNIT_ASSERT( gif1[9] == gif1[8] );
+  for( size_t i = 0; i < 10; ++i )
+    CPPUNIT_ASSERT( gif1[i] == gif2[i] );
+  // different origin
+  CPPUNIT_ASSERT( gif1[0] != gif1[1] );
+  CPPUNIT_ASSERT( gif1[0] != gif1[7] );
+  CPPUNIT_ASSERT( gif1[1] != gif1[0] );
+  CPPUNIT_ASSERT( gif1[7] != gif1[0] );
+  // different dimension
+  CPPUNIT_ASSERT( gif1[2] != gif1[3] );
+  CPPUNIT_ASSERT( gif1[2] != gif1[7] );
+  CPPUNIT_ASSERT( gif1[3] != gif1[2] );
+  CPPUNIT_ASSERT( gif1[7] != gif1[2] );
+  // different pixel
+  CPPUNIT_ASSERT( gif1[4] != gif1[5] );
+  CPPUNIT_ASSERT( gif1[5] != gif1[4] );
+  CPPUNIT_ASSERT( gif1[5] != gif1[8] );
+  CPPUNIT_ASSERT( gif1[8] != gif1[5] );
+  // transparent pixel
+  // gif1[6] and gif1[7] have one pixel different, but that pixel is
+  // transparent.
+  // in term of colors, gif1[4] and gif1[6] are identical, but gif1[6]
+  // has one transparent pixel, while gif1[4] doesn't; same are
+  // gif1[5] and gif1[7].
+  CPPUNIT_ASSERT( gif1[6] == gif1[7] );
+  CPPUNIT_ASSERT( gif1[7] == gif1[6] );
+  CPPUNIT_ASSERT( gif1[4] != gif1[6] );
+  CPPUNIT_ASSERT( gif1[6] != gif1[4] );
+  CPPUNIT_ASSERT( gif1[5] != gif1[7] );
+  CPPUNIT_ASSERT( gif1[7] != gif1[5] );
 }
 
 void GifImageTest::testGetPixel()
@@ -253,6 +317,24 @@ void GifImageTest::testGetPixel()
   CPPUNIT_ASSERT( img.GetPixel( 4, 4 ) == 0 );
   CPPUNIT_ASSERT_THROW( img.GetPixel( 0, 0, R, G, B ), vp::Exception );
   CPPUNIT_ASSERT_THROW( img.GetPixel( 4, 4, R, G, B ), vp::Exception );
+}
+
+void GifImageTest::testTransparent()
+{
+  vp::Gif gif( 2, 5, 5, 2 );
+  vp::GifImage& img = gif[0];
+
+  CPPUNIT_ASSERT( img.Transparent( 0, 0 ) == false );
+  img.SetPixel( 0, 0, 3 );
+  CPPUNIT_ASSERT( img.Transparent( 0, 0 ) == false );
+  img.TransColor( 3 );
+  CPPUNIT_ASSERT( img.Transparent( 0, 0 ) );
+
+  // coordinate X or Y exceeds
+  CPPUNIT_ASSERT_THROW( img.Transparent( -1, 0 ), vp::Exception );
+  CPPUNIT_ASSERT_THROW( img.Transparent( 0, -1 ), vp::Exception );
+  CPPUNIT_ASSERT_THROW( img.Transparent( 5, 4 ), vp::Exception );
+  CPPUNIT_ASSERT_THROW( img.Transparent( 4, 5 ), vp::Exception );
 }
 
 void GifImageTest::testSetPixel()

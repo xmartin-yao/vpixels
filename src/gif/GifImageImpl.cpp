@@ -39,7 +39,7 @@ GifImageImpl::~GifImageImpl() = default;
 GifImageImpl& GifImageImpl::operator=( const GifImageImpl& other )
 {
   if( this == &other )
-    return *this ;
+    return *this;
 
   // GifImageImpl objects that belong to different GifImpl,
   // but have the same dimension, are allowed
@@ -54,6 +54,55 @@ GifImageImpl& GifImageImpl::operator=( const GifImageImpl& other )
   *ImageDescriptor() = *other.ImageDescriptor();
 
   return *this;
+}
+
+////////////////////////////////
+// Two images are the same, if
+//   1) their origins are the same, and
+//   2) their dimensions are the same, and
+//   3) pixels of the same location are the same.
+// Two pixels of the same location are the same, if
+//   a) both of them are transparent, or
+//   b) both are not transparent and have the same color.
+//////////////////////////////////////////////////////////
+bool GifImageImpl::operator==( const GifImageImpl& other ) const
+{
+  if( this == &other )
+    return true;
+
+  // compare origin and dimension
+  if( Left() != other.Left() || Top() != other.Top() ||
+      Width() != other.Width() || Height() != other.Height() )
+    return false;
+
+  // compare pixel by pixel
+  for( uint16_t y = 0; y < Height(); ++y )
+  {
+    for( uint16_t x = 0; x < Width(); ++x )
+    {
+      auto ThisTransparent = Transparent( x, y );
+      auto OtherTransparent = other.Transparent( x, y );
+      if( ThisTransparent && OtherTransparent)
+      {
+        // the two pixels are transparent
+        continue;
+      }
+      else if( !ThisTransparent && !OtherTransparent )
+      {
+        // the two pixels have same color
+        uint8_t R1, G1, B1, R2, G2, B2;
+        GetPixel( x, y, R1, G1, B1 );
+        other.GetPixel( x, y, R2, G2, B2 );
+        if( R1 == R2 && G1 == G2 && B1 == B2 )
+          continue;
+      }
+
+      // the two pixels are different
+      return false;
+    }
+  }
+
+  return true;
 }
 
 //////////////////////
@@ -105,7 +154,7 @@ uint16_t GifImageImpl::Height() const
 
 //////////////////////////////
 void GifImageImpl::Crop( const uint16_t Left, const uint16_t Top,
-                     const uint16_t Width, const uint16_t Height )
+                         const uint16_t Width, const uint16_t Height )
 {
   ImageDescriptor()->Crop( Left, Top, Width, Height );
 }
@@ -223,6 +272,13 @@ void GifImageImpl::GetPixel( const uint16_t X, const uint16_t Y,
     GetColorTable( Index, Red, Green, Blue );
   else
     m_GifImpl.GetColorTable( Index, Red, Green, Blue );
+}
+
+// check whether the pixel is transparent or not
+/////////////////////////////////////////////////
+bool GifImageImpl::Transparent( const uint16_t X, const uint16_t Y ) const
+{
+  return HasTransColor() && GetPixel(X, Y) == TransColor();
 }
 
 /////////////////////////////////////////////

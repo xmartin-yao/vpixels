@@ -46,6 +46,10 @@ namespace vp
     GifImage( GifImage&& ) = delete;
     GifImage& operator=( GifImage&& ) = delete;
 
+    // compare
+    bool operator==( const GifImage& ) const;
+    bool operator!=( const GifImage& ) const;
+
     // bpp
     uint8_t  BitsPerPixel() const;
     void     BitsPerPixel( const uint8_t Bpp );
@@ -65,6 +69,7 @@ namespace vp
     uint8_t GetPixel( const uint16_t X, const uint16_t Y ) const;
     void    GetPixel( const uint16_t X, const uint16_t Y,
                       uint8_t& Red, uint8_t& Green, uint8_t& Blue ) const;
+    bool    Transparent( const uint16_t X, const uint16_t Y ) const;
 
     // delay
     uint16_t Delay() const;

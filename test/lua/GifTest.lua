@@ -615,6 +615,13 @@ function TestGifImage:testPixels()
   lu.assertEquals( img:getpixel(0, 0), 3 )
   img:setpixel( 1, 1, 2 )
   lu.assertEquals( img:getpixel(1, 1), 2 )
+  lu.assertFalse( img:transparent(1, 1) )
+  img:transcolor( 2 )
+  lu.assertTrue( img:transparent(1, 1) )
+  lu.assertFalse( img:transparent(0, 0) )
+  img:transcolor( 3 )
+  lu.assertFalse( img:transparent(1, 1) )
+  lu.assertTrue( img:transparent(0, 0) )
 
   -- wrong args
   lu.assertError( img.setall, img, -1 )
@@ -628,6 +635,11 @@ function TestGifImage:testPixels()
   lu.assertError( img.getpixel, img, 1, -1 )
   lu.assertError( img.getpixel, img, 3, 1 )
   lu.assertError( img.getpixel, img, 1, 4 )
+
+  lu.assertError( img.transparent, img, -1, 1 )
+  lu.assertError( img.transparent, img, 1, -1 )
+  lu.assertError( img.trans, img, 3, 1 )
+  lu.assertError( img.trans, img, 1, 4 )
 end
 
 function TestGifImage:testCrop()
@@ -810,6 +822,74 @@ function TestGifImage:testColorTable()
   lu.assertError( img.setcolortable, img, 1, 256, 26, 27 )
   lu.assertError( img.setcolortable, img, 1, 25, 256, 27 )
   lu.assertError( img.setcolortable, img, 1, 25, 26, 256 )
+end
+
+function TestGifImage:testCompare()
+  local gif = vpixels.gif( 2, 8, 5, 2 )
+  for i = 0, 3 do
+    gif:setcolor( i, i, i, i )
+  end
+
+  local img0 = gif[0]
+  local img1 = gif[1]
+
+  -- same object
+  lu.assertTrue( img0 == img0 )
+
+  -- different objects
+  lu.assertTrue( img0 == img1 )
+  lu.assertTrue( img1 == img0 )
+
+  -- set to two different colors
+  img0:setpixel( 3, 2, 1 )
+  img1:setpixel( 3, 2, 2 )
+  lu.assertTrue( img0 ~= img1 )
+  lu.assertTrue( img1 ~= img0 )
+
+  -- set the two color transparent
+  img0:transcolor( 1 )
+  img1:transcolor( 2 )
+  lu.assertTrue( img0 == img1 )
+  lu.assertTrue( img1 == img0 )
+
+  -- crop img0
+  img0:crop( 0, 1, 8, 4 )
+  lu.assertTrue( img0 ~= img1 )
+  lu.assertTrue( img1 ~= img0 )
+
+  -- crop img1
+  img1:crop( 1, 0, 7, 5 )
+  lu.assertTrue( img0 ~= img1 )
+  lu.assertTrue( img1 ~= img0 )
+
+  -- crop both
+  img0:crop( 1, 1, 7, 4 )
+  img1:crop( 1, 1, 7, 4 )
+  lu.assertTrue( img0 == img1 )
+  lu.assertTrue( img1 == img0 )
+
+  -- compare with objects other than vp.image
+  lu.assertTrue( img0 ~= nil )
+  lu.assertTrue( nil ~= img0 )
+  lu.assertTrue( img0 ~= 0 )
+  lu.assertTrue( 0 ~= img0 )
+  lu.assertTrue( img0 ~= "img0" )
+  lu.assertTrue( "img0" ~= img0 )
+  lu.assertTrue( img0 ~= {} )
+  lu.assertTrue( {} ~= img0 )
+
+  -- operator < not supported
+  lu.assertError( img0.__lt, img0, img0 )
+  lu.assertError( img0.__lt, img0, img1 )
+  lu.assertError( img0.__lt, img1, img0 )
+  lu.assertError( img0.__lt, img0, nil )
+  lu.assertError( img0.__lt, nil, img0 )
+  lu.assertError( img0.__lt, img0, 0 )
+  lu.assertError( img0.__lt, 0, img0 )
+  lu.assertError( img0.__lt, img0, "img0" )
+  lu.assertError( img0.__lt, "img0", img0 )
+  lu.assertError( img0.__lt, img0, {} )
+  lu.assertError( img0.__lt, {}, img0 )
 end
 
 function TestGifImage:testGC()

@@ -44,6 +44,7 @@ namespace LuaGifImageImpl
   int SetAllPixels( lua_State* L );
   int SetPixel( lua_State* L );
   int GetPixel( lua_State* L );
+  int Transparent( lua_State* L );
   int Interlaced( lua_State* L );
   int Delay( lua_State* L );
   int ColorTable( lua_State* L );
@@ -56,6 +57,8 @@ namespace LuaGifImageImpl
   int TransColor( lua_State* L );
 
   // meta methods
+  int Equal( lua_State* L );
+  int LessThan( lua_State* L );
   int ToString( lua_State* L );
   int Finalizer( lua_State* L );
 
@@ -63,6 +66,7 @@ namespace LuaGifImageImpl
   vp::GifImage* CheckGifImage( lua_State* L, int arg );
   LuaGifImageUD* CheckGifImageUD( lua_State* L, int arg );
   uint16_t CheckColorTable( lua_State* L, vp::GifImage* pGifImage );
+  const char* TypeName( lua_State* L, int arg );
 
   // methods of LuaGifImage
   const luaL_Reg Methods[] = {
@@ -79,6 +83,8 @@ namespace LuaGifImageImpl
     { "setall",           SetAllPixels },
     { "setpixel",         SetPixel },
     { "getpixel",         GetPixel },
+    { "transparent",      Transparent },
+    { "trans",            Transparent },
     { "interlaced",       Interlaced },
     { "delay",            Delay },
     { "colortable",       ColorTable },
@@ -121,6 +127,14 @@ void LuaGifImage::Register( lua_State* L )
   // meta fields
   lua_pushstring( L, "__index" );  // point to itself
   lua_pushvalue( L, -2 );
+  lua_settable( L, -3 );
+
+  lua_pushstring( L, "__eq" );
+  lua_pushcfunction( L, LuaGifImageImpl::Equal );
+  lua_settable( L, -3 );
+
+  lua_pushstring( L, "__lt" );
+  lua_pushcfunction( L, LuaGifImageImpl::LessThan );
   lua_settable( L, -3 );
 
   lua_pushstring( L, "__tostring" );
@@ -391,6 +405,26 @@ int LuaGifImageImpl::GetPixel( lua_State* L )
 }
 
 /////////////////
+// ret_bool = image:Transparent( x, y )
+////////////////////////////////////////
+int LuaGifImageImpl::Transparent( lua_State* L )
+{
+  LuaUtil::CheckArgs( L, 3 );
+
+  vp::GifImage* pGifImage = CheckGifImage( L, 1 );
+
+  auto X = LuaUtil::CheckUint16( L, 2 );
+  LuaUtil::CheckValueUpper( L, 2, X, pGifImage->Width() );
+
+  auto Y = LuaUtil::CheckUint16( L, 3 );
+  LuaUtil::CheckValueUpper( L, 3, Y, pGifImage->Height() );
+
+  lua_pushboolean( L, pGifImage->Transparent( X, Y ) );
+
+  return 1;
+}
+
+/////////////////
 // ret_bool = image:Interlaced()
 //////////////////////////////////
 int LuaGifImageImpl::Interlaced( lua_State* L )
@@ -606,6 +640,46 @@ int LuaGifImageImpl::TransColor( lua_State* L )
 
     return 0;
   }
+}
+
+///////////////
+// meta method __eq
+// for operator '==' and '~='
+////////////////////////////////////
+int LuaGifImageImpl::Equal( lua_State* L )
+{
+  LuaUtil::CheckArgs( L, 2 );
+
+  auto pGifImage1 = CheckGifImage( L, 1 );
+  auto pGifImage2 = CheckGifImage( L, 2 );
+  lua_pushboolean( L, *pGifImage1 == *pGifImage2 );
+
+  return 1;
+}
+
+//////////////////
+// type name of argument arg
+//////////////////////////////////////////////////
+const char* LuaGifImageImpl::TypeName( lua_State* L, int arg )
+{
+  if( luaL_testudata( L, arg, ID ) != nullptr )  // LuaGifImage type
+    return ID;
+  else if( luaL_testudata( L, arg, LuaGif::ID ) != nullptr )  // LuaGif type
+    return LuaGif::ID;
+  else
+    return luaL_typename( L, arg );
+}
+
+///////////////
+// meta method __lt
+// for operator '<', '<=', '>' and '>=', not supported
+//////////////////////////////////////////////////////////
+int LuaGifImageImpl::LessThan( lua_State* L )
+{
+  LuaUtil::CheckArgs( L, 2 );
+  const char* msg = lua_pushfstring( L, "unsupported comparison between '%s' and '%s'",
+                                     TypeName(L, 1), TypeName(L, 2) );
+  return luaL_error( L, msg );
 }
 
 ///////////////

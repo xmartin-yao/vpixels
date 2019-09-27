@@ -45,6 +45,7 @@ namespace PyGifImageImpl
   int  Init( PyGifImageObject* self, PyObject* args, PyObject* kw );
   void Dealloc( PyGifImageObject* self );
   PyObject* Repr( PyGifImageObject* self );
+  PyObject* RichCompare( PyObject* obj1, PyObject* obj2, int op );
 
   // methods GifImage_Type (exposed to Python)
   PyObject* Clone( PyGifImageObject* self, PyObject* arg );
@@ -58,6 +59,7 @@ namespace PyGifImageImpl
   PyObject* SetAllPixels( PyGifImageObject* self, PyObject* args );
   PyObject* SetPixel( PyGifImageObject* self, PyObject* args );
   PyObject* GetPixel( PyGifImageObject* self, PyObject* args );
+  PyObject* Transparent( PyGifImageObject* self, PyObject* args );
   PyObject* Interlaced( PyGifImageObject* self );
   PyObject* Delay( PyGifImageObject* self, PyObject* args );
   PyObject* ColorTable( PyGifImageObject* self );
@@ -87,6 +89,8 @@ namespace PyGifImageImpl
     MDef( setall,           SetAllPixels,     METH_VARARGS, "set all pixels to same color." )
     MDef( setpixel,         SetPixel,         METH_VARARGS, "set the color of a pixel." )
     MDef( getpixel,         GetPixel,         METH_VARARGS, "get the color of a pixel." )
+    MDef( transparent,      Transparent,      METH_VARARGS, "check if a pixel is transparent." )
+    MDef( trans,            Transparent,      METH_VARARGS, "check if a pixel is transparent." )
     MDef( interlaced,       Interlaced,       METH_NOARGS,  "return true if pixels are interlaced." )
     MDef( delay,            Delay,            METH_VARARGS, "set/get delay time for the image." )
     MDef( colortable,       ColorTable,       METH_NOARGS,  "return True if there is local color table." )
@@ -133,7 +137,7 @@ PyTypeObject PyGifImage::GifImage_Type = {
   "vp.gifimage object",           // tp_doc
   0,                              // tp_traverse
   0,                              // tp_clear
-  0,                              // tp_richcompare
+  PyGifImageImpl::RichCompare,    // tp_richcompare
   0,                              // tp_weaklistoffset
   0,                              // tp_iter
   0,                              // tp_iternext
@@ -222,6 +226,51 @@ PyObject* PyGifImageImpl::Repr( PyGifImageObject* self )
                               self->pGifImage->Left(), self->pGifImage->Top(),
                               self->pGifImage->Width(), self->pGifImage->Height(),
                               self->pGifImage->ColorTableSize() );
+}
+
+/////////////////////////////
+// operator: '<', '<=', '==', '!=', '>' or '>='
+/////////////////////////////////////////////////////
+PyObject* PyGifImageImpl::RichCompare( PyObject* obj1, PyObject* obj2, int op )
+{
+  // supported operator: '==' or '!='
+  if( op != Py_EQ && op != Py_NE )
+  {
+    PyErr_Format( PyExc_TypeError, "unsupported comparison between '%s' and '%s'",
+                  Py_TYPE(obj1)->tp_name, Py_TYPE(obj2)->tp_name );
+
+    return nullptr;
+  }
+
+  // one object is not of GifImage_Type
+  if( Py_TYPE(obj1) != &PyGifImage::GifImage_Type ||
+      Py_TYPE(obj2) != &PyGifImage::GifImage_Type )
+  {
+    if( op == Py_EQ )
+      Py_RETURN_FALSE;
+    else
+      Py_RETURN_TRUE;
+  }
+
+  // compare two objects of GifImage_Type
+  PyGifImageObject* Img1 = reinterpret_cast<PyGifImageObject*>( obj1 );
+  PyGifImageObject* Img2 = reinterpret_cast<PyGifImageObject*>( obj2 );
+  GifImage_Check( Img1 )
+  GifImage_Check( Img2 )
+  if( *(Img1->pGifImage) == *(Img2->pGifImage) )
+  {
+    if( op == Py_EQ )
+      Py_RETURN_TRUE;
+    else
+      Py_RETURN_FALSE;
+  }
+  else
+  {
+    if( op == Py_NE )
+      Py_RETURN_TRUE;
+    else
+      Py_RETURN_FALSE;
+  }
 }
 
 ///////////////////
@@ -431,6 +480,26 @@ PyObject* PyGifImageImpl::GetPixel( PyGifImageObject* self, PyObject* args )
   Value_CheckRangeEx( 2, Y, 0, self->pGifImage->Height() )
 
   return Py_BuildValue( "B", self->pGifImage->GetPixel(X, Y) );
+}
+
+///////////////////
+// ret_bool = img.Transparent( x, y )
+////////////////////////////////////////////////////////////
+PyObject* PyGifImageImpl::Transparent( PyGifImageObject* self, PyObject* args )
+{
+  GifImage_Check( self )
+
+  int16_t X, Y;
+  if( !PyArg_ParseTuple( args, "hh", &X, &Y ) )
+    return nullptr;
+
+  Value_CheckRangeEx( 1, X, 0, self->pGifImage->Width() )
+  Value_CheckRangeEx( 2, Y, 0, self->pGifImage->Height() )
+
+  if( self->pGifImage->Transparent(X, Y) )
+    Py_RETURN_TRUE;
+  else
+    Py_RETURN_FALSE;
 }
 
 ///////////////////

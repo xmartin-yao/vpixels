@@ -59,6 +59,9 @@ struct GifImageImpl
   GifImageImpl( GifImageImpl&& ) = delete;
   GifImageImpl& operator=( GifImageImpl&& ) = delete;
 
+  // compare
+  bool operator==( const GifImageImpl& ) const;
+
   // bpp
   uint8_t  BitsPerPixel() const;
   void     BitsPerPixel( const uint8_t bpp );
@@ -78,6 +81,7 @@ struct GifImageImpl
   uint8_t GetPixel( const uint16_t X, const uint16_t Y ) const;
   void    GetPixel( const uint16_t X, const uint16_t Y,
                     uint8_t& Red, uint8_t& Green, uint8_t& Blue ) const;
+  bool    Transparent( const uint16_t X, const uint16_t Y ) const;
 
   // delay
   uint16_t Delay() const;
