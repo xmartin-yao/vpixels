@@ -23,6 +23,7 @@
 #include "PyGifImage.h"
 #include "PyUtil.h"
 #include "config.h"
+#include <string>
 #include <iostream>
 
 //////////////////////

@@ -155,7 +155,7 @@ void LuaUtil::CheckValueUpper( lua_State* L, int arg, uint16_t value, uint16_t u
 ///////////////////////////////////////
 // check if value is within range [lower, upper]
 /////////////////////////////////////////////////////////////////
-void LuaUtil::CheckValueRange( lua_State* L, int arg, uint16_t value,
+void LuaUtil::CheckValueRange( lua_State* L, int arg, lua_Number value,
                                uint16_t lower, uint16_t upper )
 {
   if( value < lower || value > upper )

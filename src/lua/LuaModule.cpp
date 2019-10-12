@@ -24,6 +24,7 @@
 #include "LuaDerive.h"
 #include "LuaUtil.h"
 #include "config.h"
+#include <string>
 #include <iostream>
 
 #ifdef _MSC_VER  // for VC++

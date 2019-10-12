@@ -46,7 +46,7 @@ namespace LuaUtil
   void CheckValueUpper( lua_State* L, int arg, uint16_t value, uint16_t upper );
 
   // check value within [lower, upper]
-  void CheckValueRange( lua_State* L, int arg, uint16_t value, uint16_t lower,
+  void CheckValueRange( lua_State* L, int arg, lua_Number value, uint16_t lower,
                         uint16_t upper );
 
   // check value within [lower, upper)
