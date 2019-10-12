@@ -53,6 +53,7 @@ namespace PyGifImpl
   PyObject* AspectRatio( PyGifObject* self );
   PyObject* GetImage( PyGifObject* self, PyObject* arg );
   PyObject* Images( PyGifObject* self );
+  PyObject* Size( PyGifObject* self );
 
   // utils
   vp::Gif* NewGif( PyObject* args, PyObject* kw );
@@ -82,6 +83,7 @@ namespace PyGifImpl
     MDef( aspectratio,      AspectRatio,      METH_NOARGS,  "get aspect ratio." )
     MDef( getimage,         GetImage,         METH_O,       "get an image object." )
     MDef( images,           Images,           METH_NOARGS,  "get the number of images." )
+    MDef( size,             Size,             METH_NOARGS,  "get the size of resulting GIF file." )
     { nullptr, nullptr, 0, nullptr } 
   };
 
@@ -556,4 +558,12 @@ PyObject* PyGifImpl::GetImage( PyGifObject* self, PyObject* arg )
   vp::GifImage& Image = (*self->pGif)[Index];
 
   return PyGifImage::Cast2Py( &Image, self );
+}
+
+///////////////////
+// size = gif.Size()
+//////////////////////////////////////////
+PyObject* PyGifImpl::Size( PyGifObject* self )
+{
+  return Py_BuildValue( "I", self->pGif->Size() );
 }

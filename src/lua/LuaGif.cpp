@@ -47,6 +47,7 @@ namespace LuaGifImpl
   int AspectRatio( lua_State* L );
   int Images( lua_State* L );
   int GetImage( lua_State* L );
+  int Size( lua_State* L );
 
   // meta methods
   int Indexing( lua_State* L );
@@ -85,6 +86,7 @@ namespace LuaGifImpl
     { "aspectratio",    AspectRatio },
     { "images",         Images },
     { "getimage",       GetImage },
+    { "size",           Size },
     { nullptr, nullptr }
   };
 } //LuaGifImpl
@@ -511,6 +513,19 @@ int LuaGifImpl::GetImage( lua_State* L )
   vp::GifImage& Image = (*pGif)[Index];
 
   return LuaGifImage::Cast2Lua( L, &Image, pGifUD );
+}
+
+////////////
+// size = gif:Size()
+//////////////////////////////////
+int LuaGifImpl::Size( lua_State* L ) 
+{
+  LuaUtil::CheckArgs( L, 1 );
+
+  vp::Gif* pGif = CheckGif( L, 1 );
+  lua_pushunsigned( L, pGif->Size() );
+
+  return 1;
 }
 
 ///////////

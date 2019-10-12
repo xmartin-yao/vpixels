@@ -87,6 +87,8 @@ struct GifImpl
   uint8_t Read( std::istream& );
   void    Write( std::ostream& );
 
+  size_t Size();
+
   // for test
   const GifComponentVec& Components() const { return m_ComponentVec; }
 

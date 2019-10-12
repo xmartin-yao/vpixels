@@ -92,6 +92,8 @@ namespace vp
     bool Import( const std::string& FileName );
     bool Export( const std::string& FileName, const bool OverWrite = false );
 
+    size_t Size();
+
   private:
     const GifImpl* GetImpl() const;
     GifImpl*       GetImpl();

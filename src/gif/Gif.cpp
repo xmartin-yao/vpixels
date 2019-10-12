@@ -183,6 +183,12 @@ bool Gif::Export( const std::string& FileName, const bool OverWrite )
   return GetImpl()->Export(FileName, OverWrite);
 }
 
+//////////////////
+size_t Gif::Size()
+{
+  return GetImpl()->Size();
+}
+
 /////////////////////////
 Gif::operator bool() const
 {

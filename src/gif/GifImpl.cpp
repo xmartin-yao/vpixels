@@ -23,6 +23,7 @@
 #include "GifComponentVecUtil.h"
 #include "GifImageVecBuilder.h"
 #include <fstream>
+#include <sstream>
 
 
 ///////////////////////////////////////////////////////////
@@ -268,4 +269,14 @@ void GifImpl::Write( std::ostream& os )
   os << m_ScreenDescriptor;
   GifComponentVecUtil::Write( os, m_ComponentVec );
   os.put( m_GifTrailer );
+}
+
+// size of the resulting GIF file in byte
+//////////////////////////////////////////
+size_t GifImpl::Size()
+{
+  std::ostringstream os;
+  Write( os );
+
+  return static_cast<size_t>( os.tellp() );
 }
