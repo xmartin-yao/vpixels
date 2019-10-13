@@ -221,11 +221,9 @@ int LuaGifImpl::Import( lua_State* L )
     // error occurred during importing
     Error = true;
 
-    // Basic exception safety
-    // vp::Gif object may not be valid, create a new one,
-    // in order to keep LuaGif still a valid object.
-    delete pGifUD->pGif;
-    pGifUD->pGif = new vp::Gif();
+    // No exception safety
+    // vp::Gif object is not in valid state, results of calling methods of
+    // LuaGif object are undefined. However no memory leak is guaranteed.
 
     // set error message
     luaL_where( L, 1 );

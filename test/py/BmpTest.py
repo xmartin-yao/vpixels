@@ -261,10 +261,7 @@ class TestBmp( unittest.TestCase ):
 
     # import non-bmp file or corrupted bmp file
     self.assertRaises( Exception, bmp.importf, 'BmpTest.py' ) # not a bmp file
-    # bmp still a valid object, but becomes bpp=1, 1x1
-    self.assertEqual( 1, bmp.bpp() )
-    self.assertEqual( (1, 1), bmp.dimension() )
-    self.assertEqual( 2, bmp.colortablesize() )
+    # bmp becomes invalid, results of calling its methods are undefined
 
 
   def testExport( self ):

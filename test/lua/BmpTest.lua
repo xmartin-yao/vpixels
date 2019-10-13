@@ -325,11 +325,7 @@ function TestBmp:testImport()
 
   -- import non-bmp file or corrupted bmp file
   lu.assertError( bmp.import, bmp, 'BmpTest.lua' )   -- not a BMP file
-  -- bmp still a valid object, but  becomes bpp=1, 1x1
-  lu.assertEquals( 1, bmp:bpp() )
-  lu.assertEquals( 1, bmp:width() )
-  lu.assertEquals( 1, bmp:height() )
-  lu.assertEquals( 2, bmp:colortablesize() )
+  -- bmp becomes invalid, results of calling its methods are undefined
 end
 
 function TestBmp:testExport()

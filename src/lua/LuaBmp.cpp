@@ -193,11 +193,9 @@ int LuaBmpImpl::Import( lua_State* L )
     // error occurred during importing
     Error = true;
 
-    // Basic exception safety
-    // vp::Bmp object may not be valid, create a new one,
-    // in order to keep LuaBmp still a valid object.
-    delete pBmp;
-    pBmp = new vp::Bmp();
+    // No exception safety
+    // vp::Bmp object is not in valid state, results of calling methods
+    // of LuaBmp object are undefined. However no memory leak is guaranteed.
 
     // set error message, call lua_error() outside of catch-block;
     // otherwise, the vp::Exception object won't be deallocated,

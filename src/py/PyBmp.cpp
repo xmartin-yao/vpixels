@@ -237,11 +237,9 @@ PyObject* PyBmpImpl::Import( PyBmpObject* self, PyObject* arg )
   }
   catch( const vp::Exception& e )
   {
-    // Basic exception safety
-    // vp::Bmp object may not be valid, create a new one,
-    // in order to keep self still a valid object.
-    delete self->pBmp;
-    self->pBmp = new vp::Bmp();
+    // No exception safety
+    // vp::Bmp object is not in valid state, results of calling methods of
+    // PyBmp object are undefined. However no memory leak is guaranteed.
 
     PyErr_Format( PyExc_Exception, "failed to import '%s' (%s)", FileName, e.what() );
     return nullptr;

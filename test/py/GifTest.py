@@ -473,12 +473,8 @@ class TestGif( unittest.TestCase ):
 
     # import non-gif file or corrupted gif file
     self.assertRaises( Exception, gif.importf, 'GifTest.py' ) # not a gif file
-    # gif still a valid object, but becomes bpp=2, 1x1, images=1, colors=4
-    self.assertEqual( 2, gif.bpp() )
-    self.assertEqual( (1, 1), gif.dimension() )
-    self.assertEqual( 1, len(gif) )
-    self.assertEqual( 4, gif.colortablesize() )
-    # img0 and img1 are invalid, b/c the gif object they refer to is out of scope
+    # gif becomes invalid, results of calling its methods are undefined
+    # img0 and img1 become invalid too, calling their methods result in errors
     self.assertNotEqual( img0, None )
     self.assertNotEqual( img1, None )
     self.assertRaises( Exception, img0.bpp )

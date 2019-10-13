@@ -277,13 +277,11 @@ PyObject* PyGifImpl::Import( PyGifObject* self, PyObject* arg )
   }
   catch( const vp::Exception& e )
   {
-    // Basic exception safety
-    // vp::Gif object may not be valid, create a new one,
-    // in order to keep self still a valid object.
-    delete self->pGif;
-    self->pGif = new vp::Gif();
+    // No exception safety
+    // vp::Gif object is not in valid state, results of calling methods of
+    // PyGif object are undefined. However no memory leak is guaranteed.
 
-    PyErr_Format( PyExc_Exception, "failed to read '%s' (%s)", FileName, e.what() );
+    PyErr_Format( PyExc_Exception, "failed to import '%s' (%s)", FileName, e.what() );
   }
 
   // reset the list, no matter whether importing failed or not
