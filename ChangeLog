@@ -1,3 +1,19 @@
+0.6.6
+- Add C++ example GifDownsize.cpp
+- vp::Gif
+  - Allow changing color resolution (bits/pixel)
+  - Allow increasing color table size to maximum 256
+  - Allow changing background color
+  - Add vp::Gif::Size()
+- vp::GifImage
+  - Allow changing disposal method and color resolution (bits/pixel)
+  - Allow increasing color table size to maximum 256
+  - Allow changing/enabling/disabling transparent color
+  - Add vp::GifImage::operator==()
+- Lua and Python module
+  - Accommodate the changes made to vp::Gif and vp::GifImage
+  - No new object creating upon file importing failure
+
 0.6.5
 - Use README.md instead of README
 - Enhance image file importing of Lua and Python module

@@ -1,24 +1,55 @@
 ## VPixels
-VPixels is a library that can be used to generate BMP and animated GIF images.
-VPixels allows access to pixels. Use your imagination and creativity, you can
-write programs to generate images as the following examples.
+If you like doodling and programming, VPixels is a tool for you. You can use
+it to generate BMP and animated GIF images. The following are examples
+generated using VPixels. VPixels allows you to manipulate every pixel in your
+image. Use your imagination and creativity, you may write programs to generate
+even better and stunning ones.
 
 ![conic color](example/img/conic_color_small.png) ![conic gray](example/img/conic_gray_small.png) ![rainy day](example/img/rainyday.gif)
 
 Written in C++, VPixels also provides programming interfaces to scripting language
-Lua and Python. You can write your programs in C++, Lua or Python.
+Lua and Python. Choose the one you prefer, C++, Lua or Python.
 
 ## License
 GNU General Public License version 3 or any later version.
 Please see license terms in file COPYING.
 
-## Directories
+## Table of contents
+* [Repo Directories](#repo-directories)
+* [Examples](#examples)
+* [Build and Install](#build-and-install)
+  * [Prerequisite](#prerequisite)
+  * [Build with Autotools](#build-with-autotools)
+  * [Build with CMake](#build-with-cmake)
+* [Lua API](#lua-api)
+  * [Import VPixels module](#import-vpixels-module)
+  * [Methods of BMP object](#methods-of-bmp-object)
+  * [Methods of GIF object](#methods-of-gif-object)
+  * [Methods of GIF image object](#methods-of-gif-image-object)
+* [Python API](#python-api)
+
+## Repo Directories
 ```
   example/  - examples of using VPixels in C++, Lua and Python
   include/  - C++ header files
   src/      - C++ source files
   test/     - tests
   cmake/    - files for CMake build
+```
+
+## Examples
+```
+  example/cpp/       - examples in C++
+    BmpInfo.cpp      - show information of a BMP file
+    GifDownsize.cpp  - downsize a GIF file
+    GifImages.cpp    - extract images(frames) from a GIF file
+    GifInfo.cpp      - show information of a GIF file
+  example/lua/       - example Lua scripts
+    circularity.lua  - generate a BMP file consisting of circular shapes
+    hourglass.lua    - generate a GIF file of animated hourglass
+  example/py/        - example Python scripts
+    circularity.py   - generate a BMP file consisting of circular shapes
+    hourglass.py     - generate a GIF file of animated hourglass
 ```
 
 ## Build and Install
@@ -94,7 +125,7 @@ Please see examples in directory `example/lua/`
 
      bmp = vpixels.bmp()   -- create a bmp object, bpp = 1, w = 1, h = 1
 
-     bmp = bmp_old:clone() -- create a bmp object from an existing one
+     bmp = bmp_old:clone() -- create a bmp object from an existing one (bmp_old)
 ```
 
 * Import from/export to a BMP file
@@ -175,7 +206,7 @@ Please see examples in directory `example/lua/`
 
      gif = vpixels.gif()    -- create a GIF object, bpp = 2, w = 1, h = 1, n = 1, g = true
 
-     gif = gif_old:clone()  -- create a GIF object from existing one
+     gif = gif_old:clone()  -- create a GIF object from existing one (gif_old)
 ```
 
 * Import from/export to a GIF file
@@ -195,6 +226,8 @@ Please see examples in directory `example/lua/`
      w = gif:width()           -- query GIF canvas width
      h = gif:height()          -- query GIF canvas height
      w, h = gif:dimension()    -- query GIF canvas width and height
+
+     size = gif:size()         -- query size of the resulting GIF file
 ```
 
 * Access global color table
@@ -230,18 +263,21 @@ Please see examples in directory `example/lua/`
      -- img: image(frame) at index i
 ```
 
-### Methods of GIF image(frame) object
+### Methods of GIF image object
 
 * Copy a GIF image(frame) object
 ```
      img2:clone(img1)  -- img2 copies img1
 ```
 
-* Queries
+* Bits/pixel
 ```
      bpp = img:bitsperpixel()  -- query bits/pixel of the image(frame)
      bpp = img:bpp()           -- same as img:bitsperpixel()
+```
 
+* Origin and dimension
+```
      l = img:left()            -- query x coordinate of the image(frame)
      t = img:top()             -- query y coordinate of the image(frame)
 
@@ -250,14 +286,34 @@ Please see examples in directory `example/lua/`
      w, h = img:dimension()    -- query width and height of the image(frame)
 ```
 
-* Crop GIF image(frame)
+* Disposal method
 ```
-    img:crop(l, t, w, h)
+     m = img:disposalmethod()  -- query disposal method
+     m = img:disposa()         -- same as img:disposalmethod()
+     img:disposalmethod(m)     -- set disposal method
+     img:disposa(m)            -- same as img:disposalmethod(m)
 
-    -- l: x coordinate of the cropped image(frame), must be within GIF canvas
-    -- t: y coordinate of the cropped image(frame), must be within GIF canvas
-    -- w: with of the cropped image(frame), l + w must be within GIF canvas
-    -- h: height of the cropped image(frame), t + h must be within GIF canvas
+     -- disposal method
+     --   m = 0, disposal method not specified
+     --   m = 1, image is drawn on top of previous
+     --   m = 2, image is drawn after screen is restored to background color
+     --   m = 3, image is drawn after screen is restored to the state before previous was draw
+```
+
+* Transparent color
+```
+     img:hastransparentcolor()     -- true, if img has transparent color enabled
+     img:hastranscolor()           -- same as img:hastransparentcolor()
+     img:hastransparentcolor(yes)  -- enable transparent color, if yes == true
+                                   -- disable transparent color, if yes == false
+     img:hastranscolor(yes)        -- same as img:hastransparentcolor(yes)
+
+     i = img:transparentcolor()  -- get transparent color
+     i = img:transcolor()        -- same as img:transparentcolor()
+     img:transparentcolor(i)     -- set transparent color
+     img:transcolor(i)           -- same as img:transparentcolor(i)
+
+     -- i: index of transparent color
 ```
 
 * Access local color table
@@ -289,9 +345,31 @@ Please see examples in directory `example/lua/`
 
      i = img:getpixel(x, y)  -- get color of a pixel
 
+     img:transparent(x, y)   -- true, if a pixel is transparent
+     img:trans(x, y)         -- same as img:transparent(x, y)
+
      -- i: index of a color table entry, within range [0, size)
      -- x: x coordinate of the pixel, within range [0, width)
      -- y: y coordinate of the pixel, within range [0, height)
+```
+
+* Crop GIF image(frame)
+```
+     img:crop(l, t, w, h)
+
+     -- l: x coordinate of the cropped image(frame), must be within GIF canvas
+     -- t: y coordinate of the cropped image(frame), must be within GIF canvas
+     -- w: with of the cropped image(frame), l + w must be within GIF canvas
+     -- h: height of the cropped image(frame), t + h must be within GIF canvas
+```
+
+* Operator "**==**" and "**~=**"
+```
+     img1 == img2  -- true, if img1 and img2 satisfy
+                   -- 1) they have the same origin and dimension; and
+                   -- 2) corresponding pixels are transparent or have the same RGB.
+
+     img1 ~= img2  -- negation of img1 == img2
 ```
 
 ## Python API
@@ -310,6 +388,11 @@ instead as the name of the methods.
 * Python does not have operator **#**, use _**len**_ instead.
 ```
      n = len(gif)  # get the number of images(frames)
+```
+
+* Python uses "**!=**", instead of "**~=**", as unequal operator
+```
+     img1 != img2
 ```
 
 However, it is worth mentioning that Python uses _**dot**_ when calling a method of an object, e.g.
