@@ -43,3 +43,11 @@ add_executable(gifimages GifImages.cpp)
 
 # link to libvpgif
 set_target_properties(gifinfo gifimages PROPERTIES LINK_LIBRARIES vpgif)
+
+#
+# target: gifdownsize
+#
+add_executable(gifdownsize GifDownsize.cpp)
+
+# link to libvpgif
+set_target_properties(gifdownsize PROPERTIES LINK_LIBRARIES "vpgif;vpbmp")
