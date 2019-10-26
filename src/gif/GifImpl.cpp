@@ -22,6 +22,7 @@
 #include "Exception.h"
 #include "GifComponentVecUtil.h"
 #include "GifImageVecBuilder.h"
+#include "GifImageImpl.h"
 #include <fstream>
 #include <sstream>
 
@@ -191,6 +192,75 @@ const vp::GifImage& GifImpl::operator[]( const size_t Index ) const &
 #endif
 
   return *m_ImageVec[Index];
+}
+
+///////////////
+// remove an image
+// if failed, return false, the object may not be valid
+/////////////////////////////////////////////////////////
+bool GifImpl::Remove( const size_t Index )
+{
+#ifndef VP_EXTENSION
+  if( Index >= m_ImageVec.size() )
+    VP_THROW( "index out of range" );
+
+  if( m_ImageVec.size() == 1 )
+    VP_THROW( "single image GIF" );
+#endif
+
+  // the two components that form the image
+  auto& pImageImpl = m_ImageVec[Index]->m_pImpl;
+  auto pGraphicsControlExt = static_cast<void*>(pImageImpl->m_pGraphicsControlExt.get());
+  auto pImageDescriptor = static_cast<void*>(pImageImpl->m_pImageDescriptor.get());
+
+  // remove the image from m_ImageVec
+  m_ImageVec.erase( m_ImageVec.begin() + Index );
+
+  // remove the two components from m_ComponentVec
+  uint8_t Count = 0;
+  for( auto it = m_ComponentVec.begin(); it != m_ComponentVec.end(); )
+  {
+    auto pComponent = (*it).get();
+    if( pComponent == pGraphicsControlExt || pComponent == pImageDescriptor )
+    {
+      m_ComponentVec.erase( it );
+      ++Count;
+
+      // the two components removed
+      if( Count == 2 )
+        break;
+    }
+    else
+    {
+      ++it;
+    }
+  }
+
+  // if only one image left, remove its GifGraphicsControlExt component
+  if( Count == 2 && m_ImageVec.size() == 1 )
+  {
+    // remove the component from m_ComponentVec
+    auto& pImageImpl = m_ImageVec[0]->m_pImpl;
+    auto pGraphicsControlExt = static_cast<void*>(pImageImpl->m_pGraphicsControlExt.get());
+    for( auto it = m_ComponentVec.begin(); it != m_ComponentVec.end(); )
+    {
+      auto pComponent = (*it).get();
+      if( pComponent == pGraphicsControlExt )
+      {
+        m_ComponentVec.erase( it );
+        break;
+      }
+      else
+      {
+        ++it;
+      }
+    }
+
+    // in GifImageImpl, set the component to nullptr
+    pImageImpl->m_pGraphicsControlExt.reset();
+  }
+
+  return( Count == 2 );
 }
 
 //////////////////////////////////////////////

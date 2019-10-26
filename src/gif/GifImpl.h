@@ -78,6 +78,7 @@ struct GifImpl
   size_t Images() const;
   vp::GifImage&       operator[]( const size_t Index ) &; 
   const vp::GifImage& operator[]( const size_t Index ) const &; 
+  bool Remove( const size_t Index );
 
   // IO
   bool Import( const std::string& FileName );

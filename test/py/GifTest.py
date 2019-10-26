@@ -444,6 +444,44 @@ class TestGif( unittest.TestCase ):
     self.assertRaises( ValueError, gif2.background, 4 )  # exceeds
 
 
+  def testRemoveImage( self ):
+    gif = vpixels.gif( 2, 3, 4, 7 )
+    self.assertEqual( len(gif), 7 )
+
+    self.assertEqual( gif.removeimage(0), True )  # remove 1st image
+    self.assertEqual( len(gif), 6 )
+    self.assertEqual( gif.removeimage(5), True )  # remove last one
+    self.assertEqual( len(gif), 5 )
+    self.assertEqual( gif.removeimage(2), True )  # remove middle one
+    self.assertEqual( len(gif), 4 )
+
+    # error cases
+    self.assertRaises( ValueError, gif.removeimage, -1 )  # out of range
+    self.assertRaises( ValueError, gif.removeimage, 4 )   # out of range
+    self.assertRaises( TypeError,  gif.removeimage, 1.5 ) # not an integer
+
+    # remove images until only one left
+    while len(gif) > 1:
+      self.assertEqual( gif.remove(0), True )
+
+    # now gif contains only one image
+    self.assertEqual( len(gif), 1 )
+    self.assertRaises( Exception, gif.removeimage, 0 )  # cannot remove the image
+    img = gif[0]
+    self.assertEqual( img.delay(), 0 )
+    self.assertRaises( Exception, img.delay, 100 )
+    self.assertEqual( img.disposalmethod(), 0 )
+    self.assertRaises( Exception, img.disposalmethod, 1 )
+    self.assertEqual( img.hastranscolor(), False )
+    self.assertRaises( Exception, img.hastranscolor, True )
+    self.assertRaises( Exception, img.transcolor )
+    self.assertRaises( Exception, img.transcolor, 1 )
+
+    # single image object
+    gif2 = vpixels.gif( 2, 3, 4, 1 )
+    self.assertRaises( Exception, gif2.removeimage, 0 )  # cannot remove the image
+
+
   def testImportf( self ):
     gif = vpixels.gif( 3, 4, 5, 2 )
     img0 = gif[0]

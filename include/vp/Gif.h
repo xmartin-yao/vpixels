@@ -87,6 +87,7 @@ namespace vp
     size_t Images() const;
     GifImage& operator[]( const size_t Index ) &; 
     const GifImage& operator[]( const size_t Index ) const &; 
+    bool Remove( const size_t Index );
 
     // IO
     bool Import( const std::string& FileName );

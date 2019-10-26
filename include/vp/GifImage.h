@@ -25,6 +25,7 @@
 
 // forward
 struct GifImageImpl;
+struct GifImpl;
 
 namespace vp
 {
@@ -110,6 +111,9 @@ namespace vp
     // std::make_unique() should be friend. see GifImageVecBuilder
     friend std::unique_ptr<vp::GifImage>
     std::make_unique<vp::GifImage>( std::unique_ptr<GifImageImpl>&& );
+
+    // GifImpl::Remove() needs access to m_pImpl
+    friend struct ::GifImpl;
 
     const GifImageImpl* GetImpl() const;
     GifImageImpl*       GetImpl();

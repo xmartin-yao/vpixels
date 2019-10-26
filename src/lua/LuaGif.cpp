@@ -47,6 +47,7 @@ namespace LuaGifImpl
   int AspectRatio( lua_State* L );
   int Images( lua_State* L );
   int GetImage( lua_State* L );
+  int RemoveImage( lua_State* L );
   int Size( lua_State* L );
 
   // meta methods
@@ -86,6 +87,8 @@ namespace LuaGifImpl
     { "aspectratio",    AspectRatio },
     { "images",         Images },
     { "getimage",       GetImage },
+    { "removeimage",    RemoveImage },
+    { "remove",         RemoveImage },
     { "size",           Size },
     { nullptr, nullptr }
   };
@@ -511,6 +514,30 @@ int LuaGifImpl::GetImage( lua_State* L )
   vp::GifImage& Image = (*pGif)[Index];
 
   return LuaGifImage::Cast2Lua( L, &Image, pGifUD );
+}
+
+/////////////
+// ret_bool = gif:RemoveImage( 0 )
+//////////////////////////////////
+int LuaGifImpl::RemoveImage( lua_State* L )
+{
+  LuaUtil::CheckArgs( L, 2 );
+
+  vp::Gif* pGif = CheckGif( L, 1 );
+
+  auto Images = static_cast<uint16_t>(pGif->Images());
+  if( Images == 0 )
+    luaL_error( L, "'%s' object has no image", LuaGif::ID );
+
+  if( Images == 1 )
+    luaL_error( L, "'%s' object has only one image", LuaGif::ID );
+
+  auto Index = LuaUtil::CheckUint16( L, 2 );
+  LuaUtil::CheckValueUpper( L, 2, Index, Images );
+
+  lua_pushboolean( L, pGif->Remove(Index) );
+
+  return 1;
 }
 
 ////////////

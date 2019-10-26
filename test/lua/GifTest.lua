@@ -377,6 +377,45 @@ function TestGif:testBackgroundColor()
   lu.assertError( gif2.backgroundcolor, gif2, 4 )  -- exceeds
 end
 
+function TestGif:testRemoveImage()
+  local gif = vpixels.gif( 2, 3, 4, 7 )
+  lu.assertEquals( #gif, 7 )
+
+  lu.assertIsTrue( gif:removeimage(0) )  -- remove 1st image
+  lu.assertEquals( #gif, 6 )
+  lu.assertIsTrue( gif:removeimage(5) )  -- remove last one
+  lu.assertEquals( #gif, 5 )
+  lu.assertIsTrue( gif:removeimage(2) )  -- remove middle one
+  lu.assertEquals( #gif, 4 )
+
+  -- error cases
+  lu.assertError( gif.removeimage, gif, -1 )  -- out of range
+  lu.assertError( gif.removeimage, gif, 4 )   -- out of range
+  lu.assertError( gif.removeimage, gif, 1.5 ) -- not an integer
+
+  -- remove images until only one left
+  while #gif > 1 do
+    lu.assertIsTrue( gif:remove(0) )
+  end
+
+  -- now gif contains only one image
+  lu.assertEquals( #gif, 1 )
+  lu.assertError( gif.removeimage, gif, 0 ) -- cannot remove the image
+  local img = gif[0]
+  lu.assertEquals( img:delay(), 0 )
+  lu.assertError( img.delay, 100 )
+  lu.assertEquals( img:disposalmethod(), 0 )
+  lu.assertError( img.disposalmethod, 1 )
+  lu.assertIsFalse( img:hastranscolor() )
+  lu.assertError( img.hastranscolor, true )
+  lu.assertError( img.transcolor )
+  lu.assertError( img.transcolor, 1 )
+
+  -- single image object
+  local gif2 = vpixels.gif( 2, 3, 4, 1 )
+  lu.assertError( gif2.removeimage, gif2, 0 ) -- cannot remove the image
+end
+
 function TestGif:testIndexing()
   local gif = vpixels.gif( 2, 3, 4, 5 )
   local ret = nil

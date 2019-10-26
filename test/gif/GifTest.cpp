@@ -458,3 +458,44 @@ void GifTest::testBitsPerPixel()
   CPPUNIT_ASSERT_THROW( img2.BitsPerPixel( 1 ), vp::Exception );
   CPPUNIT_ASSERT_THROW( img2.BitsPerPixel( 9 ), vp::Exception );
 }
+
+void GifTest::testRemove()
+{
+  vp::Gif gif( 2, 3, 4, 9 );
+  CPPUNIT_ASSERT( gif.Images() == 9 );
+
+  CPPUNIT_ASSERT( gif.Remove( 0 ) );  // remove 1st image
+  CPPUNIT_ASSERT( gif.Images() == 8 );
+  CPPUNIT_ASSERT( gif.Remove( 7 ) );  // remove last one
+  CPPUNIT_ASSERT( gif.Images() == 7 );
+  CPPUNIT_ASSERT( gif.Remove( 3 ) );  // remove the middle one
+  CPPUNIT_ASSERT( gif.Images() == 6 );
+
+  // index out of range
+  CPPUNIT_ASSERT_THROW( gif.Remove( -1 ), vp::Exception );
+  CPPUNIT_ASSERT_THROW( gif.Remove( 6 ), vp::Exception );
+
+  // remove images until only one left
+  for( size_t nImages = gif.Images() - 1; gif.Images() > 1; --nImages )
+  {
+    CPPUNIT_ASSERT( gif.Remove( 0 ) );
+    CPPUNIT_ASSERT( gif.Images() == nImages );
+  }
+
+  // now gif contains only one image
+  CPPUNIT_ASSERT( gif.Images() == 1 );
+  CPPUNIT_ASSERT_THROW( gif.Remove( 0 ), vp::Exception );
+  vp::GifImage& image = gif[0];
+  CPPUNIT_ASSERT( image.Delay() == 0 );
+  CPPUNIT_ASSERT_THROW( image.Delay( 10 ), vp::Exception );
+  CPPUNIT_ASSERT( image.DisposalMethod() == 0 );
+  CPPUNIT_ASSERT_THROW( image.DisposalMethod( 1 ), vp::Exception );
+  CPPUNIT_ASSERT( image.HasTransColor() == false );
+  CPPUNIT_ASSERT_THROW( image.HasTransColor( true ), vp::Exception );
+  CPPUNIT_ASSERT_THROW( image.TransColor(), vp::Exception );
+  CPPUNIT_ASSERT_THROW( image.TransColor( 3 ), vp::Exception );
+
+  // single image GIF object
+  vp::Gif gif2( 2, 3, 4, 1 );
+  CPPUNIT_ASSERT_THROW( gif2.Remove( 0 ), vp::Exception );
+}

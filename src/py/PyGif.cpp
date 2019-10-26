@@ -52,6 +52,7 @@ namespace PyGifImpl
   PyObject* BackgroundColor( PyGifObject* self, PyObject* args );
   PyObject* AspectRatio( PyGifObject* self );
   PyObject* GetImage( PyGifObject* self, PyObject* arg );
+  PyObject* RemoveImage( PyGifObject* self, PyObject* arg );
   PyObject* Images( PyGifObject* self );
   PyObject* Size( PyGifObject* self );
 
@@ -82,6 +83,8 @@ namespace PyGifImpl
     MDef( background,       BackgroundColor,  METH_VARARGS, "get/set background color." )
     MDef( aspectratio,      AspectRatio,      METH_NOARGS,  "get aspect ratio." )
     MDef( getimage,         GetImage,         METH_O,       "get an image object." )
+    MDef( removeimage,      RemoveImage,      METH_O,       "remove an image." )
+    MDef( remove,           RemoveImage,      METH_O,       "remove an image." )
     MDef( images,           Images,           METH_NOARGS,  "get the number of images." )
     MDef( size,             Size,             METH_NOARGS,  "get the size of resulting GIF file." )
     { nullptr, nullptr, 0, nullptr } 
@@ -556,6 +559,40 @@ PyObject* PyGifImpl::GetImage( PyGifObject* self, PyObject* arg )
   vp::GifImage& Image = (*self->pGif)[Index];
 
   return PyGifImage::Cast2Py( &Image, self );
+}
+
+///////////////////
+// ret_bool = gif.RemoveImage( 0 )
+////////////////////////////////////////////////////////
+PyObject* PyGifImpl::RemoveImage( PyGifObject* self, PyObject* arg )
+{
+  if( self->pGif->Images() == 0 )
+  {
+    PyErr_Format( PyExc_Exception, "'%s' object contains no image",
+                  Py_TYPE(self)->tp_name );
+    return nullptr;
+  }
+
+  if( self->pGif->Images() == 1 )
+  {
+    PyErr_Format( PyExc_Exception, "'%s' object contains only one image",
+                  Py_TYPE(self)->tp_name );
+    return nullptr;
+  }
+
+  if( !PyInt_CheckExact(arg) )
+  {
+    PyErr_Format( PyExc_TypeError, "requires an integer, got %s", Py_TYPE(arg)->tp_name );
+    return nullptr;
+  }
+
+  Py_ssize_t Index = PyInt_AsSsize_t(arg);
+  Value_CheckRangeEx( 1, Index, 0, static_cast<Py_ssize_t>(self->pGif->Images()) )
+
+  if( self->pGif->Remove(Index) )
+    Py_RETURN_TRUE;
+  else
+    Py_RETURN_FALSE;
 }
 
 ///////////////////

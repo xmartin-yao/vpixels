@@ -38,6 +38,8 @@ class GifTest : public CPPUNIT_NS::TestCase
   CPPUNIT_TEST( testColorTableSize );
   CPPUNIT_TEST( testBitsPerPixel );
 
+  CPPUNIT_TEST( testRemove );
+
   CPPUNIT_TEST_SUITE_END();
 
 protected:
@@ -48,5 +50,6 @@ protected:
   void testExport();
   void testColorTableSize();
   void testBitsPerPixel();
+  void testRemove();
 };
 #endif //GifTest_h

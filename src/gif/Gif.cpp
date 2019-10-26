@@ -172,6 +172,12 @@ const GifImage& Gif::operator[]( const size_t Index ) const &
 }
 
 //////////////////////////////////////////////
+bool Gif::Remove( const size_t Index )
+{
+  return GetImpl()->Remove(Index);
+}
+
+//////////////////////////////////////////////
 bool Gif::Import( const std::string& FileName )
 {
   return GetImpl()->Import(FileName);
