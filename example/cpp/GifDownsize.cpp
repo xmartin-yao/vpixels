@@ -1424,65 +1424,28 @@ void GifDownsizer::ReduceBpp()
 ///////////////////////////////////////////////////////////////
 void GifDownsizer::RemoveDuplicates()
 {
-  // count number of images,
-  // excluding consecutively duplicated ones
-  auto nImages = m_pGifSrc->Images();
-  std::vector<bool> Label(nImages, false);
   size_t i = 0;
   size_t j = 1;
   while( j < m_pGifSrc->Images() )
   {
     m_pLog->Progesss( j, m_pGifSrc->Images() - 1 );
 
-    // j-th image is duplicated
-    if( (*m_pGifSrc)[i] == (*m_pGifSrc)[j] )
+    if( (*m_pGifSrc)[i] == (*m_pGifSrc)[j] )  // j-th image is duplicated
     {
-      --nImages;       // reduce number of images
-      Label[j] = true; // label duplicated
-      ++j;
+      // add delay time to i-th image
+      (*m_pGifSrc)[i].Delay( (*m_pGifSrc)[i].Delay() + (*m_pGifSrc)[j].Delay() );
+
+      // remove j-th image
+      if( !m_pGifSrc->Remove( j ) )
+        VP_THROW( "Failed to remove image" );
     }
     else
     {
       // next consecutive pair
       i = j;
-      j = i + 1;
-    }
-  }
-
-  // no duplicated image
-  if( nImages == m_pGifSrc->Images() )
-    return;
-
-  // new GIF
-  vp::Gif* pGif = new vp::Gif( m_pGifSrc->BitsPerPixel(), m_pGifSrc->Width(),
-                               m_pGifSrc->Height(), nImages, m_pGifSrc->ColorTable() );
-
-  // copy color table
-  for( uint16_t i = 0; i < m_pGifSrc->ColorTableSize(); ++i )
-  {
-    uint8_t R, G, B;
-    m_pGifSrc->GetColorTable( static_cast<uint8_t>(i), R, G, B );
-    pGif->SetColorTable( static_cast<uint8_t>(i), R, G, B );
-  }
-
-  // copy images, excluding duplicated ones
-  (*pGif)[0] = (*m_pGifSrc)[0];  // copy 1st image
-  for( j = 0, i = 1; i < m_pGifSrc->Images(); ++i )
-  {
-    if( Label[i] )  // duplicated image
-    {
-      // add delay time
-      (*pGif)[j].Delay( (*pGif)[j].Delay() + (*m_pGifSrc)[i].Delay() );
-    }
-    else
-    {
       ++j;
-      (*pGif)[j] = (*m_pGifSrc)[i];  // copy image
     }
   }
-
-  delete m_pGifSrc;
-  m_pGifSrc = pGif;
 }
 
 /////////////////////
@@ -1491,54 +1454,27 @@ void GifDownsizer::RemoveDuplicates()
 //////////////////////////////////////////////////////////
 void GifDownsizer::Remove1PixelImages()
 {
-  // count number of images, excluding 1-pixel ones
-  auto nImages = m_pGifSrc->Images();
-  std::vector<bool> Label(nImages, false);
-  for( size_t i = 1; i < m_pGifSrc->Images(); ++i )
+  size_t i = 0;
+  size_t j = 1;
+  while( j < m_pGifSrc->Images() )
   {
-    // i-th is a 1-pixel image
-    vp::GifImage& Img = (*m_pGifSrc)[i] ;
-    if( Img.Width() == 1 && Img.Height() == 1 )
+    vp::GifImage& Img = (*m_pGifSrc)[j] ;
+    if( Img.Width() == 1 && Img.Height() == 1 )  // j-th is 1-pixel image
     {
-      --nImages;       // reduce number of images
-      Label[i] = true; // label it 1-pixel image
-    }
-  }
+      // add delay time to i-th image
+      (*m_pGifSrc)[i].Delay( (*m_pGifSrc)[i].Delay() + Img.Delay() );
 
-  // no 1-pixel image
-  if( nImages == m_pGifSrc->Images() )
-    return;
-
-  // new GIF
-  vp::Gif* pGif = new vp::Gif( m_pGifSrc->BitsPerPixel(), m_pGifSrc->Width(),
-                               m_pGifSrc->Height(), nImages, m_pGifSrc->ColorTable() );
-
-  // copy color table
-  for( uint16_t i = 0; i < m_pGifSrc->ColorTableSize(); ++i )
-  {
-    uint8_t R, G, B;
-    m_pGifSrc->GetColorTable( static_cast<uint8_t>(i), R, G, B );
-    pGif->SetColorTable( static_cast<uint8_t>(i), R, G, B );
-  }
-
-  // copy images, excluding 1-pixel ones
-  (*pGif)[0] = (*m_pGifSrc)[0];  // copy 1st image
-  for( size_t j = 0, i = 1; i < m_pGifSrc->Images(); ++i )
-  {
-    if( Label[i] )  // 1-pixel image
-    {
-      // add delay time
-      (*pGif)[j].Delay( (*pGif)[j].Delay() + (*m_pGifSrc)[i].Delay() );
+      // remove j-th image
+      if( !m_pGifSrc->Remove( j ) )
+        VP_THROW( "Failed to remove image" );
     }
     else
     {
+      // next consecutive pair
+      i = j;
       ++j;
-      (*pGif)[j] = (*m_pGifSrc)[i];  // copy image
     }
   }
-
-  delete m_pGifSrc;
-  m_pGifSrc = pGif;
 }
 
 /////////////////////

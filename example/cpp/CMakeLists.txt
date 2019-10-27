@@ -49,5 +49,11 @@ set_target_properties(gifinfo gifimages PROPERTIES LINK_LIBRARIES vpgif)
 #
 add_executable(gifdownsize GifDownsize.cpp)
 
-# link to libvpgif
+# link to libvpgif and libvpbmp
 set_target_properties(gifdownsize PROPERTIES LINK_LIBRARIES "vpgif;vpbmp")
+
+# static link to libstdc++ and libgcc
+if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
+  set_target_properties(bmpinfo gifinfo gifimages gifdownsize PROPERTIES LINK_FLAGS
+                        "-static-libstdc++ -static-libgcc")
+endif()
