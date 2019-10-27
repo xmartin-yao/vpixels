@@ -19,7 +19,6 @@
 
 #include "BmpImpl.h"
 #include "Exception.h"
-#include "config.h"
 #include <fstream>
 
 /////////////////////////////////////////

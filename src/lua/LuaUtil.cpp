@@ -21,7 +21,6 @@
 #include <cmath>
 #include <cstring>
 #include "LuaUtil.h"
-#include "config.h"
 
 ///////////////////////////////
 // check number of arguments
