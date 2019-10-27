@@ -258,6 +258,9 @@ Please see examples in directory `example/lua/`
      img = gif:image(i) -- get an image(frame)
      img = gif[i]       -- same as gif:image(i)
 
+     gif:removeimage(i) -- remove an image(frame)
+     gif:remove(i)      -- same as gif:removeimage(i)
+
      -- n: number of images(frames)
      -- i: index of the image(frame), within range [0, n)
      -- img: image(frame) at index i

@@ -1,3 +1,8 @@
+0.6.7
+- Add Gif::Remove(), allowing remove an image from vp::Gif object
+- Adopt Gif::Remove() in Lua and Python module
+- Adopt Gif::Remove() in example/cpp/GifDownsize.cpp
+
 0.6.6
 - Add C++ example GifDownsize.cpp
 - vp::Gif
