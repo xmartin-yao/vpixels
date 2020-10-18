@@ -19,7 +19,7 @@
 
 #include <Python.h>
 #include "PyGif.h"
-#include "PyGifImage.h"
+#include "PyGifDefs.h"
 #include "PyUtil.h"
 #include "Gif.h"
 #include "Exception.h"
@@ -558,7 +558,7 @@ PyObject* PyGifImpl::GetImage( PyGifObject* self, PyObject* arg )
 
   vp::GifImage& Image = (*self->pGif)[Index];
 
-  return PyGifImage::Cast2Py( &Image, self );
+  return PyGifImageImpl::Cast2Py( &Image, self );
 }
 
 ///////////////////

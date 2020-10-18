@@ -19,6 +19,7 @@
 
 #include <Python.h>
 #include "PyGifImage.h"
+#include "PyGifDefs.h"
 #include "PyGif.h"
 #include "PyUtil.h"
 #include "Gif.h"
@@ -164,10 +165,10 @@ PyTypeObject PyGifImage::GifImage_Type = {
 };
 
 ///////////////////////////////////////////////////////////////
-PyObject* PyGifImage::Cast2Py( vp::GifImage* pGifImage, PyGifObject* pGifObject )
+PyObject* PyGifImageImpl::Cast2Py( vp::GifImage* pGifImage, PyGifObject* pGifObject )
 {
   // create new PyGifImageObject
-  PyTypeObject* type = &GifImage_Type;
+  PyTypeObject* type = &PyGifImage::GifImage_Type;
   PyObject* self = type->tp_alloc( type, 0 );
 
   // initialize PyGifImageObject

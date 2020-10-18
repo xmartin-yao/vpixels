@@ -25,6 +25,6 @@ namespace PyBmp
 {
   // type object of PyBmp
   extern PyTypeObject Bmp_Type;
-};
+}
 
 #endif //PyBmp_h
