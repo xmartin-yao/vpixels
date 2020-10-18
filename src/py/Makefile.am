@@ -25,9 +25,8 @@ if BUILD_PY
 
 pyexec_LTLIBRARIES = vpixels.la
 
-vpixels_la_SOURCES = PyModule.cpp PyUtil.h \
-                     PyBmp.h PyBmp.cpp \
-                     PyGif.h PyGif.cpp PyGifImage.h PyGifImage.cpp
+vpixels_la_SOURCES = PyModule.cpp PyUtil.h PyBmp.h PyBmp.cpp \
+                     PyGifDefs.h PyGif.h PyGif.cpp PyGifImage.h PyGifImage.cpp
 
 ## shared: build shared lib
 ## module: name will not be prefixed with 'lib'
