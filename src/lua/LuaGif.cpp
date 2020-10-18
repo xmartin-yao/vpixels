@@ -19,7 +19,7 @@
 
 #include <lua.hpp>
 #include "LuaGif.h"
-#include "LuaGifImage.h"
+#include "LuaGifDefs.h"
 #include "LuaUtil.h"
 #include "Gif.h"
 #include "GifImage.h"
@@ -29,6 +29,9 @@
 //////////////////////////////////
 namespace LuaGifImpl
 {
+  // ID of LuaGif and its metatable
+  const char ID[] = "vp.gif";
+
   // wrappers of copy ctor and member functions of vp::Gif
   int Clone( lua_State* L );
   int Import( lua_State* L );
@@ -101,7 +104,7 @@ namespace
   int ToString( lua_State* L ) 
   {
     luaL_checktype( L, 1, LUA_TTABLE );
-    lua_pushfstring( L, "metatable of %s", LuaGif::ID );
+    lua_pushfstring( L, "metatable of %s", LuaGifImpl::ID );
 
     return 1;
   }
@@ -112,7 +115,7 @@ namespace
 ////////////////////////////////////
 void LuaGif::Register( lua_State* L )
 {
-  luaL_newmetatable( L, ID ); 
+  luaL_newmetatable( L, LuaGifImpl::ID ); 
 
   // meta fields
   lua_pushstring( L, "__index" );
@@ -159,9 +162,6 @@ int LuaGif::New( lua_State* L )
 
   return LuaGifImpl::Cast2Lua( L, pGif );
 }
-
-//////////////////////
-const char LuaGif::ID[] = "vp.gif";
 
 /////////////////
 // New() called with arguments
@@ -507,13 +507,13 @@ int LuaGifImpl::GetImage( lua_State* L )
 
   auto Images = static_cast<uint16_t>(pGif->Images());
   if( Images == 0 )
-    luaL_error( L, "'%s' object has no image", LuaGif::ID );
+    luaL_error( L, "'%s' object has no image", ID );
 
   auto Index = LuaUtil::CheckUint16( L, 2 );
   LuaUtil::CheckValueUpper( L, 2, Index, Images );
   vp::GifImage& Image = (*pGif)[Index];
 
-  return LuaGifImage::Cast2Lua( L, &Image, pGifUD );
+  return LuaGifImageImpl::Cast2Lua( L, &Image, pGifUD );
 }
 
 /////////////
@@ -527,10 +527,10 @@ int LuaGifImpl::RemoveImage( lua_State* L )
 
   auto Images = static_cast<uint16_t>(pGif->Images());
   if( Images == 0 )
-    luaL_error( L, "'%s' object has no image", LuaGif::ID );
+    luaL_error( L, "'%s' object has no image", ID );
 
   if( Images == 1 )
-    luaL_error( L, "'%s' object has only one image", LuaGif::ID );
+    luaL_error( L, "'%s' object has only one image", ID );
 
   auto Index = LuaUtil::CheckUint16( L, 2 );
   LuaUtil::CheckValueUpper( L, 2, Index, Images );
@@ -572,7 +572,7 @@ int LuaGifImpl::ToString( lua_State* L )
 {
   vp::Gif* pGif = CheckGif( L, 1 );
   lua_pushfstring( L, "%s: %s bpp=%d %dx%d images=%d colors=%d", 
-                   LuaGif::ID, pGif->Version().c_str(), pGif->BitsPerPixel(),
+                   ID, pGif->Version().c_str(), pGif->BitsPerPixel(),
                    pGif->Width(), pGif->Height(),
                    pGif->Images(), pGif->ColorTableSize() );
   return 1;
@@ -618,7 +618,7 @@ int LuaGifImpl::Cast2Lua( lua_State* L, vp::Gif* pGif )
   pGifUD->pListImageUD = new SimpleList<LuaGifImageUD>();
 
   // set the metatable to userdatum
-  luaL_getmetatable( L, LuaGif::ID );
+  luaL_getmetatable( L, ID );
   lua_setmetatable( L, -2 );
 
   return 1;
@@ -629,13 +629,13 @@ int LuaGifImpl::Cast2Lua( lua_State* L, vp::Gif* pGif )
 ////////////////////////////////////////////////////////
 LuaGifUD* LuaGifImpl::CheckGifUD( lua_State* L, int arg )
 {
-  void* pUD = luaL_checkudata( L, arg, LuaGif::ID );
+  void* pUD = luaL_checkudata( L, arg, ID );
 
   // this should not happen, just in case
   LuaGifUD* pGifUD = static_cast<LuaGifUD*>(pUD);
   if( pGifUD == nullptr )
   {
-    const char* msg = lua_pushfstring( L, "invalid '%s' object", LuaGif::ID );
+    const char* msg = lua_pushfstring( L, "invalid '%s' object", ID );
     luaL_argerror( L, arg, msg );
   }
 
@@ -652,7 +652,7 @@ vp::Gif* LuaGifImpl::CheckGif( lua_State* L, int arg )
   // in case __gc() has been called directly, e.g. gif:__gc()
   if( pGifUD->pGif == nullptr )
   {
-    const char* msg = lua_pushfstring( L, "invalid '%s' object (pGif is null)", LuaGif::ID );
+    const char* msg = lua_pushfstring( L, "invalid '%s' object (pGif is null)", ID );
     luaL_argerror( L, arg, msg );
   }
 
@@ -664,7 +664,7 @@ void LuaGifImpl::CheckGif( lua_State* L, vp::Gif* pGif, int arg )
 {
   if( pGif == nullptr )
   {
-    const char* msg = lua_pushfstring( L, "invalid '%s' object (pGif is null)", LuaGif::ID );
+    const char* msg = lua_pushfstring( L, "invalid '%s' object (pGif is null)", ID );
     luaL_argerror( L, arg, msg );
   }
 }
@@ -679,7 +679,7 @@ int LuaGifImpl::GetField( lua_State* L )
   if( luaL_getmetafield( L, 1, Key ) )
     return 1;
   else
-    return luaL_error( L, "'%s' object has no field '%s'", LuaGif::ID, Key );
+    return luaL_error( L, "'%s' object has no field '%s'", ID, Key );
 }
 
 ////////////////////////

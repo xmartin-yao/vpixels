@@ -28,7 +28,7 @@ luaexec_LTLIBRARIES = vpixels.la
 
 vpixels_la_SOURCES = LuaModule.cpp LuaUtil.h LuaUtil.cpp \
                      LuaBmp.h LuaBmp.cpp LuaDerive.h LuaDerive.cpp \
-                     LuaGif.h LuaGif.cpp LuaGifImage.h LuaGifImage.cpp
+                     LuaGifDefs.h LuaGif.h LuaGif.cpp LuaGifImage.h LuaGifImage.cpp
 
 ## shared: build shared lib
 ## module: name will not be prefixed with 'lib'

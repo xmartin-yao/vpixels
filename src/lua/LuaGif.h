@@ -20,34 +20,6 @@
 #ifndef LuaGif_h
 #define LuaGif_h
 
-// forward
-namespace vp { class Gif; }
-template<typename T> class SimpleList;
-struct LuaGifImageUD;
-
-/////////////////////////////
-// Userdatum for LuaGif
-//
-// pGif: pointer to vp::Gif object
-//
-// pListImageUD: list of LuaGifImage userdatum
-//   This list is to track every LuaGifImage userdatum created by
-//   LuaGif and notifies them when LuaGif goes out of scope.
-//   It stores pointers of every created LuaGifImage userdatum (see 
-//   LuaGif::GetImage() and LuaGifImage::Cast2Lua()). When LuaGif goes
-//   out of scope, every LuaGifImage is set to invalid (see 
-//   LuaGif::Finalizer()).
-//
-// Both are instantiated when LuaGif is created (see LuaGif::New() and 
-// LuaGif::Cast2Lua()), need to be deleted when LuaGif goes out of scope
-// (see LuaGif::Finalizer()).
-//////////////////////////////////////////////////////////////////////////
-typedef struct LuaGifUD
-{
-  vp::Gif* pGif;
-  SimpleList<LuaGifImageUD>* pListImageUD;
-} LuaGifUD;
-
 ////////////////////////////////
 namespace LuaGif
 {
@@ -56,9 +28,6 @@ namespace LuaGif
 
   // create a LuaGif
   int New( lua_State* L );
-
-  // ID of LuaGif
-  extern const char ID[];
-};
+}
 
 #endif //LuaGif_h

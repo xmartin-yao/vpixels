@@ -19,7 +19,7 @@
 
 #include <lua.hpp>
 #include "LuaGifImage.h"
-#include "LuaGif.h"
+#include "LuaGifDefs.h"
 #include "LuaUtil.h"
 #include "GifImage.h"
 #include "Gif.h"
@@ -29,7 +29,7 @@
 //////////////////////////////
 namespace LuaGifImageImpl
 {
-  // ID of LuaGifImage and metatable
+  // ID of LuaGifImage and its metatable
   const char ID[] = "vp.gifimage";
 
   // wrappers of member functions of vp::GifImage
@@ -162,8 +162,8 @@ void LuaGifImage::Register( lua_State* L )
 ////////////////////////////////
 // cast GifImage object into Lua object
 ////////////////////////////////////////////////////////
-int LuaGifImage::Cast2Lua( lua_State* L, vp::GifImage* pGifImage,
-                           LuaGifUD* pGifUD )                
+int LuaGifImageImpl::Cast2Lua( lua_State* L, vp::GifImage* pGifImage,
+                               LuaGifUD* pGifUD )
 {
   // create a new userdatum (a Lua object)
   void* pUD = lua_newuserdata( L, sizeof(LuaGifImageUD) );
@@ -178,7 +178,7 @@ int LuaGifImage::Cast2Lua( lua_State* L, vp::GifImage* pGifImage,
   pGifUD->pListImageUD->Add( pImageUD );
 
   // set metatable to the userdatum
-  luaL_getmetatable( L, LuaGifImageImpl::ID );
+  luaL_getmetatable( L, ID );
   lua_setmetatable ( L, -2 );
 
   return 1;
@@ -210,7 +210,7 @@ int LuaGifImageImpl::Clone( lua_State* L )
   if( Error )
   {
     const char* msg = lua_pushfstring( L, "'%s' belongs to an incompatible '%s'",
-                                       ID, LuaGif::ID );
+                                       ID, LuaGifImpl::ID );
     return luaL_argerror( L, 2, msg );
   }
   else
@@ -664,8 +664,8 @@ const char* LuaGifImageImpl::TypeName( lua_State* L, int arg )
 {
   if( luaL_testudata( L, arg, ID ) != nullptr )  // LuaGifImage type
     return ID;
-  else if( luaL_testudata( L, arg, LuaGif::ID ) != nullptr )  // LuaGif type
-    return LuaGif::ID;
+  else if( luaL_testudata( L, arg, LuaGifImpl::ID ) != nullptr )  // LuaGif type
+    return LuaGifImpl::ID;
   else
     return luaL_typename( L, arg );
 }
@@ -749,7 +749,7 @@ LuaGifImageUD* LuaGifImageImpl::CheckGifImageUD( lua_State* L, int arg )
   if( pImageUD->IsValid == false )
   {
     const char* msg = lua_pushfstring( L, "invalid '%s', '%s' already out of scope",
-                                       ID, LuaGif::ID );
+                                       ID, LuaGifImpl::ID );
     luaL_argerror( L, arg, msg );
   }
 
