@@ -52,7 +52,7 @@ AM_CONDITIONAL([OS_MINGW], [test x"$os_mingw" = x"yes"])
 
 # Set CXXFLAGS, if not set by user
 dnl Must be done before AC_PROG_CXX, which set it to "-O2 -g"
-AS_IF([test -z "$CXXFLAGS"], [CXXFLAGS="-O2 -Wall -Wextra"])
+AS_IF([test -z "$CXXFLAGS"], [CXXFLAGS="-O2 -Wall -Wextra -Wsign-conversion -Wpedantic"])
 
 # Set CPPFLAGS and LDFLAGS, if not set by user
 dnl These are the default locations of Lua headers and Lua lib
@@ -172,8 +172,8 @@ AS_IF([test x"$PYTHON_PLATFORM" = x"win32" && test x"$HAVE_PY_CONFIG" = x"yes"],
 AC_ARG_ENABLE(debug,
   AS_HELP_STRING([--enable-debug], [Enable debug (-g -O0) build (default=-O2).]),
   [AS_IF([test x"$enableval" = x"yes"],
-         [CXXFLAGS="-g -O0 -Wall -Wextra"; enable_debug=yes],
-         [CXXFLAGS="-O2 -Wall -Wextra"; enable_debug=no])],
+         [CXXFLAGS="-g -O0 -Wall -Wextra -Wsign-conversion -Wpedantic"; enable_debug=yes],
+         [CXXFLAGS="-O2 -Wall -Wextra -Wsign-conversion -Wpedantic"; enable_debug=no])],
   [enable_debug=no])
 
 # enable code coverage check with gcov
@@ -192,9 +192,17 @@ AS_IF([test x"$enable_gcov" = x"yes"], [CXXFLAGS="-g -O0 -fprofile-arcs -ftest-c
 # set CHECK_COVERAGE, which will be used in makefile.am
 AM_CONDITIONAL([CHECK_COVERAGE], [test x"$enable_gcov" = x"yes"] )
 
-# enable werror
+# enable Weffc++
+AC_ARG_ENABLE(weffcpp,
+  AS_HELP_STRING([--enable-weffcpp], [Enable -Weffc++ (Warn violations of guidelines from Scott Meyers' Effect C++ books, default=no).]),
+  [enable_weffcpp="$enableval"], [enable_weffcpp=no]
+)
+
+AS_IF([test x"$enable_weffcpp" != x"no"],[CXXFLAGS="$CXXFLAGS -Weffc++"])
+
+# enable Werror
 AC_ARG_ENABLE(werror,
-  AS_HELP_STRING([--enable-werror], [Enable -Werror (warnings treated as errors, default=no).]),
+  AS_HELP_STRING([--enable-werror], [Enable -Werror (Warnings treated as errors, default=no).]),
   [enable_werror="$enableval"], [enable_werror=no]
 )
 
@@ -323,6 +331,8 @@ AC_MSG_NOTICE([
  Build configuration:
    prefix:        ${prefix}
    debug:         ${enable_debug}
-   werror:        ${enable_werror}
+   Weffc++:       ${enable_weffcpp}
+   Werror:        ${enable_werror}
    code coverage: ${enable_gcov}
+   CXXFLAGS     : ${CXXFLAGS}
 ])

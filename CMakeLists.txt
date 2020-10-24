@@ -75,7 +75,7 @@ set(CMAKE_CXX_OUTPUT_EXTENSION_REPLACE 1)
 
 # flags for g++
 if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
-  set(CMAKE_CXX_FLAGS "-Wall -Wextra -Werror -O2")
+  set(CMAKE_CXX_FLAGS "-O2 -Wall -Wextra -Wsign-conversion -Wpedantic")
 endif()
 
 # release build only for VC++
