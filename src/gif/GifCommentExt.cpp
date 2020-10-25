@@ -23,7 +23,8 @@
 
 ////////////////////////
 GifCommentExt::GifCommentExt()
-  : GifExtension( 0xFE )
+  : GifExtension( 0xFE ),
+    m_Comment( std::string() )
 {
 }
 

@@ -27,10 +27,11 @@
 
 //////////////////////////////////////////////////////////////////////
 GifImageData::GifImageData( const uint8_t BitsPerPixel, const uint32_t Size )
- : m_BitsPerPixel( BitsPerPixel )
+ : m_BitsPerPixel( BitsPerPixel ),
+   m_Pixels( U8String() )  // initial size is zero
 {
-  m_Pixels.resize( Size );
-  if( Size != 0) m_Pixels.assign( Size, 0x00 );  // zero by default
+  if( Size != 0)
+    m_Pixels.resize( Size );  // resize() zero-initializes all elements
 }
 
 ////////////////////////////////////////////
@@ -102,7 +103,10 @@ std::istream& operator>>( std::istream& is, GifImageData& ImageData )
   GifBlockIO::ReadSubBlocks( is, Codes );
 
   // decoding
-  GifDecoder()( ImageData.m_BitsPerPixel, Codes, ImageData.m_Pixels );
+  GifDecoder Decoder{};  // through still causes warnings of -Weffc++,
+                         // with empty initializer the generated default ctor
+                         // is able to initialize all data members.
+  Decoder( ImageData.m_BitsPerPixel, Codes, ImageData.m_Pixels );
 
   return is;
 }
@@ -118,7 +122,10 @@ std::ostream& operator<<( std::ostream& os, const GifImageData& ImageData )
   Codes.reserve( ImageData.m_Pixels.size() );
 
   // encoding
-  GifEncoder()( ImageData.m_BitsPerPixel, ImageData.m_Pixels, Codes );
+  GifEncoder Encoder{};  // through still causes warnings of -Weffc++,
+                         // with empty initializer the generated default ctor
+                         // is able to initialize all data members.
+  Encoder( ImageData.m_BitsPerPixel, ImageData.m_Pixels, Codes );
 
   // write codes
   GifBlockIO::WriteSubBlocks( os, Codes );

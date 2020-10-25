@@ -137,7 +137,7 @@ private:
   {
     uint16_t X, Y;
 
-    Pixel( const uint16_t X = 0, const uint16_t Y = 0 );
+    Pixel( const uint16_t x = 0, const uint16_t y = 0 );
     bool operator<( const Pixel& other ) const;
   };
 
@@ -146,10 +146,9 @@ private:
 };
 
 //////////////////////////////////////
-Glass::Pixel::Pixel( const uint16_t X, const uint16_t Y )
+Glass::Pixel::Pixel( const uint16_t x, const uint16_t y )
+ : X(x), Y(y)
 {
-  this->X = X;
-  this->Y = Y;
 }
 
 // this < other, std::set needs this operator
@@ -160,10 +159,15 @@ bool Glass::Pixel::operator<( const Pixel& other ) const
 
 ///////////////////////////////////////////////////
 Glass::Glass( const uint16_t Width, const uint16_t Height )
-  : vp::Bmp( 24, Width, Height )
+  : vp::Bmp( 24, Width, Height ), m_TransPixels( std::set<Pixel>() )
 {
   // all pixels are transparent by default
-  Erase();
+  // vp::Bmp() already sets all pixels' RGB == 000
+  for( uint16_t Y = 0; Y < Height; ++Y )
+  {
+    for( uint16_t X = 0; X < Width; ++X )
+      m_TransPixels.emplace( X, Y );
+  }
 }
 
 //////////////////////////
@@ -189,9 +193,7 @@ bool Glass::HasTransPixel() const
 void Glass::Erase( const uint16_t X, const uint16_t Y )
 {
   vp::Bmp::SetPixel( X, Y, 0, 0, 0 );
-
-  Pixel pixel{X, Y};
-  m_TransPixels.insert( pixel );
+  m_TransPixels.emplace( X, Y );
 }
 
 ///////////////////
@@ -199,10 +201,11 @@ void Glass::Erase( const uint16_t X, const uint16_t Y )
 ///////////////////////////////////////////////
 void Glass::Erase()
 {
+  SetAllPixels( 0, 0, 0 );
   for( uint16_t Y = 0; Y < Height(); ++Y )
   {
     for( uint16_t X = 0; X < Width(); ++X )
-      Erase( X, Y );
+      m_TransPixels.emplace( X, Y );
   }
 }
 
@@ -272,6 +275,12 @@ public:
   virtual ~GifDownsizer();
 
   bool operator()( const std::string& InFileName, const std::string& OutFileName );
+
+  // not implemented
+  GifDownsizer( const GifDownsizer& ) = delete;
+  GifDownsizer( GifDownsizer&& ) = delete;
+  GifDownsizer& operator=( const GifDownsizer& ) = delete;
+  GifDownsizer& operator=( GifDownsizer&& ) = delete;
 
 private:
   void Init();
@@ -1412,7 +1421,7 @@ void GifDownsizer::ReduceBpp()
       }
     }
 
-    auto Bpp = SizeToBpp( Roundup( Max + 1 ) );
+    auto Bpp = SizeToBpp( Roundup( static_cast<size_t>(Max + 1) ) );
     if( Bpp != Img.BitsPerPixel() )
       Img.BitsPerPixel( Bpp );
   }

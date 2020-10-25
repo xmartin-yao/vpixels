@@ -23,7 +23,9 @@
 
 ///////////////////////////////////
 GifPlainTextExt::GifPlainTextExt()
-  : GifExtension( 0x01 )
+  : GifExtension( 0x01 ),
+    m_Data( U8String() ),
+    m_Text( std::string() )
 {
 }
 
