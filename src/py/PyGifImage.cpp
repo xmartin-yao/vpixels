@@ -393,17 +393,18 @@ PyObject* PyGifImageImpl::Crop( PyGifImageObject* self, PyObject* args )
   if( !PyArg_ParseTuple( args, "hhhh", &Left, &Top, &Width, &Height ) )
     return nullptr;
 
-  int16_t LeftLower = self->pGifImage->Left();
-  int16_t LeftUpper = LeftLower + self->pGifImage->Width();
-  int16_t TopLower = self->pGifImage->Top();
-  int16_t TopUpper = TopLower + self->pGifImage->Height();
+  uint16_t LeftLower = self->pGifImage->Left();
+  uint16_t LeftUpper = LeftLower + self->pGifImage->Width();
+  uint16_t TopLower = self->pGifImage->Top();
+  uint16_t TopUpper = TopLower + self->pGifImage->Height();
 
   Value_CheckRangeEx( 1, Left, LeftLower, LeftUpper )
   Value_CheckRangeEx( 2, Top, TopLower, TopUpper )
   Value_CheckRange( 3, Width,  1, LeftUpper - Left )
   Value_CheckRange( 4, Height, 1, TopUpper - Top )
 
-  self->pGifImage->Crop( Left, Top, Width, Height );
+  self->pGifImage->Crop( static_cast<uint16_t>(Left), static_cast<uint16_t>(Top),
+                         static_cast<uint16_t>(Width), static_cast<uint16_t>(Height) );
 
   Py_RETURN_NONE;
 }
@@ -461,7 +462,7 @@ PyObject* PyGifImageImpl::SetPixel( PyGifImageObject* self, PyObject* args )
   Value_CheckRangeEx( 2, Y, 0, self->pGifImage->Height() )
   Value_CheckUpper( 3, ColorIndex, Size )
 
-  self->pGifImage->SetPixel( X, Y, ColorIndex );
+  self->pGifImage->SetPixel( static_cast<uint16_t>(X), static_cast<uint16_t>(Y), ColorIndex );
 
   Py_RETURN_NONE;
 }
@@ -480,7 +481,7 @@ PyObject* PyGifImageImpl::GetPixel( PyGifImageObject* self, PyObject* args )
   Value_CheckRangeEx( 1, X, 0, self->pGifImage->Width() )
   Value_CheckRangeEx( 2, Y, 0, self->pGifImage->Height() )
 
-  return Py_BuildValue( "B", self->pGifImage->GetPixel(X, Y) );
+  return Py_BuildValue( "B", self->pGifImage->GetPixel(static_cast<uint16_t>(X), static_cast<uint16_t>(Y)) );
 }
 
 ///////////////////
@@ -497,7 +498,7 @@ PyObject* PyGifImageImpl::Transparent( PyGifImageObject* self, PyObject* args )
   Value_CheckRangeEx( 1, X, 0, self->pGifImage->Width() )
   Value_CheckRangeEx( 2, Y, 0, self->pGifImage->Height() )
 
-  if( self->pGifImage->Transparent(X, Y) )
+  if( self->pGifImage->Transparent(static_cast<uint16_t>(X), static_cast<uint16_t>(Y)) )
     Py_RETURN_TRUE;
   else
     Py_RETURN_FALSE;
@@ -545,7 +546,7 @@ PyObject* PyGifImageImpl::Delay( PyGifImageObject* self, PyObject* args )
       return nullptr;
     }
 
-    self->pGifImage->Delay( Centisecond );
+    self->pGifImage->Delay( static_cast<uint16_t>(Centisecond) );
 
     Py_RETURN_NONE;
   }
@@ -695,7 +696,7 @@ PyObject* PyGifImageImpl::ColorTableSize( PyGifImageObject* self, PyObject* args
 
     Value_CheckRange( 1, Size, 0, 256 )
 
-    self->pGifImage->ColorTableSize( Size );
+    self->pGifImage->ColorTableSize( static_cast<uint16_t>(Size) );
 
     Py_RETURN_NONE;
   }

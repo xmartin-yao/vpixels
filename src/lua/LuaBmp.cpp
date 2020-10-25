@@ -249,7 +249,7 @@ int LuaBmpImpl::Width( lua_State* L )
   LuaUtil::CheckArgs( L, 1 );
 
   vp::Bmp* pBmp = CheckBmp( L, 1 );
-  lua_pushunsigned( L, pBmp->Width() );
+  lua_pushunsigned( L, static_cast<unsigned int>(pBmp->Width()) );
 
   return 1;
 }
@@ -262,7 +262,7 @@ int LuaBmpImpl::Height( lua_State* L )
   LuaUtil::CheckArgs( L, 1 );
 
   vp::Bmp* pBmp = CheckBmp( L, 1 );
-  lua_pushunsigned( L, pBmp->Height() );
+  lua_pushunsigned( L, static_cast<unsigned int>(pBmp->Height()) );
 
   return 1;
 }
@@ -275,8 +275,8 @@ int LuaBmpImpl::Dimension( lua_State* L )
   LuaUtil::CheckArgs( L, 1 );
 
   vp::Bmp* pBmp = CheckBmp( L, 1 );
-  lua_pushunsigned( L, pBmp->Width() );
-  lua_pushunsigned( L, pBmp->Height() );
+  lua_pushunsigned( L, static_cast<unsigned int>(pBmp->Width()) );
+  lua_pushunsigned( L, static_cast<unsigned int>(pBmp->Height()) );
 
   return 2;
 }

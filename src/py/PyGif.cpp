@@ -205,7 +205,7 @@ vp::Gif* PyGifImpl::NewGif( PyObject* args, PyObject* kw )
   Value_CheckLower( 4, images, 1 )
   bool colortable = PyObject_IsTrue( pyBool );
 
-  return new vp::Gif( bpp, width, height, images, colortable );
+  return new vp::Gif( bpp, static_cast<uint16_t>(width), static_cast<uint16_t>(height), static_cast<size_t>(images), colortable );
 }
 
 ///////////////////////////////////////
@@ -430,7 +430,7 @@ PyObject* PyGifImpl::ColorTableSize( PyGifObject* self, PyObject* args )
 
     Value_CheckRange( 1, Size, 0, 256 )
 
-    self->pGif->ColorTableSize( Size );
+    self->pGif->ColorTableSize( static_cast<uint16_t>(Size) );
 
     Py_RETURN_NONE;
   }
@@ -556,7 +556,7 @@ PyObject* PyGifImpl::GetImage( PyGifObject* self, PyObject* arg )
   Py_ssize_t Index = PyInt_AsSsize_t(arg);
   Value_CheckRangeEx( 1, Index, 0, static_cast<Py_ssize_t>(self->pGif->Images()) )
 
-  vp::GifImage& Image = (*self->pGif)[Index];
+  vp::GifImage& Image = (*self->pGif)[static_cast<size_t>(Index)];
 
   return PyGifImageImpl::Cast2Py( &Image, self );
 }
@@ -589,7 +589,7 @@ PyObject* PyGifImpl::RemoveImage( PyGifObject* self, PyObject* arg )
   Py_ssize_t Index = PyInt_AsSsize_t(arg);
   Value_CheckRangeEx( 1, Index, 0, static_cast<Py_ssize_t>(self->pGif->Images()) )
 
-  if( self->pGif->Remove(Index) )
+  if( self->pGif->Remove(static_cast<size_t>(Index)) )
     Py_RETURN_TRUE;
   else
     Py_RETURN_FALSE;
