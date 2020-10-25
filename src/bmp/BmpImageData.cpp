@@ -75,7 +75,7 @@ std::istream& operator>>( std::istream& is, BmpImageData& id )
   for( int32_t row = 0; row < id.m_Height; ++row, i += id.m_RowLength )
   {
     // read a row
-    is.read( reinterpret_cast<char*>(&id.m_ByteArray[i]), id.m_RowLength );
+    is.read( reinterpret_cast<char*>(&id.m_ByteArray[i]), static_cast<int>(id.m_RowLength) );
 
     // skip padding bytes
     if( nBytes > 0 ) is.ignore( nBytes );
@@ -94,7 +94,7 @@ std::ostream& operator<<( std::ostream& os, const BmpImageData& id )
   for( int32_t row = 0; row < id.m_Height; ++row, i += id.m_RowLength )
   {
     // write a row
-    os.write( reinterpret_cast<char*>(&id.m_ByteArray[i]), id.m_RowLength );
+    os.write( reinterpret_cast<char*>(&id.m_ByteArray[i]), static_cast<int>(id.m_RowLength) );
 
     // write padding bytes
     if( nBytes > 0 ) os.write( &Bytes[0], nBytes );

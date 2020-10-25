@@ -74,6 +74,6 @@ void BmpInfo8Bit::ByteArrayIndices( const int32_t X, const int32_t Y,
     VP_THROW( "y out of range" ); 
 #endif
 
-  ByteIndex = X + (m_Height - 1 - Y)*m_RowLength;
+  ByteIndex = static_cast<uint32_t>(X) + static_cast<uint32_t>(m_Height - 1 - Y)*m_RowLength;
   BitIndex = 0;
 }

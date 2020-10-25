@@ -60,6 +60,6 @@ void BmpInfo24Bit::ByteArrayIndices( const int32_t X, const int32_t Y,
     VP_THROW( "y out of range" ); 
 #endif
 
-  ByteIndex = 3*X + (m_Height - 1 - Y)*m_RowLength;
+  ByteIndex = static_cast<uint32_t>(3*X) + static_cast<uint32_t>(m_Height - 1 - Y)*m_RowLength;
   BitIndex  = 0;
 }

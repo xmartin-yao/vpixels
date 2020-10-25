@@ -39,7 +39,7 @@ BmpInfo::BmpInfo( const BPP bpp, const int32_t Width, const int32_t Height )
 //////////////////////////////////////////////////////////
 uint32_t BmpInfo::ImageDataSize() const
 {
-  return (m_RowLength + PaddingBytes(m_RowLength))*m_Height;
+  return (m_RowLength + PaddingBytes(m_RowLength))*static_cast<uint32_t>(m_Height);
 }
 
 //////////////////////////////
@@ -48,7 +48,7 @@ uint32_t BmpInfo::ImageDataSize() const
 ///////////////////////////////////////////////////////////////
 uint32_t BmpInfo::ByteArraySize() const
 {
-  return m_RowLength*m_Height;
+  return m_RowLength*static_cast<uint32_t>(m_Height);
 }
 
 #if 0
@@ -82,7 +82,7 @@ void BmpInfo::ByteArrayIndices( const int32_t X, const int32_t Y,
 /////////////////////////////////////////////////////////
 uint32_t BmpInfo::CalculateRowLength() const
 {
-  uint32_t nBytes = m_Width*m_BitsPerPixel / 8;
+  uint32_t nBytes = static_cast<uint32_t>(m_Width)*m_BitsPerPixel / 8;
   if( (m_Width*m_BitsPerPixel % 8) != 0 ) 
     ++nBytes;
 

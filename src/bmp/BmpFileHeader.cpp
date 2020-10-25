@@ -31,7 +31,7 @@ BmpFileHeader::BmpFileHeader( const BmpInfo& BmpInfo )
    m_ImageOffset( 0 )
 {
   // size of BITMAPFILEHEADER + BITMAPINFOHEADER = 14 + 40 = 54 bytes
-  m_ImageOffset = 54 + 4*BmpInfo.ColorTableSize(); 
+  m_ImageOffset = 54u + 4u*BmpInfo.ColorTableSize();
   m_Filesize = m_ImageOffset + BmpInfo.ImageDataSize();
 }
 
