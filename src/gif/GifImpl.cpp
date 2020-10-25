@@ -23,6 +23,7 @@
 #include "GifComponentVecUtil.h"
 #include "GifImageVecBuilder.h"
 #include "GifImageImpl.h"
+#include "IOutil.h"
 #include <fstream>
 #include <sstream>
 
@@ -214,7 +215,7 @@ bool GifImpl::Remove( const size_t Index )
   auto pImageDescriptor = static_cast<void*>(pImageImpl->m_pImageDescriptor.get());
 
   // remove the image from m_ImageVec
-  m_ImageVec.erase( m_ImageVec.begin() + Index );
+  m_ImageVec.erase( m_ImageVec.begin() + static_cast<int32_t>(Index) );
 
   // remove the two components from m_ComponentVec
   uint8_t Count = 0;

@@ -29,6 +29,11 @@
 /////////////////////////
 namespace IOutil 
 {
+  inline void Write( std::ostream& os, const uint8_t& i8 )
+  {
+    os.put( static_cast<char>(i8) );
+  }
+
   ////////////////////////////
   // Read uint16_t or int16_t from stream, little-endian
   ////////////////////////////////////////////////////////
@@ -40,7 +45,7 @@ namespace IOutil
     uint8_t bytes[2] = {}; 
     is.read( reinterpret_cast<char*>(bytes), 2 );
 
-    i16 = (bytes[1] << 8) | bytes[0];
+    i16 = static_cast<T>((bytes[1] << 8) | bytes[0]);
   }
 
   /////////////////////////////
@@ -53,7 +58,7 @@ namespace IOutil
   {
     uint8_t bytes[2]; 
     bytes[0] = static_cast<uint8_t>(i16);
-    bytes[1] = i16 >> 8;
+    bytes[1] = static_cast<uint8_t>(i16 >> 8);
 
     os.write( reinterpret_cast<char*>(bytes), 2 );
   }
@@ -69,7 +74,7 @@ namespace IOutil
     uint8_t bytes[4] = {}; 
     is.read( reinterpret_cast<char*>(bytes), 4 );
 
-    i32 = (bytes[3] << 24) | (bytes[2] << 16) | (bytes[1] << 8) | bytes[0];
+    i32 = static_cast<T>((bytes[3] << 24) | (bytes[2] << 16) | (bytes[1] << 8) | bytes[0]);
   }
 
   /////////////////////////////
@@ -84,7 +89,7 @@ namespace IOutil
     bytes[0] = static_cast<uint8_t>(i32);
     bytes[1] = static_cast<uint8_t>(i32 >> 8);
     bytes[2] = static_cast<uint8_t>(i32 >> 16);
-    bytes[3] = i32 >> 24;
+    bytes[3] = static_cast<uint8_t>(i32 >> 24);
 
     os.write( reinterpret_cast<char*>(bytes), 4 );
   }

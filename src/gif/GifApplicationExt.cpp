@@ -19,6 +19,7 @@
 
 #include "GifApplicationExt.h"
 #include "GifBlockIO.h"
+#include "IOutil.h"
 #include <fstream>
 
 ////////////////////////////////
@@ -82,8 +83,8 @@ void GifApplicationExt::Read( std::istream& is )
 ////////////////////////////////////////////////////////
 void GifApplicationExt::Write( std::ostream& os ) const
 {
-  os.put( m_ID );
-  os.put( m_Label );
+  IOutil::Write( os, m_ID );
+  IOutil::Write( os, m_Label );
 
   // application info block
   GifBlockIO::WriteBlock( os, m_AppInfo );

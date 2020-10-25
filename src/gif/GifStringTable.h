@@ -61,7 +61,7 @@ private:
 ////////////////////////////////////////
 inline uint16_t GifStringTable::Hash( const uint16_t String, const uint8_t Pixel )
 {
-  uint32_t Key = (String << 8) | Pixel;
+  uint32_t Key = static_cast<uint32_t>(String << 8) | Pixel;
   return (Key ^ (Key >> 12)) & 0x0FFF;
 }
 

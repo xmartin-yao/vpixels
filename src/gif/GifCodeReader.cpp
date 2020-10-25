@@ -42,13 +42,13 @@ uint16_t GifCodeReader::operator()( const uint8_t CodeSize )
       throw vp::Exception( "no more code" );
 
     // add a byte to buffer
-    m_Buffer |= (m_CodeStr[m_ByteIndex] << m_BitCounter);
+    m_Buffer |= static_cast<uint32_t>(m_CodeStr[m_ByteIndex] << m_BitCounter);
     ++m_ByteIndex;
     m_BitCounter += 8;
   }
 
   // extract the code
-  uint16_t Code = m_Buffer & (0xFFFF >> (16 - CodeSize));
+  uint16_t Code = m_Buffer & static_cast<uint32_t>(0xFFFF >> (16 - CodeSize));
 
   // update buffer
   m_Buffer >>= CodeSize;

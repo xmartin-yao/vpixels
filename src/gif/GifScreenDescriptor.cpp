@@ -153,9 +153,9 @@ std::ostream& operator<<( std::ostream& os, const GifScreenDescriptor& sd )
 {
   IOutil::Write( os, sd.m_ScreenWidth );
   IOutil::Write( os, sd.m_ScreenHeight );
-  os.put( sd.m_PackedByte ); 
-  os.put( sd.m_BackgroundColor ); 
-  os.put( sd.m_AspectRatio ); 
+  IOutil::Write( os, sd.m_PackedByte );
+  IOutil::Write( os, sd.m_BackgroundColor );
+  IOutil::Write( os, sd.m_AspectRatio );
   os << sd.m_ColorTable;
 
   return os;

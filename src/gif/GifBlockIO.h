@@ -125,7 +125,7 @@ namespace GifBlockIO
       if( Remaining < BlockSize )
         BlockSize = static_cast<uint8_t>(Remaining);
   
-      os.put( BlockSize );
+      os.put( static_cast<int8_t>(BlockSize) );
       GifBlockIO::Write( os, &String[Index], BlockSize );
   
       Index += BlockSize;
@@ -161,7 +161,7 @@ namespace GifBlockIO
   WriteBlock( std::ostream& os, const std::basic_string<T>& String )
   {
     uint8_t BlockSize = static_cast<uint8_t>(String.size());
-    os.put( BlockSize );
+    os.put( static_cast<int8_t>(BlockSize) );
     GifBlockIO::Write( os, &String[0], BlockSize );
   }
 

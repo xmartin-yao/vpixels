@@ -42,7 +42,7 @@ GifImageDescriptor::GifImageDescriptor( const uint8_t BitsPerPixel,
    m_Width( Width ), m_Height( Height ),
    m_PackedByte( 0 ),
    m_ColorTable( ColorTable? (1 << BitsPerPixel) : 0 ),
-   m_ImageData( BitsPerPixel, Width*Height )
+   m_ImageData( BitsPerPixel, static_cast<uint32_t>(Width*Height) )
 {
   // if there is local color table, its default size = 2^BitsPerPixel
   if( ColorTable )
@@ -131,20 +131,22 @@ void GifImageDescriptor::Crop( const uint16_t Left, const uint16_t Top,
     return;
 
   // new image data
-  GifImageData ImageData( BitsPerPixel(), Width*Height );
+  GifImageData ImageData( BitsPerPixel(), static_cast<uint32_t>(Width*Height) );
 
   // copy pixels from old image data
+  auto dx = Left - m_Left;
+  auto dy = Top - m_Top;
   for( uint16_t x = 0; x < Width; ++x )
   {
     for( uint16_t y = 0; y < Height; ++y )
     {
-      uint8_t Color = m_ImageData.GetPixel(x + Left - m_Left + m_Width*(y + Top - m_Top));
-      ImageData.SetPixel( x + Width*y, Color );
+      uint8_t Color = m_ImageData.GetPixel( static_cast<uint32_t>((x + dx) + m_Width*(y + dy)) );
+      ImageData.SetPixel( static_cast<uint32_t>(x + Width*y), Color );
     }
   }
 
   // replace old image data
-  m_ImageData = ImageData;
+  m_ImageData = ImageData;  // ToDo: add move assignment to GifImageData
 
   // set parameters to new values
   m_Left = Left;
@@ -224,7 +226,7 @@ uint32_t GifImageDescriptor::PixelIndex( const uint16_t X, const uint16_t Y ) co
     VP_THROW( "y out of range" );
 #endif
 
-  return X + m_Width*Y;
+  return static_cast<uint32_t>(X + m_Width*Y);
 }
 
 //////////////////////////////////////////////////
@@ -275,7 +277,7 @@ void GifImageDescriptor::Read( std::istream& is )
     m_ColorTable.Size( 0 );  // no local color table
 
   // image data
-  m_ImageData.Init( m_Width*m_Height );
+  m_ImageData.Init( static_cast<size_t>(m_Width*m_Height) );
   is >> m_ImageData;
   if( m_ImageData.Size() != static_cast<size_t>(m_Width*m_Height) )
     throw vp::Exception( "wrong image data size" );
@@ -284,12 +286,12 @@ void GifImageDescriptor::Read( std::istream& is )
 ///////////////////////////////////////////
 void GifImageDescriptor::Write( std::ostream& os ) const
 {
-  os.put( m_ID );
+  IOutil::Write( os, m_ID );
   IOutil::Write( os, m_Left );
   IOutil::Write( os, m_Top );
   IOutil::Write( os, m_Width );
   IOutil::Write( os, m_Height );
-  os.put( m_PackedByte );
+  IOutil::Write( os, m_PackedByte );
   os << m_ColorTable;
   os << m_ImageData;
 }

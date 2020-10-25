@@ -33,6 +33,7 @@ public:
   // factory method to create a concrete component
   static std::shared_ptr<GifComponent> Create( const uint8_t Label );
 
+  // TO DO: put argument LocalColorTable before Left and Top
   // factory method to create ImageDescriptor
   static std::shared_ptr<GifComponent> Create( const uint8_t BitsPerPixel,
                                                const uint16_t Width,

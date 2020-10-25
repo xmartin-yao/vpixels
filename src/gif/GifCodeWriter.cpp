@@ -34,7 +34,7 @@ GifCodeWriter::GifCodeWriter( U8String& CodeStr )
 void GifCodeWriter::operator()( const uint16_t Code, const uint8_t CodeSize )
 {
   // buffer the code
-  m_Buffer += (Code << m_BitCounter);
+  m_Buffer += static_cast<uint32_t>(Code << m_BitCounter);
   m_BitCounter += CodeSize;
 
   // if buffered codes can form byte(s)

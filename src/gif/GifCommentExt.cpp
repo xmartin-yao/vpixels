@@ -19,6 +19,7 @@
 
 #include "GifCommentExt.h"
 #include "GifBlockIO.h"
+#include "IOutil.h"
 
 ////////////////////////
 GifCommentExt::GifCommentExt()
@@ -49,7 +50,7 @@ void GifCommentExt::Read( std::istream& is )
 /////////////////////////////////////////////////////
 void GifCommentExt::Write( std::ostream& os ) const
 {
-  os.put( m_ID );
-  os.put( m_Label );
+  IOutil::Write( os, m_ID );
+  IOutil::Write( os, m_Label );
   GifBlockIO::WriteSubBlocks( os, m_Comment );
 }

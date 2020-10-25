@@ -21,6 +21,7 @@
 #include "GifEncoder.h"
 #include "GifDecoder.h"
 #include "GifBlockIO.h"
+#include "IOutil.h"
 #include "Exception.h"
 #include <istream>
 
@@ -110,7 +111,7 @@ std::istream& operator>>( std::istream& is, GifImageData& ImageData )
 std::ostream& operator<<( std::ostream& os, const GifImageData& ImageData )
 {
   // write bpp
-  os.put( ImageData.m_BitsPerPixel );
+  IOutil::Write( os, ImageData.m_BitsPerPixel );
 
   // reserve space for codes
   U8String Codes;
