@@ -53,6 +53,18 @@ GifImageData& GifImageData::operator=( const GifImageData& other )
   return *this;
 }
 
+////////////////////////////////////////////////////////
+GifImageData& GifImageData::operator=( GifImageData&& other ) noexcept
+{
+  if( this != &other )
+  {
+    m_BitsPerPixel = other.m_BitsPerPixel;  // uint8_t, don't need to call move()
+    m_Pixels = std::move(other.m_Pixels);
+  }
+
+  return *this;
+}
+
 ///////////////////////////////////////
 void GifImageData::SetAllPixels( const uint8_t ColorIndex )
 {

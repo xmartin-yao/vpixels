@@ -146,7 +146,7 @@ void GifImageDescriptor::Crop( const uint16_t Left, const uint16_t Top,
   }
 
   // replace old image data
-  m_ImageData = ImageData;  // ToDo: add move assignment to GifImageData
+  m_ImageData = std::move(ImageData);
 
   // set parameters to new values
   m_Left = Left;
@@ -263,11 +263,11 @@ void GifImageDescriptor::Read( std::istream& is )
   IOutil::Read( is, m_Height );
   m_PackedByte = is.get(); 
 
-  if( (m_PackedByte & 0x40) == 0x40 )
+  if( Interlaced() )
     throw vp::Exception( "interlaced image not supported" );
 
   // local color table
-  if( (m_PackedByte & 0x80) == 0x80 )
+  if( LocalColorTable() )
   {
     uint8_t SizeBits = m_PackedByte & 0x07; 
     m_ColorTable.Size( 1 << (SizeBits + 1) );

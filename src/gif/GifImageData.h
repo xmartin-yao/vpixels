@@ -32,12 +32,12 @@ public:
   GifImageData( const uint8_t BitsPerPixel = 2, const uint32_t Size = 0 );
   GifImageData( const GifImageData& other );
   GifImageData& operator=( const GifImageData& other );
+  GifImageData& operator=( GifImageData&& other ) noexcept;
 
   ~GifImageData() = default;
 
   // not implemented
   GifImageData( GifImageData&& ) = delete;
-  GifImageData& operator=( GifImageData&& ) = delete;
 
   // bpp
   uint8_t BitsPerPixel() const { return m_BitsPerPixel; }
