@@ -1,3 +1,11 @@
+0.6.8
+- Maintenance
+  - Lua module: clean up LuaGif.h and LuaGifImage.h by adding LuaGifDefs.h
+  - Python module: clean up PyGif.h and PyGifImage.h by adding PyGifDefs.h
+  - Add g++ options -Wsign-conversion and -Wpedantic as default, -Weffc++
+    as optional. Fix corresponding warnings.
+  - Add move assignment operator to GifImageData
+
 0.6.7
 - Add Gif::Remove(), allowing remove an image from vp::Gif object
 - Adopt Gif::Remove() in Lua and Python module
