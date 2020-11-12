@@ -70,4 +70,19 @@
     return nullptr; \
   }
 
+/////////////////////////
+// Support Python 3
+// In Python 3, strings are of PyBytes or PyUnicode,
+// so PyString_ --> PyUnicode_ to handle texts.
+// In Python 3, integers are of PyLong, so PyInt_ --> PyLong_
+//////////////////////////////////////////////////////////////
+#if PY_MAJOR_VERSION == 3
+  #define PyString_FromString PyUnicode_FromString
+  #define PyString_FromFormat PyUnicode_FromFormat
+  #define PyString_CheckExact PyUnicode_CheckExact
+  #define PyString_AsString   PyUnicode_AsUTF8
+  #define PyInt_CheckExact    PyLong_CheckExact
+  #define PyInt_AsSsize_t     PyLong_AsSsize_t
+#endif
+
 #endif //PyUtil_h

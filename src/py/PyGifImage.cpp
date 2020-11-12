@@ -162,6 +162,9 @@ PyTypeObject PyGifImage::GifImage_Type = {
   0,                              // tp_weaklist
   0,                              // tp_del
   0                               // tp_version_tag
+#if PY_MAJOR_VERSION == 3
+  ,0                              // tp_finalize
+#endif
 };
 
 ///////////////////////////////////////////////////////////////
@@ -214,7 +217,7 @@ void PyGifImageImpl::Dealloc( PyGifImageObject* self )
   if( self->pGifImage != nullptr )
     self->pGifImage = nullptr;
 
-  self->ob_type->tp_free(self);
+  Py_TYPE(self)->tp_free(self);
 }
 
 ///////////////////////////////////////
@@ -223,7 +226,7 @@ PyObject* PyGifImageImpl::Repr( PyGifImageObject* self )
   GifImage_Check( self )
 
   return PyString_FromFormat( "<%s object: bpp=%d (%d,%d) %dx%d colors=%d>",
-                              self->ob_type->tp_name, self->pGifImage->BitsPerPixel(),
+                              Py_TYPE(self)->tp_name, self->pGifImage->BitsPerPixel(),
                               self->pGifImage->Left(), self->pGifImage->Top(),
                               self->pGifImage->Width(), self->pGifImage->Height(),
                               self->pGifImage->ColorTableSize() );

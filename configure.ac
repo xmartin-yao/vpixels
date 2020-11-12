@@ -125,29 +125,30 @@ AS_IF([test x"$HAVE_LUA_HPP" = x"yes" && test x"$HAVE_LUA_LIB" != x"no"],
        AC_MSG_RESULT([$luaexecdir])
       ])
 
-# Check for Python
+# PY_VERSION as an argument to choose Python version
+AC_ARG_VAR(PY_VERSION, [Python version to build Python extension (default=2.7)])
+AS_IF([test -z "$PY_VERSION"], [PY_VERSION="2.7"])
+
+# Check for Python interpreter
 dnl PYTHON, PYTHON_VERSION, pythondir and pyexecdir, etc get set
 dnl PYTHON is the full path of Python interpreter
-AM_PATH_PYTHON([2.7], [HAVE_PY_EXE="yes"], [HAVE_PY_EXE="no"])
-
-# Check for Python version: 2.7
-AC_MSG_CHECKING([whether Python version is 2.7])
-AS_IF([test x"$PYTHON_VERSION" = x"2.7"], [AC_MSG_RESULT([yes])],
-      [HAVE_PY_EXE="no"; AC_MSG_RESULT([no])])
+AM_PATH_PYTHON([$PY_VERSION], , [:])
 
 # Check for Python unittest.py
-AS_IF([test x"$HAVE_PY_EXE" = x"yes"],
+AS_IF([test x"$PYTHON" != x":"],
       [AC_MSG_CHECKING([for python unittest])
        $PYTHON -c "import unittest" &>/dev/null && HAVE_PY_UNIT="yes"
        AS_IF([test x"$HAVE_PY_UNIT" = x"yes"], [AC_MSG_RESULT([yes])],
              [HAVE_PY_UNIT="no"; AC_MSG_RESULT([no])])])
 
-# python-config
-AS_IF([test x"$HAVE_PY_EXE" = x"yes"],
-      [AC_CHECK_PROG([HAVE_PY_CONFIG], [python-config], yes, no)])
+# Check for python-config or python3-config
+# if exits, PYTHON_CONFIG is set to the full path and will be used in src/py/Makefile.am
+AS_IF([test x"${PYTHON_VERSION%%.*}" = x"3" || test x"${PY_VERSION%%.*}" = x"3"],
+      [PYTHON_CONFIG_NAME="python3-config"], [PYTHON_CONFIG_NAME="python-config"])
+AC_PATH_PROG(PYTHON_CONFIG, $PYTHON_CONFIG_NAME)
 
 # Tweaks are needed on MinGW 
-AS_IF([test x"$PYTHON_PLATFORM" = x"win32" && test x"$HAVE_PY_CONFIG" = x"yes"],
+AS_IF([test x"$PYTHON_PLATFORM" = x"win32" && test ! -z "$PYTHON_CONFIG"],
       [dnl replace '\' with '/'
        pythondir=${pythondir//\\//}
        pyexecdir=${pyexecdir//\\//}
@@ -170,7 +171,7 @@ AS_IF([test x"$PYTHON_PLATFORM" = x"win32" && test x"$HAVE_PY_CONFIG" = x"yes"],
 
 # enable debug
 AC_ARG_ENABLE(debug,
-  AS_HELP_STRING([--enable-debug], [Enable debug (-g -O0) build (default=-O2).]),
+  AS_HELP_STRING([--enable-debug], [Enable debug (-g -O0) build (default=-O2)]),
   [AS_IF([test x"$enableval" = x"yes"],
          [CXXFLAGS="-g -O0 -Wall -Wextra -Wsign-conversion -Wpedantic"; enable_debug=yes],
          [CXXFLAGS="-O2 -Wall -Wextra -Wsign-conversion -Wpedantic"; enable_debug=no])],
@@ -178,7 +179,7 @@ AC_ARG_ENABLE(debug,
 
 # enable code coverage check with gcov
 AC_ARG_ENABLE(gcov, 
-  AS_HELP_STRING([--enable-gcov], [Enable code coverage check using gcov.(default=no)]), 
+  AS_HELP_STRING([--enable-gcov], [Enable code coverage check using gcov (default=no)]), 
   [enable_gcov="$enableval"], [enable_gcov=no])
 
 AS_IF([test x"$enable_gcov" != x"no"],
@@ -219,10 +220,10 @@ AM_CONDITIONAL([TEST_LUA], [test x"$TO_BUILD_LUA" = x"yes" &&
 
 dnl When Python is installed and coverage check is disabled
 # set BUILD_PY and TEST_PY
-AS_IF([test x"$HAVE_PY_CONFIG" = x"yes" && test x"$enable_gcov" = x"no"], [TO_BUILD_PY="yes"])
+AS_IF([test ! -z "$PYTHON_CONFIG" && test x"$enable_gcov" = x"no"], [TO_BUILD_PY="yes"])
 AM_CONDITIONAL([BUILD_PY], [test x"$TO_BUILD_PY" = x"yes"])
 AM_CONDITIONAL([TEST_PY], [test x"$TO_BUILD_PY" = x"yes" &&
-                           test x"$HAVE_PY_EXE" = x"yes" &&
+                           test x"$PYTHON" != x":" &&
                            test x"$HAVE_PY_UNIT" = x"yes"])
 
 # Files to be generated
@@ -300,15 +301,15 @@ AC_MSG_WARN([
 ])
 fi
 
-if test x"$HAVE_PY_CONFIG" != x"yes"; then
+if test -z "$PYTHON_CONFIG"; then
 AC_MSG_WARN([
 ================================
- Unable to find python-config,
+ Unable to find $PYTHON_CONFIG_NAME,
  Python module will not build.
 ])
 fi
 
-if test x"$HAVE_PY_EXE" != x"yes"; then
+if test x"$PYTHON" = x":"; then
 AC_MSG_WARN([
 ====================================
  Unable to find Python interpreter,
@@ -329,10 +330,10 @@ AC_MSG_NOTICE([
 ============ Summary =============
  ${PACKAGE_STRING}
  Build configuration:
-   prefix:        ${prefix}
-   debug:         ${enable_debug}
-   Weffc++:       ${enable_weffcpp}
-   Werror:        ${enable_werror}
-   code coverage: ${enable_gcov}
-   CXXFLAGS     : ${CXXFLAGS}
+   prefix          ${prefix}
+   debug           ${enable_debug}
+   Weffc++         ${enable_weffcpp}
+   Werror          ${enable_werror}
+   code coverage   ${enable_gcov}
+   Python version  ${PYTHON_VERSION}
 ])

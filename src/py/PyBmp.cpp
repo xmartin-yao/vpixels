@@ -134,6 +134,9 @@ PyTypeObject PyBmp::Bmp_Type = {
   0,                              // tp_weaklist
   0,                              // tp_del
   0                               // tp_version_tag
+#if PY_MAJOR_VERSION == 3
+  ,0                              // tp_finalize
+#endif
 };
 
 ////////////////////////////////////////////////
@@ -174,14 +177,14 @@ void PyBmpImpl::Dealloc( PyBmpObject* self )
     self->pBmp = nullptr;
   }
 
-  self->ob_type->tp_free( self );
+  Py_TYPE(self)->tp_free( self );
 }
 
 ///////////////////////////////////////
 PyObject* PyBmpImpl::Repr( PyBmpObject* self )
 {
   return PyString_FromFormat( "<%s object: bpp=%d %dx%d>",
-                              self->ob_type->tp_name, self->pBmp->BitsPerPixel(),
+                              Py_TYPE(self)->tp_name, self->pBmp->BitsPerPixel(),
                               self->pBmp->Width(), self->pBmp->Height() );                            
 }
 
@@ -224,7 +227,7 @@ PyObject* PyBmpImpl::Import( PyBmpObject* self, PyObject* arg )
     return nullptr;    
   }
 
-  char* FileName = PyString_AsString( arg );
+  const char* FileName = PyString_AsString( arg );
 
   try
   {
@@ -273,7 +276,7 @@ PyObject* PyBmpImpl::Export( PyBmpObject* self, PyObject* args )
 //////////////////////////////////////////
 PyObject* PyBmpImpl::Clone( PyBmpObject* self )
 {
-  PyTypeObject* type = self->ob_type;
+  PyTypeObject* type = Py_TYPE(self);
   PyObject* other = type->tp_alloc( type, 0 );
   reinterpret_cast<PyBmpObject*>(other)->pBmp = new vp::Bmp( *(self->pBmp) );
 

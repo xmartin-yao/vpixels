@@ -24,10 +24,7 @@ import sys
 
 # import vpixels from current directory
 sys_path = sys.path
-if sys.platform == 'win32':
-  sys.path = ['.\\']
-else:
-  sys.path = ['./']
+sys.path = ['']
 import vpixels
 sys.path = sys_path # restore default sys.path
 

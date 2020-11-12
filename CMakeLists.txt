@@ -38,24 +38,37 @@ FindLuaExe(5.2)
 #   LUA_EXECUTABLE  full path to the executable
 
 # Lua lib
-find_package(Lua 5.2 QUIET)
+find_package(Lua 5.2 EXACT QUIET)
 #   LUA_FOUND
 #   LUA_LIBRARIES  full path to the lib
 #   LUA_INCLUDE_DIR
 #   LUA_VERSION_STRING
 
+# Python version
+# use -DPY_VERSION=<version> to choose Python version
+# Python 2.7 by default
+if(NOT DEFINED PY_VERSION)
+  set(PY_VERSION 2.7)
+endif()
+
 # Python executable
-find_package(PythonInterp 2.7 QUIET)
+find_package(PythonInterp ${PY_VERSION} QUIET )
 #   PYTHONINTERP_FOUND
 #   PYTHON_EXECUTABLE  full path to the executable
 #   PYTHON_VERSION_STRING 
+if(${PYTHONINTERP_FOUND})
+  message(STATUS "Found Python ${PYTHON_VERSION_STRING} executable")
+endif()
 
-# Python lib
-find_package(PythonLibs 2.7 QUIET)
+# Python libs
+find_package(PythonLibs ${PY_VERSION} QUIET )
 #   PYTHONLIBS_FOUND
 #   PYTHON_LIBRARIES  full path to the lib
 #   PYTHON_INCLUDE_DIRS
 #   PYTHONLIBS_VERSION_STRING
+if(${PYTHONLIBS_FOUND})
+  message(STATUS "Found Python ${PYTHONLIBS_VERSION_STRING} libs")
+endif()
 
 # CppUnit
 find_package(PkgConfig QUIET)  # find pkg-config first
@@ -129,15 +142,15 @@ if(NOT ${LUA_FOUND} )
 endif()
 
 if(NOT ${PYTHONINTERP_FOUND} )
-  message("============ Warning ============")
-  message("Failed to find Python interpreter")
+  message("============ Warning ================")
+  message("Failed to find Python ${PY_VERSION} interpreter")
   message("Unable to test Python extensions")
-  message("====================================")
+  message("=====================================")
 endif()
 
 if(NOT ${PYTHONLIBS_FOUND} )
   message("============ Warning ============")
-  message("Failed to find Python libs")
+  message("Failed to find Python ${PY_VERSION} libs")
   message("Unable to build Python extensions")
   message("=================================")
 endif()

@@ -147,6 +147,9 @@ PyTypeObject PyGif::Gif_Type = {
   0,                              // tp_weaklist
   0,                              // tp_del
   0                               // tp_version_tag
+#if PY_MAJOR_VERSION == 3
+  ,0                              // tp_finalize
+#endif
 };
 
 ////////////////////////////////////////////////
@@ -227,7 +230,7 @@ void PyGifImpl::Dealloc( PyGifObject* self )
     self->pGif = nullptr;
   }
 
-  self->ob_type->tp_free( self );
+  Py_TYPE(self)->tp_free( self );
 }
 
 ///////////////////
@@ -248,7 +251,7 @@ void PyGifImpl::Invalidate( SimpleList<PyGifImageObject>* pGifImageObjectList )
 PyObject* PyGifImpl::Repr( PyGifObject* self )
 {
   return PyString_FromFormat( "<%s object: %s bpp=%d %dx%d images=%d colors=%d>",
-                              self->ob_type->tp_name,
+                              Py_TYPE(self)->tp_name,
                               self->pGif->Version().c_str(),
                               self->pGif->BitsPerPixel(),
                               self->pGif->Width(), self->pGif->Height(),
@@ -267,7 +270,7 @@ PyObject* PyGifImpl::Import( PyGifObject* self, PyObject* arg )
     return nullptr;    
   }
 
-  char* FileName = PyString_AsString( arg );
+  const char* FileName = PyString_AsString( arg );
 
   try
   {
@@ -323,7 +326,7 @@ PyObject* PyGifImpl::Export( PyGifObject* self, PyObject* args )
 PyObject* PyGifImpl::Clone( PyGifObject* self )
 {
   // create a new PyGifObject
-  PyTypeObject* type = self->ob_type;
+  PyTypeObject* type = Py_TYPE(self);
   PyObject* other = type->tp_alloc( type, 0 );
 
   // initialize the PyGifObject

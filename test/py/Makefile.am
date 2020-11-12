@@ -39,7 +39,7 @@ check-local: copy-scripts copy-modules
 	@list='$(SCRIPT_LIST)'; \
 	for file in $$list; do \
 	  echo "run" $$file; \
-	  python$(EXEEXT) $$file; \
+	  $(PYTHON) $$file; \
 	done
 	@echo ===============================================
 

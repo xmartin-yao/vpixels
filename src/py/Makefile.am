@@ -32,9 +32,9 @@ vpixels_la_SOURCES = PyModule.cpp PyUtil.h PyBmp.h PyBmp.cpp \
 ## module: name will not be prefixed with 'lib'
 ## fno-strict-aliasing: suppress warning on Py_INCREF
 AM_CPPFLAGS = -shared -fno-strict-aliasing -I@top_srcdir@/include/vp \
-              -I@top_srcdir@/src/util `python-config --cflags`
+              -I@top_srcdir@/src/util `$(PYTHON_CONFIG) --cflags`
 AM_LDFLAGS = -shared -module -no-undefined -avoid-version \
-             @top_builddir@/src/libvpixels.la `python-config --libs`
+             @top_builddir@/src/libvpixels.la `$(PYTHON_CONFIG) --libs`
 
 ## shrext: specify lib name extension
 ##         use '.pyd', instead of '.dll', as name extension
