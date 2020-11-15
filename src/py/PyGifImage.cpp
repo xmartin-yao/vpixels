@@ -38,6 +38,178 @@
     return nullptr; \
   }
 
+////////
+// docstrings
+//////////////////////
+PyDoc_STRVAR( GifImage_Type_doc,
+"A vpixels.gifimage class represents an image (a.k.a frame) in a GIF image.\n\n\
+vpixels.gifimage class cannot be directly instantiated. To access vpixels.gifImage\n\
+objects contained in a vpixels.gif object, call getimage() of vpixels.gif object\n\
+or use subscript operator of vpixels.gif object.\n\n\
+Examples:\n\n\
+   gif  = vpixels.gif(2, 3, 4, 5)  # create a vpixels.gif object\n\
+   img0 = gif.getimage(0)          # get image 0\n\
+   img1 = gif[1]                   # get image 1" );
+
+PyDoc_STRVAR( clone_doc,
+"clone(other)\n\n\
+   other: a vpixels.gifimage object to be cloned\n\n\
+Clone another vpixels.gifimage object, so this vpixels.gifimage object will be\n\
+the same as the other one.");
+
+PyDoc_STRVAR( bitsperpixel_doc,
+"bitsperpixel(bpp)\n\n\
+   bpp: color resolution in bits/pixel\n\n\
+Change color resolution of vpixels.gifimage object. Support any value within\n\
+range [2,8]. Size of local color table, if there is one, will be changed\n\
+accordingly.\n\n\
+bitsperpixel() -> int\n\n\
+Return color resolution of vpixels.gifimage object." );
+
+PyDoc_STRVAR( bpp_doc, "Alias of bitsperpixel(...)." );
+
+PyDoc_STRVAR( left_doc,
+"left() -> int\n\n\
+Return x-coordinate of image's origin with respect to canvas.");
+
+PyDoc_STRVAR( top_doc,
+"top() -> int\n\n\
+Return y-coordinate of image's origin with respect to canvas.");
+
+PyDoc_STRVAR( width_doc,
+"width() -> int\n\n\
+Return image width in pixels." );
+
+PyDoc_STRVAR( height_doc,
+"height() -> int\n\n\
+Return image height in pixels." );
+
+PyDoc_STRVAR( dimension_doc,
+"dimension() -> tuple\n\n\
+Return dimension (width and height) of image in pixels." );
+
+PyDoc_STRVAR( crop_doc,
+"crop(left, top, width, height)\n\n\
+   left:   x-coordinate of image's origin with respect to canvas\n\
+   top:    y-coordinate of image's origin with respect to canvas\n\
+   width:  width of image\n\
+   height: height of image\n\n\
+Crop vpixels.gifimage object with the specified parameters." );
+
+PyDoc_STRVAR( setallpixels_doc,
+"setallpixels(index)\n\n\
+   index: index of an entry in color table entry\n\n\
+Set all pixels to the same color represented by an index of an entry in local\n\
+color table if there is one; or an entry in global color table, otherwise.\n\
+Index is within range [0, size)." );
+
+PyDoc_STRVAR( setall_doc, "Alias of setallpixels(...)." );
+
+PyDoc_STRVAR( setpixel_doc,
+"setpixel(x, y, index)\n\n\
+   x: x-coordinate of a pixel\n\
+   y: y-coordinate of a pixel\n\
+   index: index of an entry in color table\n\n\
+Set color of a pixel. i.e. an index of an entry in local color table\n\
+if there is one; or an entry in global color table, otherwise. Index is\n\
+within range [0, size)." );
+
+PyDoc_STRVAR( getpixel_doc,
+"getpixel(x, y) -> int\n\n\
+   x: x-coordinate of a pixel\n\
+   y: y-coordinate of a pixel\n\n\
+Return color of a pixel, i.e. an index of an entry in local color table\n\
+if there is one; or an entry in global color table, otherwise." );
+
+PyDoc_STRVAR( transparent_doc,
+"transparent(x, y) -> bool\n\
+   x: x-coordinate of a pixel\n\
+   y: y-coordinate of a pixel\n\n\
+Return True if pixel is transparent, else False." );
+
+PyDoc_STRVAR( trans_doc, "Alias of transparent(...)" );
+
+PyDoc_STRVAR( interlaced_doc,
+"interlaced() -> bool\n\n\
+Return True if pixels are interlaced, else False.");
+
+PyDoc_STRVAR( delay_doc,
+"delay(time)\n\n\
+   time: delay time in centi-second.\n\n\
+Change delay time of vpixels.gifimage object.\n\n\
+delay() -> int\n\n\
+Return delay time of vpixels.gifimage object.");
+
+PyDoc_STRVAR( colortable_doc,
+"colortable() -> bool\n\n\
+Return True if vpixels.gifimage object has a local color table, else False.");
+
+PyDoc_STRVAR( colortablesorted_doc,
+"colortablesorted() -> bool\n\n\
+Return True if entries in local color table are sorted, else False.");
+
+PyDoc_STRVAR( colortablesize_doc,
+"colortablesize(size)\n\n\
+   size: size of local color table to be changed to,\n\n\
+Change size of local color table. Color resolution will be changed accordingly.\n\
+Size can be any value in {0, 4, 8, 16, 32, 64, 128, 256}\n\n\
+colortablesize() -> int\n\n\
+Return size of local color table. 0 means no local color table." );
+
+PyDoc_STRVAR( setcolortable_doc,
+"setcolortable(index, red, green, blue)\n\n\
+   index: index of an entry in local color table\n\
+   red:   intensity of red channel\n\
+   green: intensity of green channel\n\
+   blue:  intensity of blue channel\n\n\
+Set an entry in local color table if there is one. Index is within\n\
+range [0, size) and intensities are within range [0, 255]" );
+
+PyDoc_STRVAR( setcolor_doc, "Alias of setcolortable(...)." );
+
+PyDoc_STRVAR( getcolortable_doc,
+"getcolortable(index) -> tuple\n\n\
+   index: index of an entry in local color table\n\n\
+Return intensities of red, green, and blue channel of an entry in\n\
+local color table if there is one. Index is within range [0, size)" );
+
+PyDoc_STRVAR( getcolor_doc, "Alias of getcolortable(...)." );
+
+PyDoc_STRVAR( disposalmethod_doc,
+"disposalmethod(method)\n\n\
+   method = 0: disposal method not specified\n\
+            1: draw image on top of previous one\n\
+            2: draw image after canvas is restored to background color\n\
+            3: draw image after canvas is restored to previous state\n\
+               before previous one was drawn\n\n\
+Set disposal method.\n\n\
+disposalmethod() -> int\n\n\
+Return disposal method.");
+
+PyDoc_STRVAR( disposal_doc, "Alias of disposalmethod(...)");
+
+PyDoc_STRVAR( hastransparentcolor_doc,
+"hastransparentcolor(switch)\n\n\
+Turn on transparent color if switch == True, else turn off.\n\n\
+hastransparentcolor() -> bool\n\n\
+Return True if image has transparent color, else False.");
+
+PyDoc_STRVAR( hastranscolor_doc, "Alias of hastransparentcolor(...)" );
+
+PyDoc_STRVAR( transparentcolor_doc,
+"transparentcolor(index)\n\n\
+   index: index of an entry in color table\n\n\
+Set transparent color represented by an index of an entry in local color table\n\
+if there is one; or an entry in global color table, otherwise.\n\n\
+transparentcolor() -> int\n\n\
+Return transparent color represented by an index of an entry in local color table\n\
+if there is one; or an entry in global color table, otherwise.");
+
+PyDoc_STRVAR( transcolor_doc, "Alias of transparentcolor(...)" );
+
+
+////////
+// methods for GifImage_Type
 ////////////////////////////
 namespace PyGifImageImpl
 {
@@ -77,36 +249,36 @@ namespace PyGifImageImpl
 
   // type methods
   PyMethodDef Methods[] = {
-    MDef( clone,            Clone,            METH_O,       "clone other image." )
-    MDef( bitsperpixel,     BitsPerPixel,     METH_VARARGS, "get/set color resolution." )
-    MDef( bpp,              BitsPerPixel,     METH_VARARGS, "get/set color resolution." )
-    MDef( left,             Left,             METH_NOARGS,  "get left position of the image." )
-    MDef( top,              Top,              METH_NOARGS,  "get top position of the image." )
-    MDef( width,            Width,            METH_NOARGS,  "get image width." )
-    MDef( height,           Height,           METH_NOARGS,  "get image height." )
-    MDef( dimension,        Dimension,        METH_NOARGS,  "get width and height of the image." )
-    MDef( crop,             Crop,             METH_VARARGS, "crop the image." )
-    MDef( setallpixels,     SetAllPixels,     METH_VARARGS, "set all pixels to same color." )
-    MDef( setall,           SetAllPixels,     METH_VARARGS, "set all pixels to same color." )
-    MDef( setpixel,         SetPixel,         METH_VARARGS, "set the color of a pixel." )
-    MDef( getpixel,         GetPixel,         METH_VARARGS, "get the color of a pixel." )
-    MDef( transparent,      Transparent,      METH_VARARGS, "check if a pixel is transparent." )
-    MDef( trans,            Transparent,      METH_VARARGS, "check if a pixel is transparent." )
-    MDef( interlaced,       Interlaced,       METH_NOARGS,  "return true if pixels are interlaced." )
-    MDef( delay,            Delay,            METH_VARARGS, "set/get delay time for the image." )
-    MDef( colortable,       ColorTable,       METH_NOARGS,  "return True if there is local color table." )
-    MDef( colortablesorted, ColorTableSorted, METH_NOARGS,  "return True if color table sorted." )
-    MDef( colortablesize,   ColorTableSize,   METH_VARARGS, "set/get color table size." )
-    MDef( setcolortable,    SetColorTable,    METH_VARARGS, "set a color table entry." )
-    MDef( setcolor,         SetColorTable,    METH_VARARGS, "set a color table entry." )
-    MDef( getcolortable,    GetColorTable,    METH_VARARGS, "get a color table entry." )
-    MDef( getcolor,         GetColorTable,    METH_VARARGS, "get a color table entry." )
-    MDef( disposalmethod,   DisposalMethod,   METH_VARARGS, "set/get disposal method." )
-    MDef( disposal,         DisposalMethod,   METH_VARARGS, "set/get disposal method." )
-    MDef( hastransparentcolor, HasTransColor, METH_VARARGS, "query if image has transparent color, turn on/off transparent color." )
-    MDef( hastranscolor,    HasTransColor,    METH_VARARGS, "query if image has transparent color, turn on/off transparent color." )
-    MDef( transparentcolor, TransColor,       METH_VARARGS, "set/get transparent color." )
-    MDef( transcolor,       TransColor,       METH_VARARGS, "set/get transparent color." )
+    MDef( clone,            Clone,            METH_O,       clone_doc )
+    MDef( bitsperpixel,     BitsPerPixel,     METH_VARARGS, bitsperpixel_doc )
+    MDef( bpp,              BitsPerPixel,     METH_VARARGS, bpp_doc )
+    MDef( left,             Left,             METH_NOARGS,  left_doc )
+    MDef( top,              Top,              METH_NOARGS,  top_doc )
+    MDef( width,            Width,            METH_NOARGS,  width_doc )
+    MDef( height,           Height,           METH_NOARGS,  height_doc )
+    MDef( dimension,        Dimension,        METH_NOARGS,  dimension_doc )
+    MDef( crop,             Crop,             METH_VARARGS, crop_doc )
+    MDef( setallpixels,     SetAllPixels,     METH_VARARGS, setallpixels_doc )
+    MDef( setall,           SetAllPixels,     METH_VARARGS, setall_doc )
+    MDef( setpixel,         SetPixel,         METH_VARARGS, setpixel_doc )
+    MDef( getpixel,         GetPixel,         METH_VARARGS, getpixel_doc )
+    MDef( transparent,      Transparent,      METH_VARARGS, transparent_doc )
+    MDef( trans,            Transparent,      METH_VARARGS, trans_doc )
+    MDef( interlaced,       Interlaced,       METH_NOARGS,  interlaced_doc )
+    MDef( delay,            Delay,            METH_VARARGS, delay_doc )
+    MDef( colortable,       ColorTable,       METH_NOARGS,  colortable_doc )
+    MDef( colortablesorted, ColorTableSorted, METH_NOARGS,  colortablesorted_doc )
+    MDef( colortablesize,   ColorTableSize,   METH_VARARGS, colortablesize_doc )
+    MDef( setcolortable,    SetColorTable,    METH_VARARGS, setcolortable_doc )
+    MDef( setcolor,         SetColorTable,    METH_VARARGS, setcolor_doc )
+    MDef( getcolortable,    GetColorTable,    METH_VARARGS, getcolortable_doc )
+    MDef( getcolor,         GetColorTable,    METH_VARARGS, getcolor_doc )
+    MDef( disposalmethod,   DisposalMethod,   METH_VARARGS, disposalmethod_doc )
+    MDef( disposal,         DisposalMethod,   METH_VARARGS, disposal_doc )
+    MDef( hastransparentcolor, HasTransColor, METH_VARARGS, hastransparentcolor_doc )
+    MDef( hastranscolor,    HasTransColor,    METH_VARARGS, hastranscolor_doc )
+    MDef( transparentcolor, TransColor,       METH_VARARGS, transparentcolor_doc )
+    MDef( transcolor,       TransColor,       METH_VARARGS, transcolor_doc )
     { nullptr, nullptr, 0, nullptr } 
   };
 } //PyGifImageImpl
@@ -116,7 +288,7 @@ namespace PyGifImageImpl
 /////////////////////////////////
 PyTypeObject PyGifImage::GifImage_Type = {
   PyVarObject_HEAD_INIT( nullptr, 0 )
-  "vp.gifimage",                  // tp_name
+  "vpixels.gifimage",             // tp_name
   sizeof(PyGifImageObject),       // tp_basicsize
   0,                              // tp_itemsize
   (destructor)PyGifImageImpl::Dealloc, // tp_dealloc
@@ -135,7 +307,7 @@ PyTypeObject PyGifImage::GifImage_Type = {
   0,                              // tp_setattro
   0,                              // tp_as_buffer
   Py_TPFLAGS_DEFAULT,             // tp_flags
-  "vp.gifimage object",           // tp_doc
+  GifImage_Type_doc,              // tp_doc
   0,                              // tp_traverse
   0,                              // tp_clear
   PyGifImageImpl::RichCompare,    // tp_richcompare
@@ -508,7 +680,7 @@ PyObject* PyGifImageImpl::Transparent( PyGifImageObject* self, PyObject* args )
 }
 
 ///////////////////
-// ret_bool = img.Interlaced( x, y )
+// ret_bool = img.Interlaced()
 ///////////////////////////////////////////////////
 PyObject* PyGifImageImpl::Interlaced( PyGifImageObject* self )
 {

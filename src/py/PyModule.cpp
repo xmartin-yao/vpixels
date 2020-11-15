@@ -26,9 +26,39 @@
 #include <string>
 #include <iostream>
 
+////////
+// docstrings
+//////////////////////
+PyDoc_STRVAR( Module_doc,
+"This module provides a tool to generate and manipulate BMP and GIF images.\n\
+\n\
+There are three classes, vpixels.bmp, vpixels.gif, and vpixels.gifimage in\n\
+the module. A vpixels.bmp class represents a BMP image. A vpixels.gif class\n\
+represents a GIF image, and a vpixels.gifimage class an image (a.k.a. frame)\n\
+in a GIF image.\n\
+\n\
+A vpixels.bmp object can be exported to a BMP file. A BMP file can be imported\n\
+into a vpixels.bmp object for manipulating.\n\
+\n\
+A vpixels.gif object can be exported to a GIF file. A GIF file can be imported\n\
+into a vpixels.gif object, so pixels in very image can be manipulated." );
+
+PyDoc_STRVAR( about_doc,
+"about()\n\n\
+Display information about the module." );
+
+PyDoc_STRVAR( version_doc,
+"version() -> str\n\n\
+Return version of the module." );
+
+////////
+// define module
 //////////////////////
 namespace
 {
+  #define COPYRIGHT "Copyright (C) 2019 Xueyi Yao"
+  #define LICENSE   "GNU GPL version 3 or later"
+
   // version of the module
   PyObject* Version()
   {
@@ -38,8 +68,8 @@ namespace
   // about the module
   PyObject* About()
   {
-    const std::string Notice{ PACKAGE_STRING " Copyright (C) 2019 Xueyi Yao\n"
-                              "License: GNU GPL version 3 or later\n"
+    const std::string Notice{ PACKAGE_STRING " " COPYRIGHT "\n"
+                              "License: " LICENSE "\n"
                               "Bug report: " PACKAGE_BUGREPORT };
 
     std::cout << Notice << std::endl;
@@ -48,8 +78,8 @@ namespace
 
   // module methods
   PyMethodDef Methods[] = {
-    MDef( version, Version, METH_NOARGS, "version of the module." )
-    MDef( about,   About,   METH_NOARGS, "about the module." )
+    MDef( version, Version, METH_NOARGS, version_doc )
+    MDef( about,   About,   METH_NOARGS, about_doc )
     { nullptr, nullptr, 0, nullptr } 
   };
 
@@ -57,7 +87,7 @@ namespace
   struct PyModuleDef ModuleDef = {
     PyModuleDef_HEAD_INIT,
     PACKAGE_NAME,  // m_name
-    "vpixels module",  // m_doc
+    Module_doc,    // m_doc
     -1,            // m_size
     Methods,       // m_methods
     nullptr,       // m_reload
@@ -86,7 +116,7 @@ namespace
 #if PY_MAJOR_VERSION == 3
     PyObject* M = PyModule_Create( &ModuleDef );
 #else
-    PyObject* M = Py_InitModule( PACKAGE_NAME, Methods );
+    PyObject* M = Py_InitModule3( PACKAGE_NAME, Methods, Module_doc );
 #endif
     if( M == nullptr )
       return nullptr;
@@ -98,11 +128,14 @@ namespace
     // add types
     PyModule_AddObject( M, "bmp", reinterpret_cast<PyObject*>(&PyBmp::Bmp_Type) );
     PyModule_AddObject( M, "gif", reinterpret_cast<PyObject*>(&PyGif::Gif_Type) );
+    // do not need to add GifImage_Type. doing so is to allow the use of help()
+    // to display docstrings without having to have a gifimage instance.
+    PyModule_AddObject( M, "gifimage", reinterpret_cast<PyObject*>(&PyGifImage::GifImage_Type) );
 
     // add strings
     PyModule_AddObject( M, "__copyright__",
-                        PyString_FromFormat("%s Copyright (C) 2019 Xueyi Yao", PACKAGE_STRING) );
-    PyModule_AddObject( M, "__license__", PyString_FromString("GNU GPL version 3 or later") );
+                        PyString_FromFormat("%s %s", PACKAGE_STRING, COPYRIGHT) );
+    PyModule_AddObject( M, "__license__", PyString_FromString(LICENSE) );
     PyModule_AddObject( M, "__version__", PyString_FromString(PACKAGE_VERSION) );
 
     return M;

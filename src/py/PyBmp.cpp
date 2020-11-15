@@ -23,6 +23,126 @@
 #include "Bmp.h"
 #include "Exception.h"
 
+////////
+// docstrings
+//////////////////////
+PyDoc_STRVAR( Bmp_Type_doc,
+"A vpixels.bmp class represents a BMP image. To instantiate a vpixels.bmp\n\
+object, call bmp() of the module.\n\n\
+vpixels.bmp(bbp, width, height) -> vpixels.bmp\n\n\
+   bpp:    color resolution, 1, 4, 8, and 24 bits/pixel supported\n\
+   width:  image width in pixels\n\
+   height: image height in pixels\n\n\
+Examples:\n\n\
+   vpixels.bmp()\n\n\
+Create a vpixels.bmp object of color resolution 1 bit/pixel, width 1,\n\
+and height 1.\n\n\
+   vpixels.bmp(bpp=4, width=60, height=20)\n\n\
+Create a vpixels.bmp object of color resolution 4 bits/pixel, width 60,\n\
+and height 20.");
+
+PyDoc_STRVAR( importf_doc,
+"importf(name)\n\n\
+   name: name of a BMP file to be imported in\n\n\
+Import a BMP file into vpixels.bmp object.");
+
+PyDoc_STRVAR( export_doc,
+"export(name, overwrite)\n\n\
+   name: name of a BMP file to be exported to\n\
+   overwrite: if True, overwrite existing file, default == False\n\n\
+Export vpixels.bmp object to a BMP file." );
+
+PyDoc_STRVAR( clone_doc,
+"clone() -> vpixels.bmp\n\n\
+Create a new vpixels.bmp object that is the same as the current one." );
+
+PyDoc_STRVAR( bitsperpixel_doc,
+"bitsperpixel() -> int\n\n\
+Return color resolution of vpixels.bmp object in bits/pixel." );
+
+PyDoc_STRVAR( bpp_doc, "Alias of bitsperpixel(...)." );
+
+PyDoc_STRVAR( width_doc,
+"width() -> int\n\n\
+Return image width in pixels." );
+
+PyDoc_STRVAR( height_doc,
+"height() -> int\n\n\
+Return image height in pixels." );
+
+PyDoc_STRVAR( dimension_doc,
+"dimension() -> tuple\n\n\
+Return image dimension (width and height) in pixels." );
+
+PyDoc_STRVAR( colortablesize_doc,
+"colortablesize() -> int\n\n\
+Return size of color table. When color resolution is 24 bits/pixel,\n\
+vpixels.bmp object has no color table and color table size equals to 0." );
+
+PyDoc_STRVAR( setcolortable_doc,
+"setcolortable(index, red, green, blue)\n\n\
+   index: index of an entry in color table\n\
+   red:   intensity of red channel\n\
+   green: intensity of green channel\n\
+   blue:  intensity of blue channel\n\n\
+Set an entry in color table, when color resolution is 1, 4, or 8 bits/pixel.\n\
+Index is within range [0, size) and intensities are within range [0, 255]." );
+
+PyDoc_STRVAR( setcolor_doc, "Alias of setcolortable(...)." );
+
+PyDoc_STRVAR( getcolortable_doc,
+"getcolortable(index) -> tuple\n\n\
+   index: index of an entry in color table\n\n\
+Return intensities of red, green, and blue channel of an entry in\n\
+color table, when color resolution is 1, 4, or 8 bits/pixel. Index is\n\
+within range [0, size)." );
+
+PyDoc_STRVAR( getcolor_doc, "Alias of getcolortable(...)." );
+
+PyDoc_STRVAR( setallpixels_doc,
+"setallpixels(index)\n\n\
+   index: index of an entry in color table\n\n\
+Set all pixels to the same color represented by an index of an entry in\n\
+color table, when color resolution is 1, 4, or 8 bits/pixel. Index is within\n\
+range [0, size).\n\n\
+setallpixels(red, green, blue)\n\n\
+   red:   intensity of red channel\n\
+   green: intensity of green channel\n\
+   blue:  intensity of blue channel\n\n\
+Set all pixels to the same color, when color resolution is 24 bits/pixel.\n\
+Intensities are within range [0, 255].");
+
+PyDoc_STRVAR( setall_doc, "Alias of setallpixels(...)." );
+
+PyDoc_STRVAR( setpixel_doc,
+"setpixel(x, y, index)\n\n\
+   x: x-coordinate of a pixel\n\
+   y: y-coordinate of a pixel\n\
+   index: index of an entry in color table\n\n\
+Set color of a pixel, i.e. an index of an entry in color table, when color\n\
+resolution is 1, 4, or 8 bits/pixel. Index is within range [0, size).\n\n\
+setpixel(x, y, red, green, blue)\n\n\
+   x: x-coordinate of a pixel\n\
+   y: y-coordinate of a pixel\n\
+   red:   intensity of red channel\n\
+   green: intensity of green channel\n\
+   blue:  intensity of blue channel\n\n\
+Set color of a pixel, when color resolution is 24 bits/pixel. Intensities\n\
+are within range [0, 255]." );
+
+PyDoc_STRVAR( getpixel_doc,
+"getpixel(x, y) -> int\n\n\
+   x: x-coordinate of a pixel\n\
+   y: y-coordinate of a pixel\n\n\
+Return color of a pixel, i.e. an index of an entry in color table,\n\
+when color resolution is 1, 4, or 8 bits/pixel.\n\n\
+getpixel(x, y) -> tuple\n\n\
+   x: x-coordinate of a pixel\n\
+   y: y-coordinate of a pixel\n\n\
+Return color of a pixel, i.e. intensities of red, green, and blue channel,\n\
+when color resolution is 24 bits/pixel." );
+
+
 /////////////////
 // data for Bmp_Type
 ///////////////////////////////
@@ -32,7 +152,9 @@ typedef struct PyBmpObject
   vp::Bmp* pBmp;
 } PyBmpObject;
 
-/////////////////////
+////////
+// methods for Bmp_Type
+/////////////////////////
 namespace PyBmpImpl
 {
   // Python special methods
@@ -62,23 +184,23 @@ namespace PyBmpImpl
   // type methods
   PyMethodDef Methods[]= {
     // cannot use 'import' as name, which causes SyntaxError
-    MDef( importf,        Import,         METH_O,       "import from BMP file." )
-    MDef( export,         Export,         METH_VARARGS, "export to BMP file." )
-    MDef( clone,          Clone,          METH_NOARGS,  "clone itself and create a new object." )
-    MDef( bitsperpixel,   BitsPerPixel,   METH_NOARGS,  "get color resolution." )
-    MDef( bpp,            BitsPerPixel,   METH_NOARGS,  "get color resolution." )
-    MDef( width,          Width,          METH_NOARGS,  "get width." )
-    MDef( height,         Height,         METH_NOARGS,  "get height." )
-    MDef( dimension,      Dimension,      METH_NOARGS,  "get width and height." )
-    MDef( colortablesize, ColorTableSize, METH_NOARGS,  "get color table size." )
-    MDef( setcolortable,  SetColorTable,  METH_VARARGS, "set a color table entry." )
-    MDef( setcolor,       SetColorTable,  METH_VARARGS, "set a color table entry." )
-    MDef( getcolortable,  GetColorTable,  METH_VARARGS, "get a color table entry." )
-    MDef( getcolor,       GetColorTable,  METH_VARARGS, "get a color table entry." )
-    MDef( setallpixels,   SetAllPixels,   METH_VARARGS, "set all pixels to same color." )
-    MDef( setall,         SetAllPixels,   METH_VARARGS, "set all pixels to same color." )
-    MDef( setpixel,       SetPixel,       METH_VARARGS, "set the color of a pixel." )
-    MDef( getpixel,       GetPixel,       METH_VARARGS, "get the color of a pixel." )
+    MDef( importf,        Import,         METH_O,       importf_doc )
+    MDef( export,         Export,         METH_VARARGS, export_doc )
+    MDef( clone,          Clone,          METH_NOARGS,  clone_doc )
+    MDef( bitsperpixel,   BitsPerPixel,   METH_NOARGS,  bitsperpixel_doc )
+    MDef( bpp,            BitsPerPixel,   METH_NOARGS,  bpp_doc )
+    MDef( width,          Width,          METH_NOARGS,  width_doc )
+    MDef( height,         Height,         METH_NOARGS,  height_doc )
+    MDef( dimension,      Dimension,      METH_NOARGS,  dimension_doc )
+    MDef( colortablesize, ColorTableSize, METH_NOARGS,  colortablesize_doc )
+    MDef( setcolortable,  SetColorTable,  METH_VARARGS, setcolortable_doc )
+    MDef( setcolor,       SetColorTable,  METH_VARARGS, setcolor_doc )
+    MDef( getcolortable,  GetColorTable,  METH_VARARGS, getcolortable_doc )
+    MDef( getcolor,       GetColorTable,  METH_VARARGS, getcolor_doc )
+    MDef( setallpixels,   SetAllPixels,   METH_VARARGS, setallpixels_doc )
+    MDef( setall,         SetAllPixels,   METH_VARARGS, setall_doc )
+    MDef( setpixel,       SetPixel,       METH_VARARGS, setpixel_doc )
+    MDef( getpixel,       GetPixel,       METH_VARARGS, getpixel_doc )
     { nullptr, nullptr, 0, nullptr } 
   };
 } //PyBmpImpl
@@ -88,7 +210,7 @@ namespace PyBmpImpl
 //////////////////////////////
 PyTypeObject PyBmp::Bmp_Type = {
   PyVarObject_HEAD_INIT( nullptr, 0 )
-  "vp.bmp",                       // tp_name
+  "vpixels.bmp",                  // tp_name
   sizeof(PyBmpObject),            // tp_basicsize
   0,                              // tp_itemsize
   (destructor)PyBmpImpl::Dealloc, // tp_dealloc
@@ -107,7 +229,7 @@ PyTypeObject PyBmp::Bmp_Type = {
   0,                              // tp_setattro
   0,                              // tp_as_buffer
   Py_TPFLAGS_DEFAULT|Py_TPFLAGS_BASETYPE, // tp_flags, allow subclass
-  "vp.bmp object",                // tp_doc
+  Bmp_Type_doc,                   // tp_doc
   0,                              // tp_traverse
   0,                              // tp_clear
   0,                              // tp_richcompare

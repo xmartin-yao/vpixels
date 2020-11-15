@@ -25,6 +25,153 @@
 #include "Exception.h"
 #include "SimpleList.h"
 
+////////
+// docstrings
+//////////////////////
+PyDoc_STRVAR( Gif_Type_doc,
+"A vpixels.gif class represents a GIF image. A vpixels.gif object contains\n\
+vpixels.gifimage objects that represent images (a.k.a. frames) in a GIF image.\n\
+To instantiate a vpixels.gif object, call gif() of the module.\n\n\
+vpixels.gif(bbp, width, height, images, colortable) --> vpixels.gif\n\n\
+   bpp:    color resolution in bits/pixel, supported value within range [2,8]\n\
+   width:  canvas width in pixels\n\
+   height: canvas height in pixels\n\
+   images: number of images, default == 1\n\
+   colortable: if True, vpixels.gif object has a global color table,\n\
+               default == True\n\n\
+Examples:\n\n\
+   vpixels.gif()\n\n\
+Create a vpixels.gif object of color resolution 1 bit/pixel, width 1,\n\
+and height 1, that contains one vpixels.gifimage object and has\n\
+a global color table.\n\n\
+   vpixels.gif(bpp=3, width=60, height=20)\n\n\
+Create a vpixels.gif object of color resolution 3 bits/pixel, width 60,\n\
+and height 20, that contains 1 vpixels.gifimage object and has\n\
+a global color table.\n\n\
+   vpixels.gif(4, 30, 20, 5, False)\n\n\
+Create a vpixels.gif object of color resolution 4 bits/pixel, width 30,\n\
+and height 20, that contains 5 vpixels.gifimage objects and does not have\n\
+a global color table, while each of the 5 vpixels.gifimage objects has\n\
+its own local color table." );
+
+PyDoc_STRVAR( importf_doc,
+"importf(name)\n\n\
+   name: name of a GIF file to be imported in\n\n\
+Import a GIF file into vpixels.gif object.");
+
+PyDoc_STRVAR( export_doc,
+"export(name, overwrite)\n\n\
+   name: name of a GIF file to be exported to\n\
+   overwrite: if True, overwrite existing file, default == False\n\n\
+Export vpixels.gif object to a GIF file." );
+
+PyDoc_STRVAR( clone_doc,
+"clone() -> vpixels.gif\n\n\
+Create a new vpixels.gif object that is the same as the current one." );
+
+PyDoc_STRVAR( version_doc,
+"version() -> str\n\n\
+Return version of GIF specification the vpixels.gif object follows.");
+
+PyDoc_STRVAR( bitsperpixel_doc,
+"bitsperpixel(bpp)\n\n\
+   bpp: color resolution in bits/pixel\n\n\
+Change color resolution of vpixels.gif object. Support any value within\n\
+range [2,8]. Size of global color table, if there is one, will be changed\n\
+accordingly.\n\n\
+bitsperpixel() -> int\n\n\
+Return color resolution of vpixels.gif object." );
+
+PyDoc_STRVAR( bpp_doc, "Alias of bitsperpixel(...)." );
+
+PyDoc_STRVAR( width_doc,
+"width() -> int\n\n\
+Return canvas width in pixels." );
+
+PyDoc_STRVAR( height_doc,
+"height() -> int\n\n\
+Return canvas height in pixels." );
+
+PyDoc_STRVAR( dimension_doc,
+"dimension() -> tuple\n\n\
+Return dimension (width and height) of canvas in pixels." );
+
+PyDoc_STRVAR( colortable_doc,
+"colortable() -> bool\n\n\
+Return True if vpixels.gif object has a global color table, else False." );
+
+PyDoc_STRVAR( colortablesize_doc,
+"colortablesize(size)\n\n\
+   size: size of global color table to be changed to,\n\n\
+Change size of global color table. Color resolution will be changed\n\
+accordingly. Size can be any value in {0, 4, 8, 16, 32, 64, 128, 256}\n\n\
+colortablesize() -> int\n\n\
+Return size of global color table. 0 means no global color table." );
+
+PyDoc_STRVAR( colortablesorted_doc,
+"colortablesorted() -> bool\n\n\
+return True if entries in global color table are sorted, else False." );
+
+PyDoc_STRVAR( setcolortable_doc,
+"setcolortable(index, red, green, blue)\n\n\
+   index: index of an entry in global color table\n\
+   red:   intensity of red channel\n\
+   green: intensity of green channel\n\
+   blue:  intensity of blue channel\n\n\
+Set an entry in global color table. Index is within range [0, size) and\n\
+intensities are within range [0, 255]" );
+
+PyDoc_STRVAR( setcolor_doc, "Alias of setcolortable(...)" );
+
+PyDoc_STRVAR( getcolortable_doc,
+"getcolortable(index) -> tuple\n\n\
+   index: index of an entry in global color table\n\n\
+Return intensities of red, green, and blue channel of an entry in\n\
+global color table. Index is within range [0, size)." );
+
+PyDoc_STRVAR( getcolor_doc, "Alias of getcolortable(...)." );
+
+PyDoc_STRVAR( backgroundcolor_doc,
+"backgroundcolor(index)\n\n\
+   index: index of an entry in global or local color table\n\n\
+Set background color.\n\n\
+backgroundcolor() -> int\n\n\
+Return background color, an index of an entry in global or local color table.");
+
+PyDoc_STRVAR( background_doc, "Alias of backgroundcolor(...)." );
+
+PyDoc_STRVAR( aspectratio_doc,
+"aspectratio() -> int\n\n\
+Return aspect ratio." );
+
+PyDoc_STRVAR( getimage_doc,
+"getimage(index) -> vpixels.gifimage\n\n\
+   index: index of a vpixels.gifimage object\n\n\
+Return a vpixels.gifimage object contained in vpixels.gif project.\n\
+Another way to access a vpixels.gifimage object is using subscript operator.\n\
+Index is within range [0, images())." );
+
+PyDoc_STRVAR( removeimage_doc,
+"removeimage(index) -> bool\n\n\
+   index: index of a vpixels.gifimage object\n\n\
+Remove a vpixels.gifimage object contained in vpixels.gif object.\n\
+Index is within range [0, images())" );
+
+PyDoc_STRVAR( remove_doc, "Alias of removeimage(...)." );
+
+PyDoc_STRVAR( images_doc,
+"images() -> int\n\n\
+Return the number of vpixels.gifimage objects contained in vpixels.gif object.\n\
+Another way is calling the built-in function len() on vpixels.gif object." );
+
+PyDoc_STRVAR( size_doc,
+"size() -> int\n\n\
+Return size of the resulting GIF file in bytes, if vpixels.gif object\n\
+is exported to a GIF file." );
+
+
+////////
+// methods for Gif_Type
 //////////////////////
 namespace PyGifImpl
 {
@@ -63,30 +210,30 @@ namespace PyGifImpl
   // Gif_Type methods
   PyMethodDef Methods[] = {
     // cannot use 'import' as name, which causes SyntaxError
-    MDef( importf,          Import,           METH_O,       "import from GIF file." )
-    MDef( export,           Export,           METH_VARARGS, "export to GIF file." )
-    MDef( clone,            Clone,            METH_NOARGS,  "clone itself and create a new object." )
-    MDef( version,          Version,          METH_NOARGS,  "get GIF version." )
-    MDef( bitsperpixel,     BitsPerPixel,     METH_VARARGS, "get/set color resolution." )
-    MDef( bpp,              BitsPerPixel,     METH_VARARGS, "get/set color resolution." )
-    MDef( width,            Width,            METH_NOARGS,  "get width." )
-    MDef( height,           Height,           METH_NOARGS,  "get height." )
-    MDef( dimension,        Dimension,        METH_NOARGS,  "get width and height." )
-    MDef( colortable,       ColorTable,       METH_NOARGS,  "return True if there is global color table." )
-    MDef( colortablesize,   ColorTableSize,   METH_VARARGS, "get/set global color table size." )
-    MDef( colortablesorted, ColorTableSorted, METH_NOARGS,  "return True if global color table is sorted" )
-    MDef( setcolortable,    SetColorTable,    METH_VARARGS, "set a color table entry." )
-    MDef( setcolor,         SetColorTable,    METH_VARARGS, "set a color table entry." )
-    MDef( getcolortable,    GetColorTable,    METH_VARARGS, "get a color table entry." )
-    MDef( getcolor,         GetColorTable,    METH_VARARGS, "get a color table entry." )
-    MDef( backgroundcolor,  BackgroundColor,  METH_VARARGS, "get/set background color." )
-    MDef( background,       BackgroundColor,  METH_VARARGS, "get/set background color." )
-    MDef( aspectratio,      AspectRatio,      METH_NOARGS,  "get aspect ratio." )
-    MDef( getimage,         GetImage,         METH_O,       "get an image object." )
-    MDef( removeimage,      RemoveImage,      METH_O,       "remove an image." )
-    MDef( remove,           RemoveImage,      METH_O,       "remove an image." )
-    MDef( images,           Images,           METH_NOARGS,  "get the number of images." )
-    MDef( size,             Size,             METH_NOARGS,  "get the size of resulting GIF file." )
+    MDef( importf,          Import,           METH_O,       importf_doc )
+    MDef( export,           Export,           METH_VARARGS, export_doc )
+    MDef( clone,            Clone,            METH_NOARGS,  clone_doc )
+    MDef( version,          Version,          METH_NOARGS,  version_doc )
+    MDef( bitsperpixel,     BitsPerPixel,     METH_VARARGS, bitsperpixel_doc )
+    MDef( bpp,              BitsPerPixel,     METH_VARARGS, bpp_doc )
+    MDef( width,            Width,            METH_NOARGS,  width_doc )
+    MDef( height,           Height,           METH_NOARGS,  height_doc )
+    MDef( dimension,        Dimension,        METH_NOARGS,  dimension_doc )
+    MDef( colortable,       ColorTable,       METH_NOARGS,  colortable_doc )
+    MDef( colortablesize,   ColorTableSize,   METH_VARARGS, colortablesize_doc )
+    MDef( colortablesorted, ColorTableSorted, METH_NOARGS,  colortablesorted_doc )
+    MDef( setcolortable,    SetColorTable,    METH_VARARGS, setcolortable_doc )
+    MDef( setcolor,         SetColorTable,    METH_VARARGS, setcolor_doc )
+    MDef( getcolortable,    GetColorTable,    METH_VARARGS, getcolortable_doc )
+    MDef( getcolor,         GetColorTable,    METH_VARARGS, getcolor_doc )
+    MDef( backgroundcolor,  BackgroundColor,  METH_VARARGS, backgroundcolor_doc )
+    MDef( background,       BackgroundColor,  METH_VARARGS, background_doc )
+    MDef( aspectratio,      AspectRatio,      METH_NOARGS,  aspectratio_doc )
+    MDef( getimage,         GetImage,         METH_O,       getimage_doc )
+    MDef( removeimage,      RemoveImage,      METH_O,       removeimage_doc )
+    MDef( remove,           RemoveImage,      METH_O,       remove_doc )
+    MDef( images,           Images,           METH_NOARGS,  images_doc )
+    MDef( size,             Size,             METH_NOARGS,  size_doc )
     { nullptr, nullptr, 0, nullptr } 
   };
 
@@ -101,7 +248,7 @@ namespace PyGifImpl
 //////////////////////////////
 PyTypeObject PyGif::Gif_Type = {
   PyVarObject_HEAD_INIT( nullptr, 0 )
-  "vp.gif",                       // tp_name
+  "vpixels.gif",                  // tp_name
   sizeof(PyGifObject),            // tp_basicsize
   0,                              // tp_itemsize
   (destructor)PyGifImpl::Dealloc, // tp_dealloc
@@ -120,7 +267,7 @@ PyTypeObject PyGif::Gif_Type = {
   0,                              // tp_setattro
   0,                              // tp_as_buffer
   Py_TPFLAGS_DEFAULT|Py_TPFLAGS_BASETYPE, // tp_flags, allow subclass
-  "vp.gif object",                // tp_doc
+  Gif_Type_doc,                   // tp_doc
   0,                              // tp_traverse
   0,                              // tp_clear
   0,                              // tp_richcompare
