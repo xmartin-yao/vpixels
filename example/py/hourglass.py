@@ -28,16 +28,16 @@ class hourglass( vpixels.gif ):
 
   # generate GIF file
   def generate( self ):
-    print "Set color table"
+    print( "Set color table" )
     self.__setcolor()
 
-    print "Drawing ..."
+    print( "Drawing ..." )
     self.__draw()
 
-    print "Set delay time"
+    print( "Set delay time" )
     self.__setpause()
 
-    print "Export to 'hourglass.gif'"
+    print( "Export to 'hourglass.gif'" )
     self.export( "hourglass.gif", True )
 
 
@@ -124,11 +124,11 @@ class hourglass( vpixels.gif ):
 
 
 if __name__ == '__main__':
-  start = time.clock()
+  start = time.time()
 
   gif = hourglass()
-  print gif
+  print( gif )
   gif.generate()
 
-  end = time.clock()
-  print "Elapsed:", end - start, "sec."
+  end = time.time()
+  print( "Elapsed: %f sec." % (end - start) )

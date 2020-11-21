@@ -29,13 +29,13 @@ class circularity( vpixels.bmp ):
 
   # generate BMP file
   def generate( self ):
-    print "Set color table"
+    print( "Set color table" )
     self.__setcolor()
 
-    print "Drawing ..."
+    print( "Drawing ..." )
     self.__draw()
 
-    print "Export to 'circularity.bmp'"
+    print( "Export to 'circularity.bmp'" )
     self.export( "circularity.bmp", True )
 
 
@@ -46,7 +46,7 @@ class circularity( vpixels.bmp ):
     height = self.height()
 
     j = height - 1
-    for i in range( 0, height/2 ):
+    for i in range( 0, int(height/2) ):
       color = 4*i
       self.setcolor( i, color, color, color )
       self.setcolor( j, color, color, color )
@@ -70,11 +70,11 @@ class circularity( vpixels.bmp ):
 
 
 if __name__ == '__main__':
-  start = time.clock()
+  start = time.time()
 
   bmp = circularity()
-  print bmp
+  print( bmp )
   bmp.generate()
 
-  end = time.clock()
-  print "Elapsed time:", end - start, "sec"
+  end = time.time()
+  print( "Elapsed: %f sec." % (end - start) )
