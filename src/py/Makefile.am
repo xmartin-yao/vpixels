@@ -17,8 +17,8 @@
 
 ## Makefile.am for directory src/py/
 
-## for CMake build
-EXTRA_DIST = CMakeLists.txt
+## files to be included in tar ball
+EXTRA_DIST = CMakeLists.txt setup.py.in
 
 ## Build Python module, if Python is installed and coverage check is disabled
 if BUILD_PY
@@ -42,6 +42,15 @@ if OS_MINGW
   AM_LDFLAGS +=-shrext .pyd
 endif
 
+## target to build a wheel file
+pack-py:
+	@echo pack Python extension module
+	$(PYTHON) setup.py bdist_wheel >/dev/null
+
+## target clean
+clean-local:
+	$(RM) -r dist/ build/ .libs/vpixels.egg-info/
+
 else  # BUILD_PY
 
 ## show notice
@@ -51,3 +60,6 @@ all-local:
 	@echo =============================
 
 endif  # BUILD_PY
+
+## targets defined in this file
+.PHONY: pack-py

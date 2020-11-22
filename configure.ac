@@ -18,7 +18,8 @@
 #######################################################################
 
 AC_PREREQ(2.68)
-AC_INIT([vpixels], [m4_esyscmd_s([head -1 VP_VERSION])], [xmartinyao@gmail.com])
+AC_INIT([vpixels], [m4_esyscmd_s([head -1 VP_VERSION])],
+        [xmartinyao@gmail.com],, [github.com/xmartin-yao/vpixels])
 AC_CONFIG_AUX_DIR([admin])
 AC_CONFIG_MACRO_DIR([m4])
 AC_CONFIG_SRCDIR([VP_VERSION])
@@ -232,7 +233,7 @@ AC_CONFIG_FILES([Makefile
                  include/vp/Makefile
                  src/Makefile
                  src/bmp/Makefile src/gif/Makefile src/util/Makefile
-                 src/lua/Makefile src/py/Makefile
+                 src/lua/Makefile src/py/Makefile src/py/setup.py
                  test/Makefile
                  test/bmp/Makefile test/gif/Makefile test/util/Makefile
                  test/lua/Makefile test/py/Makefile

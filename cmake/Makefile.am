@@ -18,4 +18,4 @@
 ## Makefile.am for cmake/
 
 ## config.h.in is used by CMake build
-EXTRA_DIST = SetVersionNumber.cmake FindLuaExe.cmake config.h.in
+EXTRA_DIST = SetVersionNumber.cmake FindLuaExe.cmake config.h.in setup.py.in

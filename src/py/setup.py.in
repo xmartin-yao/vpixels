@@ -1,0 +1,47 @@
+###########################################
+# Copyright (C) 2020 Xueyi Yao
+# Please see license terms in file COPYING
+###########################################
+
+# setup.py.in
+# template for Autoconf to generate setup.py to build wheel file
+
+from setuptools import setup
+from setuptools.dist import Distribution
+import sys
+import os
+
+
+# suffix of extension module
+suffix = '.pyd' if os.name == 'nt' else '.so'
+
+
+# customized Distribution that forces a binary package with platform name
+class BinaryDistribution( Distribution ):
+  def has_ext_modules( self ):
+    return True
+
+
+setup( name = '@PACKAGE_NAME@',   # required
+       version = '@PACKAGE_VERSION@',   # required
+
+       # optional
+       license = 'GNU GPL version 3 or later',
+       description = 'A tool to generate and manipulate BMP and GIF images.',
+       author = 'Xueyi Yao',
+       author_email = '@PACKAGE_BUGREPORT@',
+       url = '@PACKAGE_URL@',
+
+       # root package (a package without name)
+       # so the extension module will be installed in lib/site-packages/, instead of
+       # a directory of its own. though it causes warning, it works.
+       packages = [''],   # required
+
+       # location of the built module
+       package_dir={'': '.libs'},
+
+       # pack pre-built module as package data
+       package_data = {'': ['vpixels' + suffix]},
+ 
+       distclass = BinaryDistribution,
+     )

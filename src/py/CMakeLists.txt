@@ -66,3 +66,24 @@ endif()
 if(MSVC)
   set_target_properties(vpixels-py PROPERTIES COMPILE_FLAGS "/MT")
 endif()
+
+#
+# target: pack-py
+#         pack the extension module into a wheel file
+#
+
+# configure setup.py.in
+configure_file(${PROJECT_SOURCE_DIR}/cmake/setup.py.in setup.py)
+
+# build a wheel file
+# when using MSVC, the extension module needs to be copied to current directory
+add_custom_target(pack-py
+                  DEPENDS vpixels-py
+                  COMMENT "Pack Python extension module"
+                  COMMAND ${CMAKE_COMMAND} -E copy_if_different
+                          $<TARGET_FILE:vpixels-py> $<TARGET_FILE_NAME:vpixels-py>
+                  COMMAND ${PYTHON_EXECUTABLE} setup.py bdist_wheel)
+
+# for 'make clean'
+list(APPEND CLEAN_LIST build/ dist/ vpixels.egg-info/)
+set_directory_properties(PROPERTIES ADDITIONAL_MAKE_CLEAN_FILES "${CLEAN_LIST}")

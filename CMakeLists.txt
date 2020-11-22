@@ -29,6 +29,7 @@ message(STATUS "Configuring ${CMAKE_PROJECT_NAME} ${PROJECT_VERSION}")
 
 # set email address
 set(PROJECT_BUGREPORT "xmartinyao@gmail.com")
+set(CMAKE_PROJECT_HOMEPAGE_URL "github.com/xmartin-yao/vpixels")
 
 # Lua executable
 include(${PROJECT_SOURCE_DIR}/cmake/FindLuaExe.cmake)
