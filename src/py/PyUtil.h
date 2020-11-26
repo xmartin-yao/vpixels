@@ -30,21 +30,34 @@
 // check if value >= lower
 ////////////////////////////////////////////////
 #define Value_CheckLower( arg, value, lower ) \
-  if( (value) < (lower) )        \
+  if( (value) < (lower) ) \
   { \
-    PyErr_Format( PyExc_ValueError, "argument #%d expected >= %d (%d given)", \
+    PyErr_Format( PyExc_ValueError, "argument #%d expected >= %d (got %d)", \
                   (arg), (lower), (value) ); \
     return nullptr; \
   }
 
 //////////////////////////////
 // check if value < upper
-////////////////////////////////////////////////
+// for multi-argument function that guarantees lower bound is 0
+////////////////////////////////////////////////////////////////
 #define Value_CheckUpper( arg, value, upper ) \
-  if( (value) >= (upper) )        \
+  if( (value) >= (upper) ) \
   { \
-    PyErr_Format( PyExc_ValueError, "argument #%d expected < %d (%d given)", \
-                  (arg), (upper), (value) ); \
+    PyErr_Format( PyExc_ValueError, "argument #%d expected within [0,%d] (got %d)", \
+                  (arg), (upper) - 1, (value) ); \
+    return nullptr; \
+  }
+
+//////////////////////////////
+// check if value < upper
+// for single-argument function that guarantees lower bound is 0
+////////////////////////////////////////////////////////////////
+#define Value_CheckUpperOne( value, upper ) \
+  if( (value) >= (upper) ) \
+  { \
+    PyErr_Format( PyExc_ValueError, "argument expected within [0,%d] (got %d)", \
+                  (upper) - 1, (value) ); \
     return nullptr; \
   }
 
@@ -54,8 +67,20 @@
 #define Value_CheckRange( arg, value, lower, upper ) \
   if( (value) < (lower) || (value) > (upper) )  \
   { \
-    PyErr_Format( PyExc_ValueError, "argument #%d expected within [%d,%d] (%d given)", \
+    PyErr_Format( PyExc_ValueError, "argument #%d expected within [%d,%d] (got %d)", \
                   (arg), (lower), (upper), (value) ); \
+    return nullptr; \
+  }
+
+/////////////////////////
+// check if value is within range [lower, upper]
+// for single-argument function
+/////////////////////////////////////////////////////
+#define Value_CheckRangeOne( value, lower, upper ) \
+  if( (value) < (lower) || (value) > (upper) )  \
+  { \
+    PyErr_Format( PyExc_ValueError, "argument expected within [%d,%d] (got %d)", \
+                  (lower), (upper), (value) ); \
     return nullptr; \
   }
 
@@ -65,8 +90,20 @@
 #define Value_CheckRangeEx( arg, value, lower, upper ) \
   if( (value) < (lower) || (value) >= (upper) )  \
   { \
-    PyErr_Format( PyExc_ValueError, "argument #%d expected within [%d,%d] (%d given)", \
+    PyErr_Format( PyExc_ValueError, "argument #%d expected within [%d,%d] (got %d)", \
                   (arg), (lower), (upper) - 1, (value) ); \
+    return nullptr; \
+  }
+
+/////////////////////////
+// check if value is within range [lower, upper)
+// for single-argument function
+/////////////////////////////////////////////////////
+#define Value_CheckRangeExOne( value, lower, upper ) \
+  if( (value) < (lower) || (value) >= (upper) )  \
+  { \
+    PyErr_Format( PyExc_ValueError, "argument expected within [%d,%d] (got %d)", \
+                  (lower), (upper) - 1, (value) ); \
     return nullptr; \
   }
 

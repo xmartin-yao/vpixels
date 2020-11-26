@@ -484,7 +484,7 @@ PyObject* PyBmpImpl::GetColorTable( PyBmpObject* self, PyObject* args )
   if( !PyArg_ParseTuple( args, "b", &Index ) )
     return nullptr;
 
-  Value_CheckUpper( 1, Index, Size )
+  Value_CheckUpperOne( Index, Size )
 
   uint8_t Blue, Green, Red;
   self->pBmp->GetColorTable(Index, Blue, Green, Red);
@@ -505,7 +505,7 @@ PyObject* PyBmpImpl::SetAllPixels( PyBmpObject* self, PyObject* args )
     if( !PyArg_ParseTuple( args, "b", &ColorIndex ) )
       return nullptr;
 
-    Value_CheckUpper( 1, ColorIndex, Size )
+    Value_CheckUpperOne( ColorIndex, Size )
     self->pBmp->SetAllPixels( ColorIndex );
   }
   else

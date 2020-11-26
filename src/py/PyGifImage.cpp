@@ -458,7 +458,7 @@ PyObject* PyGifImageImpl::Clone( PyGifImageObject* self, PyObject* arg )
 
   if( Py_TYPE(arg) != &PyGifImage::GifImage_Type )
   {
-    PyErr_Format( PyExc_TypeError, "argument #1: %s object expected, got %s",
+    PyErr_Format( PyExc_TypeError, "argument expected a %s object (got %s)",
                   PyGifImage::GifImage_Type.tp_name, Py_TYPE(arg)->tp_name );
     return nullptr;
   }
@@ -472,7 +472,7 @@ PyObject* PyGifImageImpl::Clone( PyGifImageObject* self, PyObject* arg )
   catch( const vp::Exception& )
   {
     PyErr_Format( PyExc_Exception,
-                  "argument #1: %s object belongs to an incompatible %s object",
+                  "argument %s object belongs to an incompatible %s object",
                   PyGifImage::GifImage_Type.tp_name, PyGif::Gif_Type.tp_name );
     return nullptr;
   }
@@ -499,11 +499,11 @@ PyObject* PyGifImageImpl::BitsPerPixel( PyGifImageObject* self, PyObject* args )
 
     if( self->pGifImage->ColorTable() )
     {
-      Value_CheckRange( 1, bpp, 2, 8 )
+      Value_CheckRangeOne( bpp, 2, 8 )
     }
     else
     {
-      Value_CheckRange( 1, bpp, 2, self->pGifObject->pGif->BitsPerPixel() )
+      Value_CheckRangeOne( bpp, 2, self->pGifObject->pGif->BitsPerPixel() )
     }
 
     self->pGifImage->BitsPerPixel( bpp );
@@ -610,7 +610,7 @@ PyObject* PyGifImageImpl::SetAllPixels( PyGifImageObject* self, PyObject* args )
   if( !PyArg_ParseTuple( args, "b", &ColorIndex ) )
     return nullptr;
 
-  Value_CheckUpper( 1, ColorIndex, Size )
+  Value_CheckUpperOne( ColorIndex, Size )
 
   self->pGifImage->SetAllPixels( ColorIndex );
 
@@ -751,7 +751,7 @@ PyObject* PyGifImageImpl::DisposalMethod( PyGifImageObject* self, PyObject* args
     if( !PyArg_ParseTuple( args, "b", &MethodID ) )
       return nullptr;
 
-    Value_CheckRange( 1, MethodID, 0, 3 )
+    Value_CheckRangeOne( MethodID, 0, 3 )
 
     self->pGifImage->DisposalMethod( MethodID );
 
@@ -869,7 +869,7 @@ PyObject* PyGifImageImpl::ColorTableSize( PyGifImageObject* self, PyObject* args
     if( !PyArg_ParseTuple( args, "h", &Size ) )
       return nullptr;
 
-    Value_CheckRange( 1, Size, 0, 256 )
+    Value_CheckRangeOne( Size, 0, 256 )
 
     self->pGifImage->ColorTableSize( static_cast<uint16_t>(Size) );
 
@@ -918,7 +918,7 @@ PyObject* PyGifImageImpl::GetColorTable( PyGifImageObject* self, PyObject* args 
   if( !PyArg_ParseTuple( args, "b", &Index ) )
     return nullptr;
 
-  Value_CheckUpper( 1, Index, self->pGifImage->ColorTableSize() )
+  Value_CheckUpperOne( Index, self->pGifImage->ColorTableSize() )
 
   uint8_t Red, Green, Blue;
   self->pGifImage->GetColorTable(Index, Red, Green, Blue);

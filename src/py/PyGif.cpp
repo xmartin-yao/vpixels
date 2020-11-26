@@ -154,8 +154,8 @@ Index is within range [0, images())." );
 PyDoc_STRVAR( removeimage_doc,
 "removeimage(index) -> bool\n\n\
    index: index of a vpixels.gifimage object\n\n\
-Remove a vpixels.gifimage object contained in vpixels.gif object.\n\
-Index is within range [0, images())" );
+Remove a vpixels.gifimage object contained in vpixels.gif object. Return False,\n\
+if removing operation failed. Index is within range [0, images())" );
 
 PyDoc_STRVAR( remove_doc, "Alias of removeimage(...)." );
 
@@ -508,7 +508,7 @@ PyObject* PyGifImpl::BitsPerPixel( PyGifObject* self, PyObject* args )
     if( !PyArg_ParseTuple( args, "b", &bpp ) )
       return nullptr;
 
-    Value_CheckRange( 1, bpp, 2, 8 )
+    Value_CheckRangeOne( bpp, 2, 8 )
 
     self->pGif->BitsPerPixel( bpp );
 
@@ -578,7 +578,7 @@ PyObject* PyGifImpl::ColorTableSize( PyGifObject* self, PyObject* args )
     if( !PyArg_ParseTuple( args, "h", &Size ) )
       return nullptr;
 
-    Value_CheckRange( 1, Size, 0, 256 )
+    Value_CheckRangeOne( Size, 0, 256 )
 
     self->pGif->ColorTableSize( static_cast<uint16_t>(Size) );
 
@@ -623,7 +623,7 @@ PyObject* PyGifImpl::GetColorTable( PyGifObject* self, PyObject* args )
   if( !PyArg_ParseTuple( args, "b", &Index ) )
     return nullptr;
 
-  Value_CheckUpper( 1, Index, self->pGif->ColorTableSize() )
+  Value_CheckUpperOne( Index, self->pGif->ColorTableSize() )
 
   uint8_t Red, Green, Blue;
   self->pGif->GetColorTable(Index, Red, Green, Blue);
@@ -653,7 +653,7 @@ PyObject* PyGifImpl::BackgroundColor( PyGifObject* self, PyObject* args )
       return nullptr;
     }
 
-    Value_CheckUpper( 1, Index, self->pGif->ColorTableSize() )
+    Value_CheckUpperOne( Index, self->pGif->ColorTableSize() )
     self->pGif->BackgroundColor( Index );
 
     Py_RETURN_NONE;
@@ -704,7 +704,7 @@ PyObject* PyGifImpl::GetImage( PyGifObject* self, PyObject* arg )
   }
 
   Py_ssize_t Index = PyInt_AsSsize_t(arg);
-  Value_CheckRangeEx( 1, Index, 0, static_cast<Py_ssize_t>(self->pGif->Images()) )
+  Value_CheckRangeExOne( Index, 0, static_cast<Py_ssize_t>(self->pGif->Images()) )
 
   vp::GifImage& Image = (*self->pGif)[static_cast<size_t>(Index)];
 
@@ -737,7 +737,7 @@ PyObject* PyGifImpl::RemoveImage( PyGifObject* self, PyObject* arg )
   }
 
   Py_ssize_t Index = PyInt_AsSsize_t(arg);
-  Value_CheckRangeEx( 1, Index, 0, static_cast<Py_ssize_t>(self->pGif->Images()) )
+  Value_CheckRangeExOne( Index, 0, static_cast<Py_ssize_t>(self->pGif->Images()) )
 
   if( self->pGif->Remove(static_cast<size_t>(Index)) )
     Py_RETURN_TRUE;
