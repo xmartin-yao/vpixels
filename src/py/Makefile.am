@@ -45,7 +45,7 @@ endif
 ## target to build a wheel file
 pack-py:
 	@echo pack Python extension module
-	$(PYTHON) setup.py bdist_wheel >/dev/null
+	@$(PYTHON) setup.py bdist_wheel >/dev/null
 
 ## target clean
 clean-local:

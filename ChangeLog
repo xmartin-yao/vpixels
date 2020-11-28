@@ -1,3 +1,10 @@
+0.7.0
+- Python module
+  - Support both 2.7 and 3.x
+  - Add docstrings to module, classes, and methods
+  - Add packing module into a wheel file
+- Python examples in example/py/ run both 2.7 and 3.x
+
 0.6.8
 - Maintenance
   - Lua module: clean up LuaGif.h and LuaGifImage.h by adding LuaGifDefs.h

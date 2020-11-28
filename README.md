@@ -61,9 +61,13 @@ Alternatively, save `vpixels.dll` to the directory where Lua interpreter is inst
 if you use Lua; or save `vpixels.pyd` to the directory `<Python Installation>/Lib/site-packages/`,
 if you use Python. 
 
+**[New in version 0.7.0]**\
+[Release](https://github.com/xmartin-yao/vpixels/releases/tag/v0.7.0)
+includes wheel files for Python users to install using `pip` tool.
+
 ### Prerequisite
 * [Lua 5.2](https://www.lua.org/ftp/)
-* [Python 2.7](https://www.python.org/downloads/)
+* [Python 2.7 or 3.x](https://www.python.org/downloads/)
 
 ### Optional (for running tests)
 * [CppUnit](https://freedesktop.org/wiki/Software/cppunit/)
@@ -71,6 +75,10 @@ if you use Python.
 * PyUnit
 
 ### Build with Autotools
+(From [releases](https://github.com/xmartin-yao/vpixels/releases) you can download
+a tarball `vpixels-<version>.tar.gz` that already includes Autotools configuration files,
+unpack it using `tar -xf vpixels-<version>.tar.gz`, change to the newly created
+directory `vpixels-<version>/`, and start from step 6.)
 1. Clone the repository
 2. Change to the directory `vpixels/`
 3. Create directory `m4/`
@@ -80,10 +88,23 @@ if you use Python.
     ``` sh
     $ autoreconf -i
     ```
-6. Create a build directory (e.g. `_build`) and change to it
-7. Configure the package (run `../configure --help` for options)
+6. Create a build directory, e.g. `_build`, and change to it
+    ``` sh
+    $ mkdir _build
+    $ cd _build
+    ```
+7. Configure the package (run `../configure --help` for options)\
+   To build with Python 2.7
     ``` sh
     $ ../configure
+    ```
+   or with Python 3.x
+    ``` sh
+    $ ../configure PY_VERSION=3
+    ```
+   or with a specific version, e.g. `3.8`, of Python
+    ``` sh
+    $ ../configure PY_VERSION=3.8
     ```
 8. Build and install the package
     ``` sh
@@ -93,11 +114,32 @@ if you use Python.
     ``` sh
     $ make check
     ```
+10. Pack Python module into a wheel file (optional)
+    ``` sh
+    $ cd src/py
+    $ make pack-py
+    ```
 ### Build with CMake
 1. Clone the repository
 2. Change to the directory `vpixels/`
-3. Create a build directory (e.g. `_build`) and change to it
-4. Configure the package (e.g. `cmake .. -G "Unix Makefiles"`)
+3. Create a build directory, e.g. `_build`, and change to it
+    ``` sh
+    $ mkdir _build
+    $ cd _build
+    ```
+4. Configure the package, e.g. using `"Unix Makefiles"` generator\
+   To build with Python 2.7
+    ``` sh
+    $ cmake .. -G "Unix Makefiles"
+    ```
+   or with Python 3.x
+    ``` sh
+    $ cmake .. -G "Unix Makefiles" -DPY_VERSION=3
+    ```
+   or with a specific version, e.g. 3.8, of Python
+    ``` sh
+    $ cmake .. -G "Unix Makefiles" -DPY_VERSION=3.8
+    ```
 5. Build the package
     ``` sh
     $ make
@@ -105,6 +147,10 @@ if you use Python.
 6. Run tests (optional)
     ``` sh
     $ make check
+    ```
+7. Pack Python module into a wheel file (optional)
+    ``` sh
+    $ make pack-py
     ```
 
 ## Lua API
@@ -376,6 +422,24 @@ Please see examples in directory `example/lua/`
 ```
 
 ## Python API
+**[New in version 0.7.0]**\
+Python API is documented using docstrings, please use help() function for details.\
+For example:
+```
+  import vpixels as vp
+
+  help(vp)  # doc of the module
+
+  help(vp.bmp)      # doc of vpixels.bmp class
+  help(vp.bmp.bpp)  # doc of method bpp() of the class
+
+  help(vp.gif)      # doc of vpixels.gif class
+  help(vp.gif.bpp)  # doc of method bpp() of the class
+
+  help(vp.gifimage)      # doc of vpixels.gifimage class
+  help(vp.gifimage.bpp)  # doc of method bpp() of the class
+```
+
 Please see examples in directory `example/py/`
 
 The signatures of the methods of Python API are almost the same as those of Lua API,
