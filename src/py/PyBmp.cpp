@@ -166,12 +166,12 @@ namespace PyBmpImpl
   // methods of Bmp_Type (exposed to Python)
   PyObject* Import( PyBmpObject* self, PyObject* arg );
   PyObject* Export( PyBmpObject* self, PyObject* args );
-  PyObject* Clone( PyBmpObject* self );
-  PyObject* BitsPerPixel( PyBmpObject* self );
-  PyObject* Width( PyBmpObject* self );
-  PyObject* Height( PyBmpObject* self );
-  PyObject* Dimension( PyBmpObject* self );
-  PyObject* ColorTableSize( PyBmpObject* self );
+  PyObject* Clone( PyBmpObject* self, PyObject* );
+  PyObject* BitsPerPixel( PyBmpObject* self, PyObject* );
+  PyObject* Width( PyBmpObject* self, PyObject* );
+  PyObject* Height( PyBmpObject* self, PyObject* );
+  PyObject* Dimension( PyBmpObject* self, PyObject* );
+  PyObject* ColorTableSize( PyBmpObject* self, PyObject* );
   PyObject* SetColorTable( PyBmpObject* self, PyObject* args );
   PyObject* GetColorTable( PyBmpObject* self, PyObject* args );
   PyObject* SetAllPixels( PyBmpObject* self, PyObject* args );
@@ -214,7 +214,7 @@ PyTypeObject PyBmp::Bmp_Type = {
   sizeof(PyBmpObject),            // tp_basicsize
   0,                              // tp_itemsize
   (destructor)PyBmpImpl::Dealloc, // tp_dealloc
-  0,                              // tp_print
+  0,                              // tp_print (2.x), tp_vectorcall_offset (3.8)
   0,                              // tp_getattr
   0,                              // tp_setattr
   0,                              // tp_compare
@@ -258,6 +258,12 @@ PyTypeObject PyBmp::Bmp_Type = {
   0                               // tp_version_tag
 #if PY_MAJOR_VERSION == 3
   ,0                              // tp_finalize
+#if PY_MINOR_VERSION >= 8
+  ,0                              // tp_vectorcall
+#endif
+#if PY_MINOR_VERSION == 8
+  ,0                              // tp_print (3.8 only)
+#endif
 #endif
 };
 
@@ -396,7 +402,7 @@ PyObject* PyBmpImpl::Export( PyBmpObject* self, PyObject* args )
 /////////////////////
 // bmp2 = bmp1.Clone()
 //////////////////////////////////////////
-PyObject* PyBmpImpl::Clone( PyBmpObject* self )
+PyObject* PyBmpImpl::Clone( PyBmpObject* self, PyObject* )
 {
   PyTypeObject* type = Py_TYPE(self);
   PyObject* other = type->tp_alloc( type, 0 );
@@ -408,7 +414,7 @@ PyObject* PyBmpImpl::Clone( PyBmpObject* self )
 ///////////////////
 // bpp = bmp.BitsPerPixel()
 ////////////////////////////////////////////////
-PyObject* PyBmpImpl::BitsPerPixel( PyBmpObject* self )
+PyObject* PyBmpImpl::BitsPerPixel( PyBmpObject* self, PyObject* )
 {
   return Py_BuildValue( "B", self->pBmp->BitsPerPixel() );
 }
@@ -416,7 +422,7 @@ PyObject* PyBmpImpl::BitsPerPixel( PyBmpObject* self )
 ///////////////////
 // bpp = bmp.Width()
 /////////////////////////////////////////
-PyObject* PyBmpImpl::Width( PyBmpObject* self )
+PyObject* PyBmpImpl::Width( PyBmpObject* self, PyObject* )
 {
   return Py_BuildValue( "H", self->pBmp->Width() );
 }
@@ -424,7 +430,7 @@ PyObject* PyBmpImpl::Width( PyBmpObject* self )
 ///////////////////
 // bpp = bmp.Height()
 ////////////////////////////////////////////
-PyObject* PyBmpImpl::Height( PyBmpObject* self )
+PyObject* PyBmpImpl::Height( PyBmpObject* self, PyObject* )
 {
   return Py_BuildValue( "H", self->pBmp->Height() );
 }
@@ -432,7 +438,7 @@ PyObject* PyBmpImpl::Height( PyBmpObject* self )
 ///////////////////
 // w, h = bmp.Dimension()
 //////////////////////////////////////////////
-PyObject* PyBmpImpl::Dimension( PyBmpObject* self )
+PyObject* PyBmpImpl::Dimension( PyBmpObject* self, PyObject* )
 {
   return Py_BuildValue( "HH", self->pBmp->Width(), self->pBmp->Height() );
 }
@@ -440,7 +446,7 @@ PyObject* PyBmpImpl::Dimension( PyBmpObject* self )
 ///////////////////
 // size = bmp.ColorTableSize()
 /////////////////////////////////////////////////////////////////
-PyObject* PyBmpImpl::ColorTableSize( PyBmpObject* self )
+PyObject* PyBmpImpl::ColorTableSize( PyBmpObject* self, PyObject* )
 {
   return Py_BuildValue( "H", self->pBmp->ColorTableSize() );
 }

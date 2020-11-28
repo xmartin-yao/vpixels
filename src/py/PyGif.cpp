@@ -185,23 +185,23 @@ namespace PyGifImpl
   // methods for Gif_Type (exposed to Python)
   PyObject* Import( PyGifObject* self, PyObject* arg );
   PyObject* Export( PyGifObject* self, PyObject* args );
-  PyObject* Clone( PyGifObject* self );
-  PyObject* Version( PyGifObject* self );
+  PyObject* Clone( PyGifObject* self, PyObject* );
+  PyObject* Version( PyGifObject* self, PyObject* );
   PyObject* BitsPerPixel( PyGifObject* self, PyObject* args );
-  PyObject* Width( PyGifObject* self );
-  PyObject* Height( PyGifObject* self );
-  PyObject* Dimension( PyGifObject* self );
-  PyObject* ColorTable( PyGifObject* self );
-  PyObject* ColorTableSorted( PyGifObject* self );
+  PyObject* Width( PyGifObject* self, PyObject* );
+  PyObject* Height( PyGifObject* self, PyObject* );
+  PyObject* Dimension( PyGifObject* self, PyObject* );
+  PyObject* ColorTable( PyGifObject* self, PyObject* );
+  PyObject* ColorTableSorted( PyGifObject* self, PyObject* );
   PyObject* ColorTableSize( PyGifObject* self, PyObject* args );
   PyObject* SetColorTable( PyGifObject* self, PyObject* args );
   PyObject* GetColorTable( PyGifObject* self, PyObject* args );
   PyObject* BackgroundColor( PyGifObject* self, PyObject* args );
-  PyObject* AspectRatio( PyGifObject* self );
+  PyObject* AspectRatio( PyGifObject* self, PyObject* );
   PyObject* GetImage( PyGifObject* self, PyObject* arg );
   PyObject* RemoveImage( PyGifObject* self, PyObject* arg );
-  PyObject* Images( PyGifObject* self );
-  PyObject* Size( PyGifObject* self );
+  PyObject* Images( PyGifObject* self, PyObject* );
+  PyObject* Size( PyGifObject* self, PyObject* );
 
   // utils
   vp::Gif* NewGif( PyObject* args, PyObject* kw );
@@ -252,7 +252,7 @@ PyTypeObject PyGif::Gif_Type = {
   sizeof(PyGifObject),            // tp_basicsize
   0,                              // tp_itemsize
   (destructor)PyGifImpl::Dealloc, // tp_dealloc
-  0,                              // tp_print
+  0,                              // tp_print (2.x), tp_vectorcall_offset (3.8)
   0,                              // tp_getattr
   0,                              // tp_setattr
   0,                              // tp_compare
@@ -296,6 +296,12 @@ PyTypeObject PyGif::Gif_Type = {
   0                               // tp_version_tag
 #if PY_MAJOR_VERSION == 3
   ,0                              // tp_finalize
+#if PY_MINOR_VERSION >= 8
+  ,0                              // tp_vectorcall
+#endif
+#if PY_MINOR_VERSION == 8
+  ,0                              // tp_print (3.8 only)
+#endif
 #endif
 };
 
@@ -470,7 +476,7 @@ PyObject* PyGifImpl::Export( PyGifObject* self, PyObject* args )
 ///////////////////
 // gif2 = gif1.Clone()
 //////////////////////////////////////////
-PyObject* PyGifImpl::Clone( PyGifObject* self )
+PyObject* PyGifImpl::Clone( PyGifObject* self, PyObject* )
 {
   // create a new PyGifObject
   PyTypeObject* type = Py_TYPE(self);
@@ -487,7 +493,7 @@ PyObject* PyGifImpl::Clone( PyGifObject* self )
 ///////////////////
 // v = gif.Version()
 ////////////////////////////////////////////////
-PyObject* PyGifImpl::Version( PyGifObject* self )
+PyObject* PyGifImpl::Version( PyGifObject* self, PyObject* )
 {
   return Py_BuildValue( "s", self->pGif->Version().c_str() );
 }
@@ -519,7 +525,7 @@ PyObject* PyGifImpl::BitsPerPixel( PyGifObject* self, PyObject* args )
 ///////////////////
 // w = gif.Width()
 /////////////////////////////////////////
-PyObject* PyGifImpl::Width( PyGifObject* self )
+PyObject* PyGifImpl::Width( PyGifObject* self, PyObject* )
 {
   return Py_BuildValue( "H", self->pGif->Width() );
 }
@@ -527,7 +533,7 @@ PyObject* PyGifImpl::Width( PyGifObject* self )
 ///////////////////
 // h = gif.Height()
 ///////////////////////////////////////////
-PyObject* PyGifImpl::Height( PyGifObject* self )
+PyObject* PyGifImpl::Height( PyGifObject* self, PyObject* )
 {
   return Py_BuildValue( "H", self->pGif->Height() );
 }
@@ -535,7 +541,7 @@ PyObject* PyGifImpl::Height( PyGifObject* self )
 ///////////////////
 // w, h = gif.Dimension()
 //////////////////////////////////////////////
-PyObject* PyGifImpl::Dimension( PyGifObject* self )
+PyObject* PyGifImpl::Dimension( PyGifObject* self, PyObject* )
 {
   return Py_BuildValue( "HH", self->pGif->Width(), self->pGif->Height() );
 }
@@ -543,7 +549,7 @@ PyObject* PyGifImpl::Dimension( PyGifObject* self )
 ///////////////////
 // ret_bool = gif.ColorTable()
 ////////////////////////////////////////////////
-PyObject* PyGifImpl::ColorTable( PyGifObject* self )
+PyObject* PyGifImpl::ColorTable( PyGifObject* self, PyObject* )
 {
   if( self->pGif->ColorTable() )
     Py_RETURN_TRUE;
@@ -554,7 +560,7 @@ PyObject* PyGifImpl::ColorTable( PyGifObject* self )
 ///////////////////
 // ret_bool = gif.ColorTableSorted()
 ////////////////////////////////////////////////
-PyObject* PyGifImpl::ColorTableSorted( PyGifObject* self )
+PyObject* PyGifImpl::ColorTableSorted( PyGifObject* self, PyObject* )
 {
   if( self->pGif->ColorTableSorted() )
     Py_RETURN_TRUE;
@@ -663,7 +669,7 @@ PyObject* PyGifImpl::BackgroundColor( PyGifObject* self, PyObject* args )
 ///////////////////
 // ratio = gif.AspectRatio()
 /////////////////////////////////////////
-PyObject* PyGifImpl::AspectRatio( PyGifObject* self )
+PyObject* PyGifImpl::AspectRatio( PyGifObject* self, PyObject* )
 {
   return Py_BuildValue( "B", self->pGif->AspectRatio() );
 }
@@ -671,7 +677,7 @@ PyObject* PyGifImpl::AspectRatio( PyGifObject* self )
 ///////////////////
 // n = gif.Images()
 //////////////////////////////////////////
-PyObject* PyGifImpl::Images( PyGifObject* self )
+PyObject* PyGifImpl::Images( PyGifObject* self, PyObject* )
 {
   return Py_BuildValue( "I", self->pGif->Images() );
 }
@@ -748,7 +754,7 @@ PyObject* PyGifImpl::RemoveImage( PyGifObject* self, PyObject* arg )
 ///////////////////
 // size = gif.Size()
 //////////////////////////////////////////
-PyObject* PyGifImpl::Size( PyGifObject* self )
+PyObject* PyGifImpl::Size( PyGifObject* self, PyObject* )
 {
   return Py_BuildValue( "I", self->pGif->Size() );
 }

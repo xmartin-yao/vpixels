@@ -162,7 +162,7 @@ int main( int argc, char *argv[] )
       return 1;
     }
   }
-  catch( vp::Exception e )
+  catch( vp::Exception& e )
   {
     std::cout << "Failed to import file: " << FileName << std::endl
               << e.what() << std::endl;

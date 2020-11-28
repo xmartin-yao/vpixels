@@ -60,13 +60,13 @@ namespace
   #define LICENSE   "GNU GPL version 3 or later"
 
   // version of the module
-  PyObject* Version()
+  PyObject* Version( PyObject*, PyObject* )
   {
     return PyString_FromString( PACKAGE_VERSION );
   }
 
   // about the module
-  PyObject* About()
+  PyObject* About( PyObject*, PyObject* )
   {
     const std::string Notice{ PACKAGE_STRING " " COPYRIGHT "\n"
                               "License: " LICENSE "\n"
