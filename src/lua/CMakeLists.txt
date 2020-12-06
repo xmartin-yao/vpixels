@@ -34,10 +34,10 @@ add_library(vpixels-lua MODULE LuaModule.cpp LuaBmp.cpp LuaGif.cpp
                                LuaGifImage.cpp LuaDerive.cpp LuaUtil.cpp)
 
 # libs to link
-target_link_libraries(vpixels-lua vpixels ${LUA_LIBRARIES})
+target_link_libraries(vpixels-lua vpixels-lib ${LUA_LIBRARIES})
 
-# name it 'vpixels'
-set_target_properties(vpixels-lua PROPERTIES OUTPUT_NAME "vpixels")
+# name it after the project
+set_target_properties(vpixels-lua PROPERTIES OUTPUT_NAME ${CMAKE_PROJECT_NAME})
 
 # don't use 'lib' as a prefix 
 set_target_properties(vpixels-lua PROPERTIES PREFIX "")

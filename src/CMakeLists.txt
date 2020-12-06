@@ -35,17 +35,20 @@ set(VPIXELS_SRCS bmp/BmpInfo.cpp bmp/BmpInfo1Bit.cpp bmp/BmpInfo4Bit.cpp
                  util/Exception.cpp)
 
 #
-# target: vpixels
+# target: vpixels-lib
 #
-add_library(vpixels STATIC EXCLUDE_FROM_ALL ${VPIXELS_SRCS} )
+add_library(vpixels-lib STATIC EXCLUDE_FROM_ALL ${VPIXELS_SRCS} )
+
+# name it after the project
+set_target_properties(vpixels-lib PROPERTIES OUTPUT_NAME ${CMAKE_PROJECT_NAME})
 
 # define VP_EXTENSION to exclude some verifications,
 # as they will be done in Lua and Python bindings
 if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
-  set_target_properties(vpixels PROPERTIES COMPILE_FLAGS "-DVP_EXTENSION")
+  set_target_properties(vpixels-lib PROPERTIES COMPILE_FLAGS "-DVP_EXTENSION")
 endif()
 
 # static link to MSVC runtime: /MT
 if(MSVC)
-  set_target_properties(vpixels PROPERTIES COMPILE_FLAGS "/MT /DVP_EXTENSION")
+  set_target_properties(vpixels-lib PROPERTIES COMPILE_FLAGS "/MT /DVP_EXTENSION")
 endif()

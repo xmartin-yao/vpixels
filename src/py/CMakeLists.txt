@@ -43,10 +43,10 @@ include_directories(${PYTHON_INCLUDE_DIRS})
 add_library(vpixels-py MODULE PyModule.cpp PyBmp.cpp PyGif.cpp PyGifImage.cpp)
 
 # libs to link
-target_link_libraries(vpixels-py vpixels ${PYTHON_LIBRARIES})
+target_link_libraries(vpixels-py vpixels-lib ${PYTHON_LIBRARIES})
 
-# name it 'vpixels'
-set_target_properties(vpixels-py PROPERTIES OUTPUT_NAME "vpixels")
+# name it after the project
+set_target_properties(vpixels-py PROPERTIES OUTPUT_NAME ${CMAKE_PROJECT_NAME})
 
 # don't use 'lib' as prefix
 set_target_properties(vpixels-py PROPERTIES PREFIX "")
