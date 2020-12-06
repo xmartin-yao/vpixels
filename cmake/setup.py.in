@@ -42,6 +42,10 @@ setup( name = '${CMAKE_PROJECT_NAME}',   # required
        # a directory of its own. though it causes warning, it works.
        packages = [''],   # required
 
+       # current directory is the location of the built extension module
+       # (some version of wheel fails without it)
+       package_dir={'': '.'},
+
        # pack pre-built module as package data
        package_data = {'': ['vpixels' + suffix]},
  
