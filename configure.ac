@@ -64,6 +64,20 @@ AS_IF([test -z "$LDFLAGS"],  [LDFLAGS="-L/usr/local/lib"])
 AC_PROG_CXX
 AX_CXX_COMPILE_STDCXX([14], [noext], [mandatory])
 
+# Retrieve ID and version of C++ compiler
+# cache variables ax_cv_cxx_compiler_vendor and ax_cv_cxx_compiler_version are set
+AC_LANG_PUSH([C++])
+AX_COMPILER_VENDOR
+AX_COMPILER_VERSION
+AC_LANG_POP([C++])
+
+# Define macros,
+# they will appear in config.h.in and get defined in config.h
+AC_DEFINE_UNQUOTED([COMPILER_ID], ["$ax_cv_cxx_compiler_vendor"], [ID of C++ compiler])
+AC_DEFINE_UNQUOTED([COMPILER_VERSION], ["$ax_cv_cxx_compiler_version"], [version of C++ compiler])
+AC_DEFINE_UNQUOTED([COMPILER_STRING], ["$ax_cv_cxx_compiler_vendor $ax_cv_cxx_compiler_version"],
+                   [name and version of C++ compiler])
+
 # Checks for types
 AC_TYPE_UINT8_T
 AC_TYPE_UINT16_T

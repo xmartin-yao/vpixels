@@ -36,9 +36,11 @@
 ///////////////////////
 namespace
 {
-  const std::string Notice{ PACKAGE_STRING " Copyright (C) 2019 Xueyi Yao\n"
+  const std::string Notice{ PACKAGE_STRING "\n"
+                            "Copyright (C) 2019 Xueyi Yao\n"
                             "License: GNU GPL version 3 or later\n"
-                            "Bug report: " PACKAGE_BUGREPORT };
+                            "Bug report: " PACKAGE_BUGREPORT "\n"
+                            "[" LUA_RELEASE ", " COMPILER_STRING ", " __DATE__ ", " __TIME__ "]" };
 
   inline void ShowNotice() 
   {

@@ -68,9 +68,11 @@ namespace
   // about the module
   PyObject* About( PyObject*, PyObject* )
   {
-    const std::string Notice{ PACKAGE_STRING " " COPYRIGHT "\n"
+    const std::string Notice{ PACKAGE_STRING "\n"
+                              COPYRIGHT "\n"
                               "License: " LICENSE "\n"
-                              "Bug report: " PACKAGE_BUGREPORT };
+                              "Bug report: " PACKAGE_BUGREPORT "\n"
+                              "[Python " PY_VERSION ", " COMPILER_STRING ", " __DATE__ ", " __TIME__ "]" };
 
     std::cout << Notice << std::endl;
     Py_RETURN_NONE;
