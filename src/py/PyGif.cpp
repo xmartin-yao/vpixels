@@ -24,63 +24,64 @@
 #include "Gif.h"
 #include "Exception.h"
 #include "SimpleList.h"
+#include "config.h"
 
 ////////
 // docstrings
 //////////////////////
 PyDoc_STRVAR( Gif_Type_doc,
-"A vpixels.gif class represents a GIF image. A vpixels.gif object contains\n\
-vpixels.gifimage objects that represent images (a.k.a. frames) in a GIF image.\n\
-To instantiate a vpixels.gif object, call gif() of the module.\n\n\
-vpixels.gif(bbp, width, height, images, colortable) --> vpixels.gif\n\n\
+"A " PACKAGE_NAME ".gif class represents a GIF image. A " PACKAGE_NAME ".gif object contains\n\
+" PACKAGE_NAME ".gifimage objects that represent images (a.k.a. frames) in a GIF image.\n\
+To instantiate a " PACKAGE_NAME ".gif object, call gif() of the module.\n\n\
+" PACKAGE_NAME ".gif(bbp, width, height, images, colortable) --> " PACKAGE_NAME ".gif\n\n\
    bpp:    color resolution in bits/pixel, supported value within range [2,8]\n\
    width:  canvas width in pixels\n\
    height: canvas height in pixels\n\
    images: number of images, default == 1\n\
-   colortable: if True, vpixels.gif object has a global color table,\n\
+   colortable: if True, " PACKAGE_NAME ".gif object has a global color table,\n\
                default == True\n\n\
 Examples:\n\n\
-   vpixels.gif()\n\n\
-Create a vpixels.gif object of color resolution 1 bit/pixel, width 1,\n\
-and height 1, that contains one vpixels.gifimage object and has\n\
+   " PACKAGE_NAME ".gif()\n\n\
+Create a " PACKAGE_NAME ".gif object of color resolution 1 bit/pixel, width 1,\n\
+and height 1, that contains one " PACKAGE_NAME ".gifimage object and has\n\
 a global color table.\n\n\
-   vpixels.gif(bpp=3, width=60, height=20)\n\n\
-Create a vpixels.gif object of color resolution 3 bits/pixel, width 60,\n\
-and height 20, that contains 1 vpixels.gifimage object and has\n\
+   " PACKAGE_NAME ".gif(bpp=3, width=60, height=20)\n\n\
+Create a " PACKAGE_NAME ".gif object of color resolution 3 bits/pixel, width 60,\n\
+and height 20, that contains 1 " PACKAGE_NAME ".gifimage object and has\n\
 a global color table.\n\n\
-   vpixels.gif(4, 30, 20, 5, False)\n\n\
-Create a vpixels.gif object of color resolution 4 bits/pixel, width 30,\n\
-and height 20, that contains 5 vpixels.gifimage objects and does not have\n\
-a global color table, while each of the 5 vpixels.gifimage objects has\n\
+   " PACKAGE_NAME ".gif(4, 30, 20, 5, False)\n\n\
+Create a " PACKAGE_NAME ".gif object of color resolution 4 bits/pixel, width 30,\n\
+and height 20, that contains 5 " PACKAGE_NAME ".gifimage objects and does not have\n\
+a global color table, while each of the 5 " PACKAGE_NAME ".gifimage objects has\n\
 its own local color table." );
 
 PyDoc_STRVAR( importf_doc,
 "importf(name)\n\n\
    name: name of a GIF file to be imported in\n\n\
-Import a GIF file into vpixels.gif object.");
+Import a GIF file into " PACKAGE_NAME ".gif object.");
 
 PyDoc_STRVAR( export_doc,
 "export(name, overwrite)\n\n\
    name: name of a GIF file to be exported to\n\
    overwrite: if True, overwrite existing file, default == False\n\n\
-Export vpixels.gif object to a GIF file." );
+Export " PACKAGE_NAME ".gif object to a GIF file." );
 
 PyDoc_STRVAR( clone_doc,
-"clone() -> vpixels.gif\n\n\
-Create a new vpixels.gif object that is the same as the current one." );
+"clone() -> " PACKAGE_NAME ".gif\n\n\
+Create a new " PACKAGE_NAME ".gif object that is the same as the current one." );
 
 PyDoc_STRVAR( version_doc,
 "version() -> str\n\n\
-Return version of GIF specification the vpixels.gif object follows.");
+Return version of GIF specification the " PACKAGE_NAME ".gif object follows.");
 
 PyDoc_STRVAR( bitsperpixel_doc,
 "bitsperpixel(bpp)\n\n\
    bpp: color resolution in bits/pixel\n\n\
-Change color resolution of vpixels.gif object. Support any value within\n\
+Change color resolution of " PACKAGE_NAME ".gif object. Support any value within\n\
 range [2,8]. Size of global color table, if there is one, will be changed\n\
 accordingly.\n\n\
 bitsperpixel() -> int\n\n\
-Return color resolution of vpixels.gif object." );
+Return color resolution of " PACKAGE_NAME ".gif object." );
 
 PyDoc_STRVAR( bpp_doc, "Alias of bitsperpixel(...)." );
 
@@ -98,7 +99,7 @@ Return dimension (width and height) of canvas in pixels." );
 
 PyDoc_STRVAR( colortable_doc,
 "colortable() -> bool\n\n\
-Return True if vpixels.gif object has a global color table, else False." );
+Return True if " PACKAGE_NAME ".gif object has a global color table, else False." );
 
 PyDoc_STRVAR( colortablesize_doc,
 "colortablesize(size)\n\n\
@@ -145,28 +146,28 @@ PyDoc_STRVAR( aspectratio_doc,
 Return aspect ratio." );
 
 PyDoc_STRVAR( getimage_doc,
-"getimage(index) -> vpixels.gifimage\n\n\
-   index: index of a vpixels.gifimage object\n\n\
-Return a vpixels.gifimage object contained in vpixels.gif project.\n\
-Another way to access a vpixels.gifimage object is using subscript operator.\n\
+"getimage(index) -> " PACKAGE_NAME ".gifimage\n\n\
+   index: index of a " PACKAGE_NAME ".gifimage object\n\n\
+Return a " PACKAGE_NAME ".gifimage object contained in " PACKAGE_NAME ".gif project.\n\
+Another way to access a " PACKAGE_NAME ".gifimage object is using subscript operator.\n\
 Index is within range [0, images())." );
 
 PyDoc_STRVAR( removeimage_doc,
 "removeimage(index) -> bool\n\n\
-   index: index of a vpixels.gifimage object\n\n\
-Remove a vpixels.gifimage object contained in vpixels.gif object. Return False,\n\
+   index: index of a " PACKAGE_NAME ".gifimage object\n\n\
+Remove a " PACKAGE_NAME ".gifimage object contained in " PACKAGE_NAME ".gif object. Return False,\n\
 if removing operation failed. Index is within range [0, images())" );
 
 PyDoc_STRVAR( remove_doc, "Alias of removeimage(...)." );
 
 PyDoc_STRVAR( images_doc,
 "images() -> int\n\n\
-Return the number of vpixels.gifimage objects contained in vpixels.gif object.\n\
-Another way is calling the built-in function len() on vpixels.gif object." );
+Return the number of " PACKAGE_NAME ".gifimage objects contained in " PACKAGE_NAME ".gif object.\n\
+Another way is calling the built-in function len() on " PACKAGE_NAME ".gif object." );
 
 PyDoc_STRVAR( size_doc,
 "size() -> int\n\n\
-Return size of the resulting GIF file in bytes, if vpixels.gif object\n\
+Return size of the resulting GIF file in bytes, if " PACKAGE_NAME ".gif object\n\
 is exported to a GIF file." );
 
 
@@ -243,12 +244,14 @@ namespace PyGifImpl
     (binaryfunc)GetImage, // mp_subscript
     0,                    // mp_ass_subscript
   };
+
+  constexpr char ID[] = {PACKAGE_NAME ".gif"};
 } //PyGifImpl
 
 //////////////////////////////
 PyTypeObject PyGif::Gif_Type = {
   PyVarObject_HEAD_INIT( nullptr, 0 )
-  "vpixels.gif",                  // tp_name
+  PyGifImpl::ID,                  // tp_name
   sizeof(PyGifObject),            // tp_basicsize
   0,                              // tp_itemsize
   (destructor)PyGifImpl::Dealloc, // tp_dealloc

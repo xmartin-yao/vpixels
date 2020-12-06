@@ -22,43 +22,47 @@
 #include "PyUtil.h"
 #include "Bmp.h"
 #include "Exception.h"
+#include "config.h"
 
 ////////
 // docstrings
 //////////////////////
 PyDoc_STRVAR( Bmp_Type_doc,
-"A vpixels.bmp class represents a BMP image. To instantiate a vpixels.bmp\n\
+"A " PACKAGE_NAME ".bmp class represents a BMP image. To instantiate a " PACKAGE_NAME ".bmp\n\
 object, call bmp() of the module.\n\n\
-vpixels.bmp(bbp, width, height) -> vpixels.bmp\n\n\
+" PACKAGE_NAME ".bmp(bbp, width, height) -> " PACKAGE_NAME ".bmp\n\n\
    bpp:    color resolution, 1, 4, 8, and 24 bits/pixel supported\n\
    width:  image width in pixels\n\
    height: image height in pixels\n\n\
 Examples:\n\n\
-   vpixels.bmp()\n\n\
-Create a vpixels.bmp object of color resolution 1 bit/pixel, width 1,\n\
+   " PACKAGE_NAME ".bmp()\n\n\
+Create a " PACKAGE_NAME ".bmp object of color resolution 1 bit/pixel, width 1,\n\
 and height 1.\n\n\
-   vpixels.bmp(bpp=4, width=60, height=20)\n\n\
-Create a vpixels.bmp object of color resolution 4 bits/pixel, width 60,\n\
+   " PACKAGE_NAME ".bmp(8, 30, 10)\n\n\
+Create a " PACKAGE_NAME ".bmp object of color resolution 8 bits/pixel, width 30,\n\
+and height 10.\n\n\
+   " PACKAGE_NAME ".bmp(bpp=4, width=60, height=20)\n\n\
+Create a " PACKAGE_NAME ".bmp object of color resolution 4 bits/pixel, width 60,\n\
 and height 20.");
 
 PyDoc_STRVAR( importf_doc,
 "importf(name)\n\n\
    name: name of a BMP file to be imported in\n\n\
-Import a BMP file into vpixels.bmp object.");
+Import a BMP file into " PACKAGE_NAME ".bmp object.");
 
 PyDoc_STRVAR( export_doc,
 "export(name, overwrite)\n\n\
    name: name of a BMP file to be exported to\n\
    overwrite: if True, overwrite existing file, default == False\n\n\
-Export vpixels.bmp object to a BMP file." );
+Export " PACKAGE_NAME ".bmp object to a BMP file." );
 
 PyDoc_STRVAR( clone_doc,
-"clone() -> vpixels.bmp\n\n\
-Create a new vpixels.bmp object that is the same as the current one." );
+"clone() -> " PACKAGE_NAME ".bmp\n\n\
+Create a new " PACKAGE_NAME ".bmp object that is the same as the current one." );
 
 PyDoc_STRVAR( bitsperpixel_doc,
 "bitsperpixel() -> int\n\n\
-Return color resolution of vpixels.bmp object in bits/pixel." );
+Return color resolution of " PACKAGE_NAME ".bmp object in bits/pixel." );
 
 PyDoc_STRVAR( bpp_doc, "Alias of bitsperpixel(...)." );
 
@@ -77,7 +81,7 @@ Return image dimension (width and height) in pixels." );
 PyDoc_STRVAR( colortablesize_doc,
 "colortablesize() -> int\n\n\
 Return size of color table. When color resolution is 24 bits/pixel,\n\
-vpixels.bmp object has no color table and color table size equals to 0." );
+" PACKAGE_NAME ".bmp object has no color table and color table size equals to 0." );
 
 PyDoc_STRVAR( setcolortable_doc,
 "setcolortable(index, red, green, blue)\n\n\
@@ -203,6 +207,8 @@ namespace PyBmpImpl
     MDef( getpixel,       GetPixel,       METH_VARARGS, getpixel_doc )
     { nullptr, nullptr, 0, nullptr } 
   };
+
+  constexpr char ID[] = {PACKAGE_NAME ".bmp"};
 } //PyBmpImpl
 
 /////////////
@@ -210,7 +216,7 @@ namespace PyBmpImpl
 //////////////////////////////
 PyTypeObject PyBmp::Bmp_Type = {
   PyVarObject_HEAD_INIT( nullptr, 0 )
-  "vpixels.bmp",                  // tp_name
+  PyBmpImpl::ID,                  // tp_name
   sizeof(PyBmpObject),            // tp_basicsize
   0,                              // tp_itemsize
   (destructor)PyBmpImpl::Dealloc, // tp_dealloc

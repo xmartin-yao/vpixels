@@ -32,16 +32,16 @@
 PyDoc_STRVAR( Module_doc,
 "This module provides a tool to generate and manipulate BMP and GIF images.\n\
 \n\
-There are three classes, vpixels.bmp, vpixels.gif, and vpixels.gifimage in\n\
-the module. A vpixels.bmp class represents a BMP image. A vpixels.gif class\n\
-represents a GIF image, and a vpixels.gifimage class an image (a.k.a. frame)\n\
+There are three classes, " PACKAGE_NAME ".bmp, " PACKAGE_NAME ".gif, and " PACKAGE_NAME ".gifimage in\n\
+the module. A " PACKAGE_NAME ".bmp class represents a BMP image. A " PACKAGE_NAME ".gif class\n\
+represents a GIF image, and a " PACKAGE_NAME ".gifimage class an image (a.k.a. frame)\n\
 in a GIF image.\n\
 \n\
-A vpixels.bmp object can be exported to a BMP file. A BMP file can be imported\n\
-into a vpixels.bmp object for manipulating.\n\
+A " PACKAGE_NAME ".bmp object can be exported to a BMP file. A BMP file can be imported\n\
+into a " PACKAGE_NAME ".bmp object for manipulating.\n\
 \n\
-A vpixels.gif object can be exported to a GIF file. A GIF file can be imported\n\
-into a vpixels.gif object, so pixels in very image can be manipulated." );
+A " PACKAGE_NAME ".gif object can be exported to a GIF file. A GIF file can be imported\n\
+into a " PACKAGE_NAME ".gif object, so pixels in very image can be manipulated." );
 
 PyDoc_STRVAR( about_doc,
 "about()\n\n\

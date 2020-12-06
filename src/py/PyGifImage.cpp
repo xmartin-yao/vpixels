@@ -26,6 +26,7 @@
 #include "GifImage.h"
 #include "Exception.h"
 #include "SimpleList.h"
+#include "config.h"
 
 /////////////////////
 // check if image object is still good for use
@@ -42,29 +43,29 @@
 // docstrings
 //////////////////////
 PyDoc_STRVAR( GifImage_Type_doc,
-"A vpixels.gifimage class represents an image (a.k.a frame) in a GIF image.\n\n\
-vpixels.gifimage class cannot be directly instantiated. To access vpixels.gifImage\n\
-objects contained in a vpixels.gif object, call getimage() of vpixels.gif object\n\
-or use subscript operator of vpixels.gif object.\n\n\
+"A " PACKAGE_NAME ".gifimage class represents an image (a.k.a frame) in a GIF image.\n\n\
+" PACKAGE_NAME ".gifimage class cannot be directly instantiated. To access " PACKAGE_NAME ".gifImage\n\
+objects contained in a " PACKAGE_NAME ".gif object, call getimage() of " PACKAGE_NAME ".gif object\n\
+or use subscript operator of " PACKAGE_NAME ".gif object.\n\n\
 Examples:\n\n\
-   gif  = vpixels.gif(2, 3, 4, 5)  # create a vpixels.gif object\n\
+   gif  = " PACKAGE_NAME ".gif(2, 3, 4, 5)  # create a " PACKAGE_NAME ".gif object\n\
    img0 = gif.getimage(0)          # get image 0\n\
    img1 = gif[1]                   # get image 1" );
 
 PyDoc_STRVAR( clone_doc,
 "clone(other)\n\n\
-   other: a vpixels.gifimage object to be cloned\n\n\
-Clone another vpixels.gifimage object, so this vpixels.gifimage object will be\n\
+   other: a " PACKAGE_NAME ".gifimage object to be cloned\n\n\
+Clone another " PACKAGE_NAME ".gifimage object, so this " PACKAGE_NAME ".gifimage object will be\n\
 the same as the other one.");
 
 PyDoc_STRVAR( bitsperpixel_doc,
 "bitsperpixel(bpp)\n\n\
    bpp: color resolution in bits/pixel\n\n\
-Change color resolution of vpixels.gifimage object. Support any value within\n\
+Change color resolution of " PACKAGE_NAME ".gifimage object. Support any value within\n\
 range [2,8]. Size of local color table, if there is one, will be changed\n\
 accordingly.\n\n\
 bitsperpixel() -> int\n\n\
-Return color resolution of vpixels.gifimage object." );
+Return color resolution of " PACKAGE_NAME ".gifimage object." );
 
 PyDoc_STRVAR( bpp_doc, "Alias of bitsperpixel(...)." );
 
@@ -94,7 +95,7 @@ PyDoc_STRVAR( crop_doc,
    top:    y-coordinate of image's origin with respect to canvas\n\
    width:  width of image\n\
    height: height of image\n\n\
-Crop vpixels.gifimage object with the specified parameters." );
+Crop " PACKAGE_NAME ".gifimage object with the specified parameters." );
 
 PyDoc_STRVAR( setallpixels_doc,
 "setallpixels(index)\n\n\
@@ -136,13 +137,13 @@ Return True if pixels are interlaced, else False.");
 PyDoc_STRVAR( delay_doc,
 "delay(time)\n\n\
    time: delay time in centi-second.\n\n\
-Change delay time of vpixels.gifimage object.\n\n\
+Change delay time of " PACKAGE_NAME ".gifimage object.\n\n\
 delay() -> int\n\n\
-Return delay time of vpixels.gifimage object.");
+Return delay time of " PACKAGE_NAME ".gifimage object.");
 
 PyDoc_STRVAR( colortable_doc,
 "colortable() -> bool\n\n\
-Return True if vpixels.gifimage object has a local color table, else False.");
+Return True if " PACKAGE_NAME ".gifimage object has a local color table, else False.");
 
 PyDoc_STRVAR( colortablesorted_doc,
 "colortablesorted() -> bool\n\n\
@@ -281,6 +282,8 @@ namespace PyGifImageImpl
     MDef( transcolor,       TransColor,       METH_VARARGS, transcolor_doc )
     { nullptr, nullptr, 0, nullptr } 
   };
+
+  constexpr char ID[] = {PACKAGE_NAME ".gifimage"};
 } //PyGifImageImpl
 
 ///////////////////
@@ -288,7 +291,7 @@ namespace PyGifImageImpl
 /////////////////////////////////
 PyTypeObject PyGifImage::GifImage_Type = {
   PyVarObject_HEAD_INIT( nullptr, 0 )
-  "vpixels.gifimage",             // tp_name
+  PyGifImageImpl::ID,             // tp_name
   sizeof(PyGifImageObject),       // tp_basicsize
   0,                              // tp_itemsize
   (destructor)PyGifImageImpl::Dealloc, // tp_dealloc

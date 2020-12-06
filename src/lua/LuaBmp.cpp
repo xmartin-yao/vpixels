@@ -22,13 +22,14 @@
 #include "LuaUtil.h"
 #include "Bmp.h"
 #include "Exception.h"
+#include "config.h"
 #include <cstdint>
 
 /////////////////////////
 namespace LuaBmpImpl
 {
   // ID of LuaBmp and metatable name
-  const char ID[] = "vp.bmp";
+  constexpr char ID[] = {PACKAGE_NAME ".bmp"};
 
   // wrappers of copy ctor and member functions of vp::Bmp
   int Clone( lua_State* L );

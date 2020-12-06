@@ -25,12 +25,13 @@
 #include "GifImage.h"
 #include "Exception.h"
 #include "SimpleList.h"
+#include "config.h"
 
 //////////////////////////////////
 namespace LuaGifImpl
 {
   // ID of LuaGif and its metatable
-  const char ID[] = "vp.gif";
+  const char ID[] = {PACKAGE_NAME ".gif"};
 
   // wrappers of copy ctor and member functions of vp::Gif
   int Clone( lua_State* L );

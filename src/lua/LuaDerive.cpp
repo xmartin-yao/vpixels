@@ -20,13 +20,14 @@
 #include <lua.hpp>
 #include "LuaDerive.h"
 #include "LuaUtil.h"
+#include "config.h"
 #include <algorithm>
 
 ///////////////////////////////
 namespace LuaDeriveImpl
 {
   // ID of LuaDerive and metatable
-  const char ID[] = "vp.derived";
+  const char ID[] = {PACKAGE_NAME ".derived"};
 
   // closure
   int Caller( lua_State* L );
