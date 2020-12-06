@@ -423,10 +423,10 @@ function TestGif:testIndexing()
   -- arg is number
   ret = gif:__index( 0 )
   lu.assertEquals( type(ret), 'userdata' )
-  lu.assertStrContains( tostring(ret), 'vp.gifimage' )
+  lu.assertStrContains( tostring(ret), 'gifimage' )
   ret = gif:__index( 4 )
   lu.assertEquals( type(ret), 'userdata' )
-  lu.assertStrContains( tostring(ret), 'vp.gifimage' )
+  lu.assertStrContains( tostring(ret), 'gifimage' )
 
   lu.assertError( gif.__index, gif, -1 )
   lu.assertError( gif.__index, gif, 5 )

@@ -248,16 +248,16 @@ end
 
 function TestDerive:testTostring()
   local derived_bmp = vpixels.derive( vpixels.bmp() )
-  lu.assertNotEquals( nil, string.find( tostring(derived_bmp), "vp.derived", 1, true ) )
-  lu.assertNotEquals( nil, string.find( tostring(derived_bmp), "vp.bmp", 1, true ) )
+  lu.assertNotEquals( nil, string.find( tostring(derived_bmp), "derived", 1, true ) )
+  lu.assertNotEquals( nil, string.find( tostring(derived_bmp), "bmp", 1, true ) )
 
   local derived_gif = vpixels.derive( vpixels.gif() )
-  lu.assertNotEquals( nil, string.find( tostring(derived_gif), "vp.derived", 1, true ) )
-  lu.assertNotEquals( nil, string.find( tostring(derived_gif), "vp.gif", 1, true ) )
+  lu.assertNotEquals( nil, string.find( tostring(derived_gif), "derived", 1, true ) )
+  lu.assertNotEquals( nil, string.find( tostring(derived_gif), "gif", 1, true ) )
 
   local derived_img = vpixels.derive( derived_gif[0] )
-  lu.assertNotEquals( nil, string.find( tostring(derived_img), "vp.derived", 1, true ) )
-  lu.assertNotEquals( nil, string.find( tostring(derived_img), "vp.gifimage", 1, true ) )
+  lu.assertNotEquals( nil, string.find( tostring(derived_img), "derived", 1, true ) )
+  lu.assertNotEquals( nil, string.find( tostring(derived_img), "gifimage", 1, true ) )
 end
 
 function TestDerive:testLengthOp()
