@@ -1,3 +1,13 @@
+0.7.1
+- Lua and Python module
+  - Add the following info
+    - Version of Lua/Python the module is built with
+    - The compiler that is used to build the module
+    - Date and time the module is built
+  - Replace hard-coded strings in C++ code with PACKAGE_NAME,
+    and in CMakeLists.txt files with CMAKE_PROJECT_NAME
+- Enhance cmake/setup.py.in
+
 0.7.0
 - Python module
   - Support both 2.7 and 3.x
