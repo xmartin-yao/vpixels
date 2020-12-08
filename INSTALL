@@ -1,7 +1,7 @@
 Prerequisite
 ============
 Lua 5.2 (https://www.lua.org/ftp/)
-Python 2.7 (https://www.python.org/downloads/)
+Python 2.7 or 3.x (https://www.python.org/downloads/)
 
 Optional (for running tests)
 ==============================
@@ -14,27 +14,43 @@ Build with Autotools
 1. Clone the repository
 2. Change to the directory vpixels/
 3. Create directory `m4/`
-4. Download ax_cxx_compile_stdcxx.m4 and move it into directory m4/
-   (https://www.gnu.org/software/autoconf-archive/ax_cxx_compile_stdcxx.html)
+4. Download the following files into directory m4/
+   ax_cxx_compile_stdcxx.m4  (https://www.gnu.org/software/autoconf-archive/ax_cxx_compile_stdcxx.html)
+   m4_ax_compiler_vendor.m4  (https://www.gnu.org/software/autoconf-archive/ax_compiler_vendor.html)
+   m4_ax_compiler_version.m4 (https://www.gnu.org/software/autoconf-archive/ax_compiler_version.html)
 5. Generate configuration files
    autoreconf -i
 6. Make a build directory (e.g. mkdir _build) and change to it
-7. Configure the package
-   ../configure
-   (run ../configure --help for options)
+7. Configure the package (run ../configure --help for options)
+   To build with Python 2.7
+     ../configure
+   or with Python 3.x
+     ../configure PY_VERSION=3
+   or with a specific version, e.g. `3.8`, of Python
+     ../configure PY_VERSION=3.8 
 8. Build and install the package
    make && make install
 9. Run tests (optional)
    make check
+10. Pack Python module into a wheel file (optional)
+   cd src/py
+   make pack-py
 
 Build with CMake
 ================
 1. Clone the repository
 2. Change to the directory
 3. Make a build directory (e.g. mkdir _build) and change to it
-4. Configure the package
-   (e.g. cmake .. -G "Unix Makefiles")
+4. Configure the package, e.g. using "Unix Makefiles" generator
+   To build with Python 2.7
+     cmake .. -G "Unix Makefiles"
+   or with Python 3.x
+     cmake .. -G "Unix Makefiles" -DPY_VERSION=3
+   or with a specific version, e.g. 3.8, of Python
+     cmake .. -G "Unix Makefiles" -DPY_VERSION=3.8
 5. Build the package
    make
 6. Run tests (optional)
    make check
+7. Pack Python module into a wheel file (optional)
+   make pack-py

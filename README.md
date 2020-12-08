@@ -82,8 +82,10 @@ directory `vpixels-<version>/`, and start from step 6.)
 1. Clone the repository
 2. Change to the directory `vpixels/`
 3. Create directory `m4/`
-4. Download [ax_cxx_compile_stdcxx.m4](https://www.gnu.org/software/autoconf-archive/ax_cxx_compile_stdcxx.html)
-   and save it into directory `m4/`
+4. Download the following files into directory `m4/`
+   * [ax_cxx_compile_stdcxx.m4](https://www.gnu.org/software/autoconf-archive/ax_cxx_compile_stdcxx.html)
+   * [m4_ax_compiler_vendor.m4](https://www.gnu.org/software/autoconf-archive/ax_compiler_vendor.html)
+   * [m4_ax_compiler_version.m4](https://www.gnu.org/software/autoconf-archive/ax_compiler_version.html)
 5. Generate configuration files
     ``` sh
     $ autoreconf -i
