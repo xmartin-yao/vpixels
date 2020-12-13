@@ -60,6 +60,10 @@ typedef struct PyGifObject {
   PyObject_HEAD
   vp::Gif* pGif;
   SimpleList<PyGifImageObject>* pGifImageObjectList;
+
+  // for iteration over images
+  bool ForwardIter;
+  Py_ssize_t IterIndex;
 } PyGifObject;
 
 

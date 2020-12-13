@@ -170,6 +170,10 @@ PyDoc_STRVAR( size_doc,
 Return size of the resulting GIF file in bytes, if " PACKAGE_NAME ".gif object\n\
 is exported to a GIF file." );
 
+PyDoc_STRVAR( reversed_doc,
+"__reversed__() -> " PACKAGE_NAME ".gif\n\n\
+Return a reverse iterator which is " PACKAGE_NAME ".gif object itself." );
+
 
 ////////
 // methods for Gif_Type
@@ -182,6 +186,9 @@ namespace PyGifImpl
   void Dealloc( PyGifObject* self );
   Py_ssize_t Length( PyGifObject* self );
   PyObject* Repr( PyGifObject* self );
+  PyObject* Iter( PyGifObject* self );
+  PyObject* IterNext( PyGifObject* self );
+  PyObject* Reversed( PyGifObject* self, PyObject* );
 
   // methods for Gif_Type (exposed to Python)
   PyObject* Import( PyGifObject* self, PyObject* arg );
@@ -207,6 +214,8 @@ namespace PyGifImpl
   // utils
   vp::Gif* NewGif( PyObject* args, PyObject* kw );
   void Invalidate( SimpleList<PyGifImageObject>* pGifImageObjectList );
+  PyObject* IterForward( PyGifObject* self );
+  PyObject* IterBackward( PyGifObject* self );
 
   // Gif_Type methods
   PyMethodDef Methods[] = {
@@ -235,6 +244,7 @@ namespace PyGifImpl
     MDef( remove,           RemoveImage,      METH_O,       remove_doc )
     MDef( images,           Images,           METH_NOARGS,  images_doc )
     MDef( size,             Size,             METH_NOARGS,  size_doc )
+    MDef( __reversed__,     Reversed,         METH_NOARGS,  reversed_doc )
     { nullptr, nullptr, 0, nullptr } 
   };
 
@@ -275,8 +285,8 @@ PyTypeObject PyGif::Gif_Type = {
   0,                              // tp_clear
   0,                              // tp_richcompare
   0,                              // tp_weaklistoffset
-  0,                              // tp_iter
-  0,                              // tp_iternext
+  (getiterfunc)PyGifImpl::Iter,   // tp_iter
+  (iternextfunc)PyGifImpl::IterNext, // tp_iternext
   PyGifImpl::Methods,             // tp_methods
   0,                              // tp_members
   0,                              // tp_getset
@@ -296,14 +306,14 @@ PyTypeObject PyGif::Gif_Type = {
   0,                              // tp_subclasses
   0,                              // tp_weaklist
   0,                              // tp_del
-  0                               // tp_version_tag
+  0,                              // tp_version_tag
 #if PY_MAJOR_VERSION == 3
-  ,0                              // tp_finalize
+  0,                              // tp_finalize
 #if PY_MINOR_VERSION >= 8
-  ,0                              // tp_vectorcall
+  0,                              // tp_vectorcall
 #endif
 #if PY_MINOR_VERSION == 8
-  ,0                              // tp_print (3.8 only)
+  0,                              // tp_print (3.8 only)
 #endif
 #endif
 };
@@ -329,6 +339,7 @@ int PyGifImpl::Init( PyGifObject* self, PyObject* args, PyObject* kw )
     return -1;
   }
 
+  // vp::Gif object
   if( PyTuple_Size(args) == 0 && kw == nullptr )
     self->pGif = new vp::Gif();
   else
@@ -337,7 +348,14 @@ int PyGifImpl::Init( PyGifObject* self, PyObject* args, PyObject* kw )
   if( self->pGif == nullptr )
     return -1;
 
+  // list of PyGifImageObjects
   self->pGifImageObjectList = new SimpleList<PyGifImageObject>();
+  if( self->pGifImageObjectList == nullptr )
+    return -1;
+
+  // default values for iterator
+  self->ForwardIter = true;
+  self->IterIndex = 0;
 
   return 0;
 }
@@ -760,4 +778,81 @@ PyObject* PyGifImpl::RemoveImage( PyGifObject* self, PyObject* arg )
 PyObject* PyGifImpl::Size( PyGifObject* self, PyObject* )
 {
   return Py_BuildValue( "I", self->pGif->Size() );
+}
+
+///////////////////
+// __iter__()
+//
+// Instead of implementing a iterator and a reverse iterator,
+// add __iter__(), __next__(), and __reversed__() to PyGifObject,
+// so PyGifObject itself is able to play both the roles.
+///////////////////////////////////////////////////////////////
+PyObject* PyGifImpl::Iter( PyGifObject* self )
+{
+  // initializing iterator or reverse iterator
+  if( self->ForwardIter )
+    self->IterIndex = 0;
+  else
+    self->IterIndex = static_cast<Py_ssize_t>(self->pGif->Images()) - 1;
+
+  Py_INCREF(self);
+  return reinterpret_cast<PyObject*>(self);
+}
+
+///////////////////
+// next() in Python 2, __next__() in Python 3
+///////////////////////////////////////////////
+PyObject* PyGifImpl::IterNext( PyGifObject* self )
+{
+  if( self->ForwardIter )
+    return IterForward( self );
+  else
+    return IterBackward( self );
+}
+
+///////////////////
+//  __reversed__()
+//////////////////////////////////////////////////
+PyObject* PyGifImpl::Reversed( PyGifObject* self, PyObject* )
+{
+  // set ForwardIter to false, so it becomes a reverse iterator
+  self->ForwardIter = false;
+  self->IterIndex = static_cast<Py_ssize_t>(self->pGif->Images()) - 1;
+
+  Py_INCREF(self);
+  return reinterpret_cast<PyObject*>(self);
+}
+
+////////////////
+// iterating forward
+//////////////////////////////////////////
+PyObject* PyGifImpl::IterForward( PyGifObject* self )
+{
+  // reach the last image
+  if( self->IterIndex >= static_cast<Py_ssize_t>(self->pGif->Images()) )
+    return nullptr;
+
+  vp::GifImage& Image = (*self->pGif)[static_cast<size_t>(self->IterIndex)];
+  ++self->IterIndex;
+
+  return PyGifImageImpl::Cast2Py( &Image, self );
+}
+
+////////////////
+// iterating backward
+//////////////////////////////////////////
+PyObject* PyGifImpl::IterBackward( PyGifObject* self )
+{
+  // reach the 1st image
+  if( self->IterIndex < 0 )
+  {
+    // set to true, so it's a forward iterator by default
+    self->ForwardIter = true;
+    return nullptr;
+  }
+
+  vp::GifImage& Image = (*self->pGif)[static_cast<size_t>(self->IterIndex)];
+  --self->IterIndex;
+
+  return PyGifImageImpl::Cast2Py( &Image, self );
 }

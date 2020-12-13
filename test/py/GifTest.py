@@ -536,6 +536,60 @@ class TestGif( unittest.TestCase ):
     self.assertEqual( (2, 3, 4), g.getcolor(0) )
 
 
+  def testIteration( self ):
+    gif = vpixels.gif(3, 8, 8, 8)
+    for i in range(8):
+      img = gif.getimage(i)
+      self.assertEqual( 0, img.getpixel(i, i) )
+      img.setpixel( i, i, i )
+      self.assertEqual( i, img.getpixel(i, i) )
+
+    # forward iteration, for-loop
+    i = 0
+    for img in gif:
+      self.assertEqual( i, img.getpixel(i, i) )
+      i += 1
+
+    # forward iteration, while-loop
+    i = 0
+    it = iter(gif)
+    while True:
+      try:
+        img = next(it)
+        self.assertEqual( i, img.getpixel(i, i) )
+        i += 1
+      except StopIteration:
+        break
+
+    # reversed iteration, for-loop
+    i = 7
+    for img in reversed(gif):
+      self.assertEqual( i, img.getpixel(i, i) )
+      i -= 1
+
+    # reversed iteration, while-loop
+    i = 7
+    it = iter( reversed(gif) )
+    while True:
+      try:
+        img = next(it)
+        self.assertEqual( i, img.getpixel(i, i) )
+        i -= 1
+      except StopIteration:
+        break
+
+    # reversed iteration, while-loop
+    i = 7
+    it = reversed(gif)  # without calling iter()
+    while True:
+      try:
+        img = next(it)
+        self.assertEqual( i, img.getpixel(i, i) )
+        i -= 1
+      except StopIteration:
+        break
+
+
 class TestGifImage( unittest.TestCase ):
   def testOutOfScope(self):
     gif = vpixels.gif( 2, 3, 4, 5 )
