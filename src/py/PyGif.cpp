@@ -185,6 +185,7 @@ namespace PyGifImpl
   int  Init( PyGifObject* self, PyObject* args, PyObject* kw );
   void Dealloc( PyGifObject* self );
   Py_ssize_t Length( PyGifObject* self );
+  int DelCopyImage( PyGifObject* self, PyObject* arg, PyObject* other );
   PyObject* Repr( PyGifObject* self );
   PyObject* Iter( PyGifObject* self );
   PyObject* IterNext( PyGifObject* self );
@@ -214,8 +215,13 @@ namespace PyGifImpl
   // utils
   vp::Gif* NewGif( PyObject* args, PyObject* kw );
   void Invalidate( SimpleList<PyGifImageObject>* pGifImageObjectList );
+  void RemoveFromList( SimpleList<PyGifImageObject>*, vp::GifImage* );
   PyObject* IterForward( PyGifObject* self );
   PyObject* IterBackward( PyGifObject* self );
+  PyObject* FetchImage( PyGifObject* self, PyObject* arg );
+  vp::GifImage* FetchImage( PyGifObject* self, PyObject* arg, Py_ssize_t& Index );
+  int CopyImage( PyGifObject* self, PyObject* arg, PyObject* other );
+  int DelImage( PyGifObject* self, PyObject* arg );
 
   // Gif_Type methods
   PyMethodDef Methods[] = {
@@ -252,7 +258,7 @@ namespace PyGifImpl
   PyMappingMethods Mapping = {
     (lenfunc)Length,      // mp_length
     (binaryfunc)GetImage, // mp_subscript
-    0,                    // mp_ass_subscript
+    (objobjargproc)DelCopyImage, // mp_ass_subscript
   };
 
   constexpr char ID[] = {PACKAGE_NAME ".gif"};
@@ -323,9 +329,12 @@ PyObject* PyGifImpl::New( PyTypeObject* type, PyObject*, PyObject* )
 {
   PyObject* self = type->tp_alloc( type, 0 );
 
-  PyGifObject* pGifObject = reinterpret_cast<PyGifObject*>(self);
-  pGifObject->pGif = nullptr;
-  pGifObject->pGifImageObjectList = nullptr;
+  if( self != nullptr )
+  {
+    PyGifObject* pGifObject = reinterpret_cast<PyGifObject*>(self);
+    pGifObject->pGif = nullptr;
+    pGifObject->pGifImageObjectList = nullptr;
+  }
 
   return self;
 }
@@ -416,7 +425,7 @@ void PyGifImpl::Invalidate( SimpleList<PyGifImageObject>* pGifImageObjectList )
   PyGifImageObject* pGifImageObject = pGifImageObjectList->Next();
   while( pGifImageObject != nullptr )
   {
-    pGifImageObject->IsValid = false;
+    pGifImageObject->status = Status::Orphaned;
     pGifImageObject = pGifImageObjectList->Next();
   }
 }
@@ -504,9 +513,12 @@ PyObject* PyGifImpl::Clone( PyGifObject* self, PyObject* )
   PyObject* other = type->tp_alloc( type, 0 );
 
   // initialize the PyGifObject
-  PyGifObject* pGifObject = reinterpret_cast<PyGifObject*>(other);
-  pGifObject->pGif = new vp::Gif( *(self->pGif) );
-  pGifObject->pGifImageObjectList = new SimpleList<PyGifImageObject>();
+  if( other != nullptr )
+  {
+    PyGifObject* pGifObject = reinterpret_cast<PyGifObject*>(other);
+    pGifObject->pGif = new vp::Gif( *(self->pGif) );
+    pGifObject->pGifImageObjectList = new SimpleList<PyGifImageObject>();
+  }
 
   return other;
 }
@@ -712,9 +724,22 @@ Py_ssize_t PyGifImpl::Length( PyGifObject* self )
 }
 
 ///////////////////
-// image0 = gif.GetImage( 0 )
+// image = gif.getimage(index)
+// __getitem__(), i.e. image = gif[index]
 ////////////////////////////////////////////////////////
 PyObject* PyGifImpl::GetImage( PyGifObject* self, PyObject* arg )
+{
+  PyObject* pObject = FetchImage( self, arg );
+  if( pObject != nullptr )
+    self->pGifImageObjectList->Add( reinterpret_cast<PyGifImageObject*>(pObject) );
+
+  return pObject;
+}
+
+///////////
+// return a vp::GifImage object and its index in vp::Gif object
+////////////////////////////////////////////////////////////////////
+vp::GifImage* PyGifImpl::FetchImage( PyGifObject* self, PyObject* arg, Py_ssize_t& Index )
 {
   if( self->pGif->Images() == 0 )
   {
@@ -727,15 +752,26 @@ PyObject* PyGifImpl::GetImage( PyGifObject* self, PyObject* arg )
   {
     PyErr_Format( PyExc_TypeError, "requires an integer, got %s",
                   Py_TYPE(arg)->tp_name );
-    return nullptr;  
+    return nullptr;
   }
 
-  Py_ssize_t Index = PyInt_AsSsize_t(arg);
+  Index = PyInt_AsSsize_t(arg);
   Value_CheckRangeExOne( Index, 0, static_cast<Py_ssize_t>(self->pGif->Images()) )
 
-  vp::GifImage& Image = (*self->pGif)[static_cast<size_t>(Index)];
+  return &((*self->pGif)[static_cast<size_t>(Index)]);
+}
 
-  return PyGifImageImpl::Cast2Py( &Image, self );
+///////////
+// return a PyGifImageObject
+///////////////////////////////////////////////
+PyObject* PyGifImpl::FetchImage( PyGifObject* self, PyObject* arg )
+{
+  Py_ssize_t Index = 0;
+  vp::GifImage* pImage = FetchImage( self, arg, Index );
+  if( pImage != nullptr )
+    return PyGifImageImpl::Cast2Py( pImage, self );
+  else
+    return nullptr;
 }
 
 ///////////////////
@@ -743,13 +779,6 @@ PyObject* PyGifImpl::GetImage( PyGifObject* self, PyObject* arg )
 ////////////////////////////////////////////////////////
 PyObject* PyGifImpl::RemoveImage( PyGifObject* self, PyObject* arg )
 {
-  if( self->pGif->Images() == 0 )
-  {
-    PyErr_Format( PyExc_Exception, "'%s' object contains no image",
-                  Py_TYPE(self)->tp_name );
-    return nullptr;
-  }
-
   if( self->pGif->Images() == 1 )
   {
     PyErr_Format( PyExc_Exception, "'%s' object contains only one image",
@@ -757,19 +786,81 @@ PyObject* PyGifImpl::RemoveImage( PyGifObject* self, PyObject* arg )
     return nullptr;
   }
 
-  if( !PyInt_CheckExact(arg) )
-  {
-    PyErr_Format( PyExc_TypeError, "requires an integer, got %s", Py_TYPE(arg)->tp_name );
+  Py_ssize_t Index = 0;
+  vp::GifImage* pImage = FetchImage( self, arg, Index );
+  if( pImage == nullptr )
     return nullptr;
-  }
 
-  Py_ssize_t Index = PyInt_AsSsize_t(arg);
-  Value_CheckRangeExOne( Index, 0, static_cast<Py_ssize_t>(self->pGif->Images()) )
+  // remove it from GifImageObjectList
+  RemoveFromList( self->pGifImageObjectList, pImage );
 
+  // remove it from vp::Gif object
   if( self->pGif->Remove(static_cast<size_t>(Index)) )
     Py_RETURN_TRUE;
   else
     Py_RETURN_FALSE;
+}
+
+////////////////////////////////////////////////////////////////
+void PyGifImpl::RemoveFromList( SimpleList<PyGifImageObject>* pGifImageObjectList,
+                                vp::GifImage* pGifImage )
+{
+  pGifImageObjectList->Rewind();
+  PyGifImageObject* pGifImageObject = pGifImageObjectList->Next();
+  while( pGifImageObject != nullptr )
+  {
+    // change its status and remove it from the list
+    if( pGifImageObject->pGifImage == pGifImage )
+    {
+      pGifImageObject->status = Status::Abandoned;
+      pGifImageObjectList->Remove( pGifImageObject );
+      break;
+    }
+
+    pGifImageObject = pGifImageObjectList->Next();
+  }
+}
+
+/////////////////
+// Implement mp_ass_subscript, i.e. __delitem__() and __setitem__()
+//   arg: index of the image, so a positive integer expected.
+//        slice is not supported.
+////////////////////////////////////////////////////////////////
+int PyGifImpl::DelCopyImage( PyGifObject* self, PyObject* arg, PyObject* other )
+{
+  if( other == nullptr )
+    return DelImage( self, arg );
+  else
+    return CopyImage( self, arg, other );
+}
+
+/////////////////
+// __delitem__(), i.e. del gif[index]
+/////////////////////////////////////////////
+int PyGifImpl::DelImage( PyGifObject* self, PyObject* index )
+{
+  return ( RemoveImage(self, index) == Py_True ) ? 0 : -1;
+}
+
+/////////////////
+// __setitem__()
+// i.e. gif[index] = img or gif[index1] = gif[index2]
+// this is equivalent to clone() of PyGifImage object
+/////////////////////////////////////////////////////////
+int PyGifImpl::CopyImage( PyGifObject* self, PyObject* index, PyObject* other )
+{
+  PyObject* pObject = FetchImage( self, index );
+  if( pObject == nullptr )
+    return -1;
+
+  // copy the other
+  PyGifImageObject* pImageObject = reinterpret_cast<PyGifImageObject*>(pObject);
+  PyObject* pRet = PyGifImageImpl::Clone( pImageObject, other );
+
+  // here ends its duty
+  Py_DECREF(pObject);
+
+  return (pRet != nullptr) ? 0 : -1;
 }
 
 ///////////////////
@@ -785,7 +876,7 @@ PyObject* PyGifImpl::Size( PyGifObject* self, PyObject* )
 //
 // Instead of implementing a iterator and a reverse iterator,
 // add __iter__(), __next__(), and __reversed__() to PyGifObject,
-// so PyGifObject itself is able to play both the roles.
+// so PyGifObject itself is able to play both roles.
 ///////////////////////////////////////////////////////////////
 PyObject* PyGifImpl::Iter( PyGifObject* self )
 {
@@ -835,7 +926,11 @@ PyObject* PyGifImpl::IterForward( PyGifObject* self )
   vp::GifImage& Image = (*self->pGif)[static_cast<size_t>(self->IterIndex)];
   ++self->IterIndex;
 
-  return PyGifImageImpl::Cast2Py( &Image, self );
+  PyObject* pObject = PyGifImageImpl::Cast2Py( &Image, self );
+  if( pObject != nullptr )
+    self->pGifImageObjectList->Add( reinterpret_cast<PyGifImageObject*>(pObject) );
+
+  return pObject;
 }
 
 ////////////////
@@ -854,5 +949,9 @@ PyObject* PyGifImpl::IterBackward( PyGifObject* self )
   vp::GifImage& Image = (*self->pGif)[static_cast<size_t>(self->IterIndex)];
   --self->IterIndex;
 
-  return PyGifImageImpl::Cast2Py( &Image, self );
+  PyObject* pObject = PyGifImageImpl::Cast2Py( &Image, self );
+  if( pObject != nullptr )
+    self->pGifImageObjectList->Add( reinterpret_cast<PyGifImageObject*>(pObject) );
+
+  return pObject;
 }

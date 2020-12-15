@@ -20,6 +20,8 @@
 #ifndef PyGifDefs_h
 #define PyGifDefs_h
 
+#include <cstdint>
+
 ////////////////////////
 // Declarations shared by PyGif.cpp and PyGIfImage.cpp
 ////////////////////////////////////////////////////////
@@ -38,12 +40,16 @@ struct PyGifImageObject;
 //   This list is to track every PyGifImageObject created by
 //   PyGifObject and notifies them when PyGifObject goes out of scope.
 //   It stores pointers of every PyGifImageObject created (see 
-//   PyGif::GetImage() and PyGifImage::Cast2Py()). When PyGifObject
-//   goes out of scope, every PyGifImageObject is set to invalid
-//   (see PyGif::Dealloc()).
+//   PyGifImpl::GetImage() and PyGifImageImpl::Cast2Py()). When PyGifObject
+//   goes out of scope, every PyGifImageObject is set to a status
+//   that is not Valid.
 //
-// Both are instantiated when PyGifObject is created (see PyGif::Init()),
-// need to be deleted when PyGifObject goes out of scope (see PyGif::Dealloc()).
+// Both are instantiated when PyGifObject is created (see PyGifImpl::Init()),
+// need to be deleted when PyGifObject goes out of scope (see PyGifImpl::Dealloc()).
+//
+// ForwardIter: forward iteration if true; reverse iteration, otherwise.
+//
+// IterIndex: index for iteration.
 //
 //////////////////////////////////////////////////////////////////////////
 // Instead of using a list to track every PyGifImageObject, an alternative
@@ -66,29 +72,30 @@ typedef struct PyGifObject {
   Py_ssize_t IterIndex;
 } PyGifObject;
 
+//////////////////////////////
+// Status of a PyGifImageObject
+//   Normal:    normal status, set when it is created and kept during its life cycle.           
+//   Abandoned: set when its corresponding vp:GifImage object is removed from
+//              the vp::Gif object.
+//   Orphaned:  set when the PyGifObject it belongs to is out of scope.
+//   Invalid:   set when it is out of scope and subject to garbage collection.           
+/////////////////////////////////////////////////////////////////
+enum class Status : int8_t { Normal, Abandoned, Orphaned, Invalid };
 
 //////////////////////////
 // Data for GifImage_Type
 //
-// IsValid: status of LuaGIfImage
-//   It is initialized to true when a PyGifImageObject is created
-//   (see PyGifImage::Cast2Py()); set to false when either LuaGif
-//   or LuaGIfImage goes out of scope (see PyGifImage::Dealloc()
-//   and PyGif::Dealloc()).
+// status: status of a PyGifImageObject
 //
 // pGifImage: pointer to vp::GifImage
-//   Set to nullptr when LuaGIfImage goes out of scope.
+//   Set to nullptr when PyGifImageObject goes out of scope.
 //   Don't need to delete it, as vp::Gif will take care of it.
 //
 // pGifObject: pointer to PyGifObject
-//   PyGifObject contains a list of pointers to PyGifImageObjects.
-//   A PyGifImageObject adds itself to the list when it is created (see
-//   PyGifImage::Cast2Py()), removes itself from the list when it goes
-//   out of scope (PyGifImage::Dealloc())
 //////////////////////////////////////////////////////////////////////////
 typedef struct PyGifImageObject {
   PyObject_HEAD
-  bool IsValid;
+  Status status;
   vp::GifImage* pGifImage;
   PyGifObject*  pGifObject;
 } PyGifImageObject;
@@ -99,6 +106,9 @@ namespace PyGifImageImpl
 {
   // cast to PyGifImageObject
   PyObject* Cast2Py( vp::GifImage*, PyGifObject* );
+
+  // copy another PyGifImageObject
+  PyObject* Clone( PyGifImageObject*, PyObject* );
 }
 
 #endif //PyGifDefs_h

@@ -445,11 +445,22 @@ class TestGif( unittest.TestCase ):
     gif = vpixels.gif( 2, 3, 4, 7 )
     self.assertEqual( len(gif), 7 )
 
-    self.assertEqual( gif.removeimage(0), True )  # remove 1st image
+    img0 = gif[0]
+    self.assertEqual( img0.bitsperpixel(), 2 )
+    self.assertTrue( gif.removeimage(0) )  # remove 1st image
+    self.assertRaises( Exception, img0.bitsperpixel ) # img0 becomes invalid
     self.assertEqual( len(gif), 6 )
-    self.assertEqual( gif.removeimage(5), True )  # remove last one
+
+    img5 = gif[5]
+    self.assertEqual( img5.bitsperpixel(), 2 )
+    self.assertTrue( gif.removeimage(5) )  # remove last one
+    self.assertRaises( Exception, img5.bitsperpixel ) # img5 becomes invalid
     self.assertEqual( len(gif), 5 )
-    self.assertEqual( gif.removeimage(2), True )  # remove middle one
+
+    img2 = gif[2]
+    self.assertEqual( img2.bitsperpixel(), 2 )
+    self.assertTrue( gif.removeimage(2) )  # remove middle one
+    self.assertRaises( Exception, img2.bitsperpixel ) # img2 becomes invalid
     self.assertEqual( len(gif), 4 )
 
     # error cases
@@ -459,7 +470,7 @@ class TestGif( unittest.TestCase ):
 
     # remove images until only one left
     while len(gif) > 1:
-      self.assertEqual( gif.remove(0), True )
+      self.assertTrue( gif.remove(0) )
 
     # now gif contains only one image
     self.assertEqual( len(gif), 1 )
@@ -469,7 +480,7 @@ class TestGif( unittest.TestCase ):
     self.assertRaises( Exception, img.delay, 100 )
     self.assertEqual( img.disposalmethod(), 0 )
     self.assertRaises( Exception, img.disposalmethod, 1 )
-    self.assertEqual( img.hastranscolor(), False )
+    self.assertFalse( img.hastranscolor() )
     self.assertRaises( Exception, img.hastranscolor, True )
     self.assertRaises( Exception, img.transcolor )
     self.assertRaises( Exception, img.transcolor, 1 )
@@ -477,6 +488,95 @@ class TestGif( unittest.TestCase ):
     # single image object
     gif2 = vpixels.gif( 2, 3, 4, 1 )
     self.assertRaises( Exception, gif2.removeimage, 0 )  # cannot remove the image
+
+
+  def testDelImage( self ):
+    gif = vpixels.gif( 2, 3, 4, 7 )
+    self.assertEqual( len(gif), 7 )
+
+    img0 = gif[0]
+    self.assertEqual( img0.bitsperpixel(), 2 )
+    del gif[0]  # delete 1st image
+    self.assertRaises( Exception, img0.bitsperpixel ) # img0 becomes invalid
+    self.assertEqual( len(gif), 6 )
+
+    img5 = gif[5]
+    self.assertEqual( img5.bitsperpixel(), 2 )
+    del gif[5]  # delete last one
+    self.assertRaises( Exception, img5.bitsperpixel ) # img5 becomes invalid
+    self.assertEqual( len(gif), 5 )
+
+    img2 = gif[2]
+    self.assertEqual( img2.bitsperpixel(), 2 )
+    del gif[2]  # delete middle one
+    self.assertRaises( Exception, img2.bitsperpixel ) # img2 becomes invalid
+    self.assertEqual( len(gif), 4 )
+
+    # error cases
+    self.assertRaises( ValueError, gif.__delitem__, -1 )  # del gif[-1], out of range
+    self.assertRaises( ValueError, gif.__delitem__, 4 )   # del gif[4], out of range
+    self.assertRaises( TypeError,  gif.__delitem__, 1.5 ) # del gif[1.5], not an integer
+    self.assertRaises( TypeError,  gif.__delitem__, '1' ) # del gif['1'], not an integer
+    self.assertRaises( TypeError,  gif.__delitem__, slice(0,3) ) # del gif[0:3], doesn't support slice
+
+    # delete images until only one left
+    while len(gif) > 1:
+      self.assertEqual( gif.remove(0), True )
+    self.assertEqual( len(gif), 1 )
+
+    # deleting the last image is not allowed
+    self.assertRaises( Exception, gif.__delitem__, 0 )
+
+
+  def testCopyImage( self ):
+    gif = vpixels.gif( 2, 3, 4, 5 )
+    # set img0
+    img0 = gif[0]
+    img0.setall( 3 )
+    self.assertEqual( 3, img0.getpixel( 1, 1 ) )
+    # before copy
+    self.assertEqual( 0, gif[1].getpixel( 1, 1 ) )
+    self.assertEqual( 0, gif[2].getpixel( 1, 1 ) )
+    # copy img0, on the right side either works
+    gif[1] = gif[0]
+    gif[2] = img0
+    #after copy
+    self.assertEqual( 3, gif[1].getpixel( 1, 1 ) )
+    self.assertEqual( 3, gif[2].getpixel( 1, 1 ) )
+
+    # index exceeds
+    self.assertRaises( ValueError, gif.__setitem__, -1, img0 )
+    self.assertRaises( ValueError, gif.__setitem__,  5, img0 )
+
+    # wrong args
+    self.assertRaises( TypeError, gif.__setitem__, 1, 1 )
+    self.assertRaises( TypeError, gif.__setitem__, 1, '1' )
+    self.assertRaises( TypeError, gif.__setitem__, 1, {} )
+
+    # images belong to compatible gif objects
+    gif2 = vpixels.gif( 2, 3, 4, 2 )
+    # before
+    self.assertEqual( 0, gif2[0].getpixel( 1, 1 ) )
+    self.assertEqual( 0, gif2[0].getpixel( 1, 1 ) )
+    # copy
+    gif2[0] = gif[0]
+    gif2[1] = img0
+    # after
+    self.assertEqual( 3, gif2[0].getpixel( 1, 1 ) )
+    self.assertEqual( 3, gif2[0].getpixel( 1, 1 ) )
+
+    # images belong to incompatible gif objects
+    gif3 = vpixels.gif( 2, 4, 4, 2 )  # different width
+    self.assertRaises( Exception, gif3.__setitem__, 0, gif[0] )
+    gif4 = vpixels.gif( 2, 3, 3, 2 )  # different height
+    self.assertRaises( Exception, gif4.__setitem__, 0, img0 )
+
+    # this is not copying
+    img0 = gif3[0]
+    self.assertEqual( (4,4), img0.dimension() )   # img0 refers to gif3[0]
+    self.assertEqual( 0, img0.getpixel( 1, 1 ) )
+    self.assertEqual( (3,4), gif[0].dimension() ) # gif[0] remains unchanged
+    self.assertEqual( 3, gif[0].getpixel( 1, 1 ) )
 
 
   def testImportf( self ):

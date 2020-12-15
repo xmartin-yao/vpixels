@@ -32,10 +32,19 @@
 // check if image object is still good for use
 ///////////////////////////////////////////////
 #define GifImage_Check( self )  \
-  if( (self)->IsValid != true ) \
+  if( (self)->status == Status::Orphaned ) \
   { \
-    PyErr_Format( PyExc_Exception, "invalid '%s' object, '%s' object already out of scope", \
-                  PyGifImage::GifImage_Type.tp_name, PyGif::Gif_Type.tp_name ); \
+    PyErr_Format( PyExc_Exception, \
+      "Invalid '%s' object.\n  The '%s' object it belongs to is aleady out of scope.", \
+      PyGifImage::GifImage_Type.tp_name, PyGif::Gif_Type.tp_name ); \
+    return nullptr; \
+  } \
+  \
+  if( (self)->status == Status::Abandoned ) \
+  { \
+    PyErr_Format( PyExc_Exception, \
+      "Invalid '%s' object.\n  This '%s' object has been removed from '%s' object.", \
+      PyGifImage::GifImage_Type.tp_name, PyGifImage::GifImage_Type.tp_name, PyGif::Gif_Type.tp_name ); \
     return nullptr; \
   }
 
@@ -222,7 +231,7 @@ namespace PyGifImageImpl
   PyObject* RichCompare( PyObject* obj1, PyObject* obj2, int op );
 
   // methods GifImage_Type (exposed to Python)
-  PyObject* Clone( PyGifImageObject* self, PyObject* arg );
+  //PyObject* Clone( PyGifImageObject* self, PyObject* arg );
   PyObject* BitsPerPixel( PyGifImageObject* self, PyObject* args );
   PyObject* Left( PyGifImageObject* self, PyObject* );
   PyObject* Top( PyGifImageObject* self, PyObject* );
@@ -336,14 +345,14 @@ PyTypeObject PyGifImage::GifImage_Type = {
   0,                              // tp_subclasses
   0,                              // tp_weaklist
   0,                              // tp_del
-  0                               // tp_version_tag
+  0,                              // tp_version_tag
 #if PY_MAJOR_VERSION == 3
-  ,0                              // tp_finalize
+  0,                              // tp_finalize
 #if PY_MINOR_VERSION >= 8
-  ,0                              // tp_vectorcall
+  0,                              // tp_vectorcall
 #endif
 #if PY_MINOR_VERSION == 8
-  ,0                              // tp_print (3.8 only)
+  0,                              // tp_print (3.8 only)
 #endif
 #endif
 };
@@ -356,13 +365,13 @@ PyObject* PyGifImageImpl::Cast2Py( vp::GifImage* pGifImage, PyGifObject* pGifObj
   PyObject* self = type->tp_alloc( type, 0 );
 
   // initialize PyGifImageObject
-  PyGifImageObject* pGifImageObject = reinterpret_cast<PyGifImageObject*>(self);
-  pGifImageObject->IsValid = true;
-  pGifImageObject->pGifImage = pGifImage;
-  pGifImageObject->pGifObject = pGifObject;
-
-  // add PyGifImageObject to list
-  pGifObject->pGifImageObjectList->Add( pGifImageObject );
+  if( self != nullptr )
+  {
+    PyGifImageObject* pGifImageObject = reinterpret_cast<PyGifImageObject*>(self);
+    pGifImageObject->status = Status::Normal;
+    pGifImageObject->pGifImage = pGifImage;
+    pGifImageObject->pGifObject = pGifObject;
+  }
 
   return self;
 }
@@ -388,9 +397,9 @@ int PyGifImageImpl::Init( PyGifImageObject*, PyObject*, PyObject* )
 void PyGifImageImpl::Dealloc( PyGifImageObject* self )
 {
   // set itself to invalid and remove itself from the list
-  if( self->IsValid )
+  if( self->status == Status::Normal )
   {
-    self->IsValid = false;
+    self->status = Status::Invalid;
     self->pGifObject->pGifImageObjectList->Remove( self );
   }
 
