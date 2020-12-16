@@ -173,7 +173,7 @@ int LuaGifImageImpl::Cast2Lua( lua_State* L, vp::GifImage* pGifImage,
   LuaGifImageUD* pImageUD = static_cast<LuaGifImageUD*>(pUD);
   pImageUD->pGifImage = pGifImage;
   pImageUD->pGifUD = pGifUD; 
-  pImageUD->IsValid = true; 
+  pImageUD->status = Status::Normal;
 
   // add the userdatum to list
   pGifUD->pListImageUD->Add( pImageUD );
@@ -210,7 +210,7 @@ int LuaGifImageImpl::Clone( lua_State* L )
 
   if( Error )
   {
-    const char* msg = lua_pushfstring( L, "'%s' belongs to an incompatible '%s'",
+    const char* msg = lua_pushfstring( L, "argument '%s' object belongs to an incompatible '%s' object",
                                        ID, LuaGifImpl::ID );
     return luaL_argerror( L, 2, msg );
   }
@@ -712,9 +712,9 @@ int LuaGifImageImpl::Finalizer( lua_State* L )
   }
 
   // set itself to invalid and remove itself from the list
-  if( pImageUD->IsValid )
+  if( pImageUD->status == Status::Normal )
   {
-    pImageUD->IsValid = false;                         
+    pImageUD->status = Status::Invalid;
     pImageUD->pGifUD->pListImageUD->Remove( pImageUD );
   }
 
@@ -736,20 +736,27 @@ LuaGifImageUD* LuaGifImageImpl::CheckGifImageUD( lua_State* L, int arg )
   LuaGifImageUD* pImageUD = static_cast<LuaGifImageUD*>(pUD);
   if( pImageUD == nullptr )
   {
-    const char* msg = lua_pushfstring( L, "invalid '%s'", ID );
+    const char* msg = lua_pushfstring( L, "invalid '%s' object", ID );
     luaL_argerror( L, arg, msg );
   }
 
   // in case __gc() has been called directly, e.g. image:__gc()
   if( pImageUD->pGifImage == nullptr )
   {
-    const char* msg = lua_pushfstring( L, "'%s' out of scope", ID );
+    const char* msg = lua_pushfstring( L, "'%s' object is out of scope", ID );
     luaL_argerror( L, arg, msg );
   }
 
-  if( pImageUD->IsValid == false )
+  if( pImageUD->status == Status::Orphaned )
   {
-    const char* msg = lua_pushfstring( L, "invalid '%s', '%s' already out of scope",
+    const char* msg = lua_pushfstring( L, "invalid '%s' object, the '%s' it belongs to is out of scope",
+                                       ID, LuaGifImpl::ID );
+    luaL_argerror( L, arg, msg );
+  }
+
+  if( pImageUD->status == Status::Abandoned )
+  {
+    const char* msg = lua_pushfstring( L, "invalid '%s' object, it has been removed from '%s' object",
                                        ID, LuaGifImpl::ID );
     luaL_argerror( L, arg, msg );
   }

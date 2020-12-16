@@ -20,6 +20,8 @@
 #ifndef LuaGifDefs_h
 #define LuaGifDefs_h
 
+#include <cstdint>
+
 ////////////////////////
 // Declarations shared by LuaGif.cpp and LuaGIfImage.cpp
 //////////////////////////////////////////////////////////
@@ -53,14 +55,21 @@ typedef struct LuaGifUD
 } LuaGifUD;
 
 
+//////////////////////////////
+// Status of a LuaGIfImage
+//   Normal:    normal status, set when it is created and kept during its life cycle.           
+//   Abandoned: set when its corresponding vp:GifImage object is removed from
+//              the vp::Gif object.
+//   Orphaned:  set when the PyGifObject it belongs to is out of scope.
+//   Invalid:   set when it is out of scope and subject to garbage collection.           
+/////////////////////////////////////////////////////////////////
+enum class Status : int8_t { Normal, Abandoned, Orphaned, Invalid };
+
+
 ////////////////////////////
 // Userdatum for LuaGIfImage
 //
-// IsValid: status of LuaGIfImage
-//   It is initialized to true when a LuaGIfImage userdatum is created
-//   (see LuaGifImageImpl::Cast2Lua()); set to false when either LuaGif or
-//   LuaGIfImage goes out of scope (see LuaGifImpl::Finalizer() and 
-//   LuaGifImageImpl::Finalizer()).
+// status: status of LuaGIfImage
 //
 // pGifImage: pointer to vp::GifImage
 //   Set to nullptr when LuaGIfImage goes out of scope.
@@ -74,7 +83,7 @@ typedef struct LuaGifUD
 ////////////////////////////////////////////////////////////////////////////
 typedef struct LuaGifImageUD
 {
-  bool IsValid;
+  Status status;
   vp::GifImage* pGifImage;
   LuaGifUD* pGifUD;
 } LuaGifImageUD;

@@ -381,11 +381,22 @@ function TestGif:testRemoveImage()
   local gif = vpixels.gif( 2, 3, 4, 7 )
   lu.assertEquals( #gif, 7 )
 
+  img0 = gif[0]
+  lu.assertEquals( img0:bitsperpixel(), 2 )
   lu.assertIsTrue( gif:removeimage(0) )  -- remove 1st image
+  lu.assertError( img0.bitsperpixe )     -- img0 becomes invalid
   lu.assertEquals( #gif, 6 )
+
+  img5 = gif[5]
+  lu.assertEquals( img5:bitsperpixel(), 2 )
   lu.assertIsTrue( gif:removeimage(5) )  -- remove last one
+  lu.assertError( img5.bitsperpixe )     -- img5 becomes invalid
   lu.assertEquals( #gif, 5 )
+
+  img2 = gif[2]
+  lu.assertEquals( img2:bitsperpixel(), 2 )
   lu.assertIsTrue( gif:removeimage(2) )  -- remove middle one
+  lu.assertError( img2.bitsperpixe )     -- img2 becomes invalid
   lu.assertEquals( #gif, 4 )
 
   -- error cases

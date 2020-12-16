@@ -67,6 +67,7 @@ namespace LuaGifImpl
   void     CheckGif( lua_State* L, vp::Gif* pGif, int arg );
   LuaGifUD* CheckGifUD( lua_State* L, int arg );
   void Invalidate( SimpleList<LuaGifImageUD>* pListImageUD );
+  void RemoveFromList( SimpleList<LuaGifImageUD>* pListImageUD, vp::GifImage* pGifImage );
 
   // methods of LuaGif
   const luaL_Reg Methods[] = {
@@ -524,7 +525,9 @@ int LuaGifImpl::RemoveImage( lua_State* L )
 {
   LuaUtil::CheckArgs( L, 2 );
 
-  vp::Gif* pGif = CheckGif( L, 1 );
+  LuaGifUD* pGifUD = CheckGifUD( L, 1 );
+  vp::Gif* pGif = pGifUD->pGif;
+  CheckGif( L, pGif, 1 );
 
   auto Images = static_cast<uint16_t>(pGif->Images());
   if( Images == 0 )
@@ -536,6 +539,10 @@ int LuaGifImpl::RemoveImage( lua_State* L )
   auto Index = LuaUtil::CheckUint16( L, 2 );
   LuaUtil::CheckValueUpper( L, 2, Index, Images );
 
+  // remove it from the list
+  RemoveFromList( pGifUD->pListImageUD, &(*pGif)[Index] );
+
+  // remove it from vp::Gif object
   lua_pushboolean( L, pGif->Remove(Index) );
 
   return 1;
@@ -692,7 +699,26 @@ void LuaGifImpl::Invalidate( SimpleList<LuaGifImageUD>* pListImageUD )
   LuaGifImageUD* pGifImageUD = pListImageUD->Next();
   while( pGifImageUD != nullptr )
   {
-    pGifImageUD->IsValid = false;
+    pGifImageUD->status = Status::Orphaned;
+    pGifImageUD = pListImageUD->Next();
+  }
+}
+
+////////////////////////////////////////////////////////////////
+void LuaGifImpl::RemoveFromList( SimpleList<LuaGifImageUD>* pListImageUD, vp::GifImage* pGifImage )
+{
+  pListImageUD->Rewind();
+  LuaGifImageUD* pGifImageUD = pListImageUD->Next();
+  while( pGifImageUD != nullptr )
+  {
+    // change its status and remove it from the list
+    if( pGifImageUD->pGifImage == pGifImage )
+    {
+      pGifImageUD->status = Status::Abandoned;
+      pListImageUD->Remove( pGifImageUD );
+      break;
+    }
+
     pGifImageUD = pListImageUD->Next();
   }
 }
