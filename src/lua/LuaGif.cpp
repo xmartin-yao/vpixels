@@ -58,8 +58,10 @@ namespace LuaGifImpl
   int Indexing( lua_State* L );
   int ToString( lua_State* L );
   int Finalizer( lua_State* L );
+  int IPairs( lua_State* L );
 
   // utils
+  int Iterator( lua_State* L );
   int Cast2Lua( lua_State* L, vp::Gif* pGif );
   int GetField( lua_State* L );
   vp::Gif* NewGif( lua_State* L );
@@ -130,6 +132,10 @@ void LuaGif::Register( lua_State* L )
 
   lua_pushstring( L, "__tostring" );
   lua_pushcfunction( L, LuaGifImpl::ToString );
+  lua_settable( L, -3 );
+
+  lua_pushstring( L, "__ipairs" );
+  lua_pushcfunction( L, LuaGifImpl::IPairs );
   lua_settable( L, -3 );
 
   lua_pushstring( L, "__gc");
@@ -515,7 +521,8 @@ int LuaGifImpl::GetImage( lua_State* L )
   LuaUtil::CheckValueUpper( L, 2, Index, Images );
   vp::GifImage& Image = (*pGif)[Index];
 
-  return LuaGifImageImpl::Cast2Lua( L, &Image, pGifUD );
+  LuaGifImageImpl::Cast2Lua( L, &Image, pGifUD );
+  return 1;
 }
 
 /////////////
@@ -584,6 +591,43 @@ int LuaGifImpl::ToString( lua_State* L )
                    pGif->Width(), pGif->Height(),
                    pGif->Images(), pGif->ColorTableSize() );
   return 1;
+}
+
+///////////////
+// meta method __ipairs
+////////////////////////////////////
+int LuaGifImpl::IPairs( lua_State* L )
+{
+  CheckGif( L, 1 );
+
+  lua_pushcfunction( L, LuaGifImpl::Iterator );
+  lua_insert( L, 1 );
+  lua_pushinteger(L, -1);
+
+  return 3;  // Iterator, LuaGif, -1
+}
+
+////////////////////////////////////
+int LuaGifImpl::Iterator( lua_State* L )
+{
+  auto pGifUD = CheckGifUD( L, 1 );
+  auto pGif = pGifUD->pGif;
+  CheckGif( L, pGif, 1 );
+
+  auto Index = luaL_checkint( L, 2 );
+  ++Index;
+  if( static_cast<size_t>(Index) >= pGif->Images() )
+  {
+    lua_pushnil( L );
+    return 1;  // nil
+  }
+
+  lua_pushinteger( L, Index );
+
+  auto& Image = (*pGif)[static_cast<size_t>(Index)];
+  LuaGifImageImpl::Cast2Lua( L, &Image, pGifUD );
+
+  return 2;  // Index, LuaGifImage
 }
 
 ///////////

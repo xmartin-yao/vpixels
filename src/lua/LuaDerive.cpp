@@ -36,10 +36,26 @@ namespace LuaDeriveImpl
   int Indexing( lua_State* L );
   int ToString( lua_State* L );
   int LengthOp( lua_State* L );
+  int IPairs( lua_State* L );
 
   // utils
   int CheckDerived( lua_State* L, int arg );
-  int PushSuper( lua_State* L, int index );
+  int PushSuper( lua_State* L, int index );   // not in use
+  int ReplaceWithSuper( lua_State* L, int index );
+  int CallMetamethod( lua_State* L, const char* method );
+}
+
+////////////////////////
+namespace
+{
+  // __tostring of metatable of LuaDerive's metatable
+  int ToString( lua_State* L )
+  {
+    luaL_checktype( L, 1, LUA_TTABLE );
+    lua_pushfstring( L, "metatable of %s", LuaDeriveImpl::ID );
+
+    return 1;
+  }
 }
 
 ////////////////
@@ -50,7 +66,7 @@ void LuaDerive::Register( lua_State* L )
   luaL_newmetatable( L, LuaDeriveImpl::ID ); 
 
   // meta fields
-  lua_pushstring( L, "__metatable" );
+  lua_pushstring( L, "__id" );
   lua_pushstring ( L, LuaDeriveImpl::ID );
   lua_settable( L, -3 ); 
 
@@ -66,12 +82,24 @@ void LuaDerive::Register( lua_State* L )
   lua_pushcfunction( L, LuaDeriveImpl::LengthOp );
   lua_settable( L, -3 );
 
+  lua_pushstring( L, "__ipairs" );
+  lua_pushcfunction( L, LuaDeriveImpl::IPairs );
+  lua_settable( L, -3 );
+
+  // add a metatable to the metatable
+  lua_createtable( L, 0, 1 );
+  lua_pushstring( L, "__tostring" );
+  lua_pushcfunction( L, ToString );
+  lua_settable( L, -3 );
+  lua_setmetatable( L, -2 );
+
   //pop the metatable
   lua_pop( L, 1 );
 }
 
 //////////////////
-// Create a derived object: a table with field 'super' pointing to userdata
+// Create a vp.derived object: a table with field 'super' pointing
+// to a userdata or another table
 /////////////////////////////////////////////////
 int LuaDerive::New( lua_State* L )
 {
@@ -107,64 +135,58 @@ int LuaDerive::New( lua_State* L )
 }
 
 //////////////////////////
-// This function replaces the implicit argument 'self', which is 
-// a vp.derived object, with super and calls super["key"]. This
+// This function replaces the implicit argument 'self' (which is
+// a vp.derived object) with its super and calls the method. This
 // is how methods of super get called from vp.derived, i.e.
 // this function makes calling
-//   vp.derived:method(arg1, ...)
-// actually call
-//   super:methods(arg1, ...)
+//   vp.derived:method(arg1, arg2)
+// actually calls
+//   super:method(arg1, arg2)
 //
 // When super["key"] is a function, this function, together with
-// two upvalues (super["key"] and super), get returned by Indexing(). 
+// a upvalue (super["key"]), gets returned by Indexing().
 ////////////////////////////////////////////////////////////////
 int LuaDeriveImpl::Caller( lua_State* L )
 {
-  // initial stack (from bottom to top):
-  // vp.derived + other args passed to closure
+  // stack: vp.derived + args
   CheckDerived( L, 1 );
+  ReplaceWithSuper( L, 1 );
 
-  // replace vp.derived with upvalue #1 (super)
-  lua_pushvalue(L, lua_upvalueindex(1));  // super
-  lua_replace(L, 1);
+  // insert upvalue (method to be called) to the bottom
+  lua_pushvalue( L, lua_upvalueindex(1) );
+  lua_insert( L, 1 );
 
-  // insert upvalue #2 (the function to be called) to the bottom
-  lua_pushvalue(L, lua_upvalueindex(2));
-  lua_insert(L, 1);
-
-  // stack (from bottom up):
-  // the function + super + other args passed to closure
-
-  // call the function
+  // stack: method + super + args
+  // call method(super, args)
   lua_call( L, lua_gettop(L) - 1, LUA_MULTRET );
   return lua_gettop(L);
 }
 
 ////////////////////////
 // meta method __index
-// This function gets called, when vp.derived does not 
-// contain the field. This function searches for super["key"].
-///////////////////////////////////////////////////////////
+// It gets called, when vp.derived does not contain the inquired field.
+// It searches for the field from its super, i.e. super["key"].
+// If super["key"] is a function, it returns a closure; otherwise, super["key"].
+/////////////////////////////////////////////////////////////////
 int LuaDeriveImpl::Indexing( lua_State* L )
 {
+  // stack: vp.derived + key
   LuaUtil::CheckArgs( L, 2 );
   CheckDerived( L, 1 );
+  ReplaceWithSuper( L, 1 );
 
-  // vp.derived["super"]
-  PushSuper( L, 1 );
-
-  // search for super["key"]
-  lua_pushvalue( L, 2 );  // key
-  lua_gettable( L, 3 );
-  if( lua_isnoneornil( L, -1 ) )
+  // stack: super + key
+  // search for field super["key"]
+  lua_gettable( L, 1 );
+  if( lua_isnoneornil( L, 2 ) )
     return luaL_error( L, "'%s' object has no field '%s'", ID, lua_tostring(L,2) );
 
-  // if super["key"] is a function, return a closure with two upvalues:
-  //   upvalue #2 -> super["key"], upvalue #1 -> super
-  if( lua_type( L, -1 ) == LUA_TFUNCTION )
-    lua_pushcclosure( L, Caller, 2 );
+  // stack: super + super["key"]
+  // if super["key"] is a function, form a closure with one upvalue: super["key"]
+  if( lua_type( L, 2 ) == LUA_TFUNCTION )
+    lua_pushcclosure( L, Caller, 1 );
 
-  return 1;
+  return 1;  // closure or super["key"]
 }
 
 ////////////////////
@@ -172,42 +194,60 @@ int LuaDeriveImpl::Indexing( lua_State* L )
 ///////////////////////////////////////
 int LuaDeriveImpl::ToString( lua_State* L )
 {
+  LuaUtil::CheckArgs( L, 1 );
   CheckDerived( L, 1 );
-
-  // vp.derived["super"]
-  PushSuper( L, 1 );
-  lua_pushfstring( L, "%s (%s)", ID, luaL_tolstring(L, -1, nullptr) ); 
+  ReplaceWithSuper( L, 1 );
+  lua_pushfstring( L, "%s (%s)", ID, luaL_tolstring(L, 1, nullptr) );
   return 1;
 }
 
 ///////////////////
 // meta method __len
-// if super.__len is a function, call it and
-// return result; otherwise, return 0.
-////////////////////////////////////////
+// It gets called when applying operator # to vp.derived.
+//////////////////////////////////////////////////////
 int LuaDeriveImpl::LengthOp( lua_State* L )
 {
-  LuaUtil::CheckArgs( L, 1, 1 );
+  LuaUtil::CheckArgs( L, 1, 1 );  // why 2 args, see LuaGifImpl::Images()
+  return CallMetamethod( L, "__len" );
+}
+
+///////////////////
+// meta method __ipairs
+// It gets called when calling ipairs() with vp.derived.
+/////////////////////////////////////////////////////
+int LuaDeriveImpl::IPairs( lua_State* L )
+{
+  LuaUtil::CheckArgs( L, 1 );
+  return CallMetamethod( L, "__ipairs" );
+}
+
+/////////////////////
+// call to meta method() of super
+// Assume initial stack: vp.derived + args
+///////////////////////////////////////////////
+int LuaDeriveImpl::CallMetamethod( lua_State* L, const char* method )
+{
+  // stack: vp.derived + args
   CheckDerived( L, 1 );
+  ReplaceWithSuper( L, 1 );
 
-  // vp.derived["super"]
-  PushSuper( L, 1 );
+  // stack: super + args
+  // get meta method of super
+  if( !luaL_getmetafield( L, 1, method ) )
+    return luaL_error( L, "object '%s' has no method '%s'",
+                       luaL_tolstring(L, 1, nullptr), method );
 
-  // super["__len"]
-  if( luaL_getmetafield( L, -1, "__len" ) )
-  {
-    if( lua_isfunction( L, -1 ) )
-    {
-      lua_pushvalue( L, -2 );
-      lua_call( L, 1, 1 );  // call super:__len()
-    }
+  if( !lua_isfunction( L, -1 ) )
+    return luaL_error( L, "'%s' of object '%s' is not a function",
+                       method, luaL_tolstring(L, -2, nullptr) );
 
-    // return other types as-is
-  }
-  else
-    lua_pushunsigned( L, 0 );
+  // put method to bottom
+  lua_insert( L, 1 );
 
-  return 1;
+  // stack: method + super + args
+  // call method(super, args)
+  lua_call( L, lua_gettop(L) - 1, LUA_MULTRET );
+  return lua_gettop(L);
 }
 
 //////////////////
@@ -216,8 +256,8 @@ int LuaDeriveImpl::LengthOp( lua_State* L )
 int LuaDeriveImpl::CheckDerived( lua_State* L, int arg )
 {
   bool IsDerived = false;
-  // a table and __metatable == ID
-  if( lua_type(L, arg) == LUA_TTABLE && luaL_getmetafield(L, arg, "__metatable") )
+  // vp.derived is a table with __id == ID
+  if( lua_type(L, arg) == LUA_TTABLE && luaL_getmetafield(L, arg, "__id") )
   {
     if( lua_isstring(L, -1) && std::equal(ID, ID + sizeof(ID), lua_tostring(L, -1)) )
       IsDerived = true;
@@ -250,5 +290,26 @@ int LuaDeriveImpl::PushSuper( lua_State* L, int index )
     return luaL_error( L, "field 'super' of '%s' should be '%s' or '%s'(got '%s')",
                        ID, lua_typename( L, LUA_TUSERDATA ),
                        lua_typename( L, LUA_TTABLE ), lua_typename( L, Type ) );
+  return 0;
+}
+
+///////////////////////////
+// Replace vp.derived object at the index with its super object.
+////////////////////////////////////////////////////////////////
+int LuaDeriveImpl::ReplaceWithSuper( lua_State* L, int index )
+{
+  lua_pushstring( L, "super" );
+  lua_rawget( L, index );
+  if( lua_isnoneornil( L, -1 ) )
+    return luaL_error( L, "'%s' object should have field 'super' but does not", ID );
+
+  int Type = lua_type( L, -1 );
+  if( Type != LUA_TUSERDATA && Type != LUA_TTABLE )
+    return luaL_error( L, "field 'super' of '%s' should be '%s' or '%s'(got '%s')",
+                       ID, lua_typename( L, LUA_TUSERDATA ),
+                       lua_typename( L, LUA_TTABLE ), lua_typename( L, Type ) );
+
+  lua_replace( L, index );
+
   return 0;
 }

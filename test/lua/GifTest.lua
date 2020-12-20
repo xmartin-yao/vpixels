@@ -457,6 +457,59 @@ function TestGif:testIndexing()
   lu.assertError( gif.__index, gif, {} )
 end
 
+function TestGif:testIPairs()
+  local gif = vpixels.gif( 2, 3, 3, 3 )
+
+  -- vp.gif has meta method __ipairs
+  lu.assertEquals( type(getmetatable(gif).__ipairs), 'function' )
+
+  -- ipairs() returns a iterator, a vp.fig and a control variable
+  local iter, state, var = ipairs( gif )
+  lu.assertEquals( type(iter), "function" )
+  lu.assertEquals( type(state), "userdata" )
+  lu.assertStrContains( tostring(state), 'gif' )
+  lu.assertEquals( var, -1 )
+
+  -- this is what a for-loop does
+  local i, img = iter( state, var )
+  lu.assertEquals( i, 0 )
+  lu.assertEquals( type(img), "userdata" )
+  lu.assertStrContains( tostring(img), 'gifimage' )
+
+  i, img = iter( state, i )
+  lu.assertEquals( i, 1 )
+  lu.assertEquals( type(img), "userdata" )
+  lu.assertStrContains( tostring(img), 'gifimage' )
+
+  i, img = iter( state, i )
+  lu.assertEquals( i, 2 )
+  lu.assertEquals( type(img), "userdata" )
+  lu.assertStrContains( tostring(img), 'gifimage' )
+
+  i, img = iter( state, i )
+  lu.assertEquals( i, nil )  -- iteration ends
+  lu.assertEquals( img, nil )
+
+  -- verify the correctness of iteration
+  for i, img in ipairs(gif) do
+    lu.assertEquals( img:getpixel(0, 0), 0 )
+  end
+
+  for i = 0, #gif - 1 do
+    gif[i]:setall(i + 1)
+  end
+
+  for i, img in ipairs(gif) do
+    lu.assertEquals( img:getpixel(0, 0), i + 1 )
+  end
+
+  -- error cases
+  getmetatable(gif).__ipairs = ""   -- replace __ipairs with a string
+  lu.assertError( ipairs, gif )
+  getmetatable(gif).__ipairs = nil  -- __ipairs removed
+  lu.assertError( ipairs, gif )
+end
+
 function TestGif:testGC()
   local gif = vpixels.gif( 2, 3, 4 )
   local img = gif[0]
@@ -477,14 +530,23 @@ end
 function TestGif:testMetatable()
   local gif = vpixels.gif()
 
-  -- allow modifying metatable
+  -- allow access to metatable
   local mt = getmetatable(gif)
   lu.assertEquals( "table", type(mt) )
+
+  -- metatable has its string representation
+  lu.assertStrContains( tostring(mt), 'gif' )
+
+  -- metatable has its own metatable
+  lu.assertEquals( type(getmetatable(mt)), "table" )
+
+  -- allow modifying metatable
   mt.getzero = function() return 0 end
   lu.assertEquals( 0, gif:getzero() )
 
-  -- metatable has its string representation
-  lu.assertEquals( "string", type(tostring(mt)) )
+  -- modification affects all vp.gif objects
+  local gif2 = vpixels.gif(2, 3, 4, 5)
+  lu.assertEquals( 0, gif2:getzero() )
 
   -- changing metatable is not allowed
   lu.assertError( setmetatable, gif, {} )
@@ -953,17 +1015,26 @@ function TestGifImage:testGC()
 end
 
 function TestGifImage:testMetatable()
-  local gif = vpixels.gif()
+  local gif = vpixels.gif( 2, 3, 4, 5 )
   local img = gif[0]
 
-  -- allow modifying metatable
+  -- allow access to metatable
   local mt = getmetatable(img)
   lu.assertEquals( "table", type(mt) )
+
+  -- metatable has its string representation
+  lu.assertStrContains( tostring(mt), 'gifimage' )
+
+  -- metatable has its own metatable
+  lu.assertEquals( type(getmetatable(mt)), "table" )
+
+  -- allow modifying metatable
   mt.getzero = function() return 0 end
   lu.assertEquals( 0, img:getzero() )
 
-  -- metatable has its string representation
-  lu.assertEquals( "string", type(tostring(mt)) )
+  -- modification affects all vp.gifimage objects
+  local img1 = gif[1]
+  lu.assertEquals( 0, img1:getzero() )
 
   -- changing metatable is not allowed
   lu.assertError( setmetatable, img, {} )

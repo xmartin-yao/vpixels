@@ -101,7 +101,7 @@ namespace LuaGifImpl
 namespace LuaGifImageImpl
 {
   // cast GifImage into LuaGifImage
-  int Cast2Lua( lua_State* L, vp::GifImage* pGifImage, LuaGifUD* pGifUD );
+  void Cast2Lua( lua_State* L, vp::GifImage* pGifImage, LuaGifUD* pGifUD );
 }
 
 #endif //LuaGifDefs_h

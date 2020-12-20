@@ -163,8 +163,8 @@ void LuaGifImage::Register( lua_State* L )
 ////////////////////////////////
 // cast GifImage object into Lua object
 ////////////////////////////////////////////////////////
-int LuaGifImageImpl::Cast2Lua( lua_State* L, vp::GifImage* pGifImage,
-                               LuaGifUD* pGifUD )
+void LuaGifImageImpl::Cast2Lua( lua_State* L, vp::GifImage* pGifImage,
+                                LuaGifUD* pGifUD )
 {
   // create a new userdatum (a Lua object)
   void* pUD = lua_newuserdata( L, sizeof(LuaGifImageUD) );
@@ -181,8 +181,6 @@ int LuaGifImageImpl::Cast2Lua( lua_State* L, vp::GifImage* pGifImage,
   // set metatable to the userdatum
   luaL_getmetatable( L, ID );
   lua_setmetatable ( L, -2 );
-
-  return 1;
 }
 
 //////////////
