@@ -335,6 +335,114 @@ function TestBmp:testExport()
   lu.assertError( bmp.export, bmp, 'temp.bmp', false )
 end
 
+function TestBmp:testIndexingNewIndex()
+  local bmp1 = vpixels.bmp( 4, 5, 6 )
+  local findex = getmetatable(bmp1).__index
+  local fnewindex = getmetatable(bmp1).__newindex
+
+  ------------------------------------
+  -- the key named 'base' is reserved
+  ------------------------------------
+
+  -- filed 'base' is not modifiable
+  lu.assertError( fnewindex, bmp1, 'base', nil )   -- bmp1.base = nil
+  lu.assertError( fnewindex, bmp1, 'base', {} )    -- bmp1.base = {}
+  lu.assertError( fnewindex, bmp1, 'base', 3.14 )  -- bmp1.base = 3.14
+  lu.assertError( fnewindex, bmp1, 'base', "string" ) -- bmp1.base = "string"
+  lu.assertError( fnewindex, bmp1, 'base', function() end ) -- bmp1.base = function() end
+
+  -- a call to __index() with key 'base' returns the vp.bmp object itself
+  -- two consecutive calls to __index() with key 'base'
+  --   e.g. bmp1.base.base
+  -- trigger an error (see override a method defined in metatable)
+  local ret = findex( bmp1, 'base' )
+  lu.assertEquals( type(ret), 'userdata' )
+  lu.assertStrContains( tostring(ret), 'bmp' )
+  lu.assertError( findex, bmp1, 'base' )
+
+  -- __index() accepts two arguments
+  lu.assertError( findex )
+  lu.assertError( findex, bmp1 )
+
+  -- __newindex() accepts three arguments
+  lu.assertError( fnewindex )
+  lu.assertError( fnewindex, bmp1 )
+  lu.assertError( fnewindex, bmp1, 'var' )
+
+  -- add variables to bmp1
+  bmp1.number = 0  -- number
+  lu.assertEquals( bmp1.number, 0 )
+
+  bmp1.name = "a name"  -- string
+  lu.assertEquals( bmp1.name, "a name" )
+
+  bmp1.consts = { 0.0, 0.0 }  -- table
+  lu.assertEquals( bmp1.consts[1], 0.0 )
+  lu.assertEquals( bmp1.consts[2], 0.0 )
+
+  -- change variables
+  bmp1.number = 1
+  lu.assertEquals( bmp1.number, 1 )
+
+  bmp1.name = "a vp.bmp object"
+  lu.assertEquals( bmp1.name, "a vp.bmp object" )
+
+  bmp1.consts[1] = 0.01
+  bmp1.consts[2] = 0.02
+  lu.assertEquals( bmp1.consts[1], 0.01 )
+  lu.assertEquals( bmp1.consts[2], 0.02 )
+
+  -- add methods to bmp1
+  function bmp1:getnumber() return bmp1.number end
+  lu.assertEquals( bmp1:getnumber(), 1 )
+
+  function bmp1:getname() return bmp1.name end
+  lu.assertEquals( bmp1:getname(), "a vp.bmp object" )
+
+  function bmp1:getconst(i) return bmp1.consts[i] end
+  lu.assertEquals( bmp1:getconst(1), 0.01 )
+  lu.assertEquals( bmp1:getconst(2), 0.02 )
+  lu.assertEquals( bmp1:getconst(3), nil )
+
+  function bmp1:getbpp() return bmp1:bpp() end  -- call method defined in metatable
+  lu.assertEquals( bmp1:getbpp(), 4 )
+
+  -- redefine methods
+  function bmp1:getnumber() return bmp1.name end
+  lu.assertEquals( bmp1:getnumber(), "a vp.bmp object" )
+
+  function bmp1:getname() return bmp1.number end
+  lu.assertEquals( bmp1:getname(), 1 )
+
+  function bmp1:getbpp() return bmp1:width() end
+  lu.assertEquals( bmp1:getbpp(), 5 )
+
+  -- override a method defined in metatable of vp.bmp
+  function bmp1:bpp() return 0 end
+  lu.assertEquals( bmp1:bpp(), 0 )
+
+  -- using 'base' key to access the method defined in metatable of vp.bmp
+  lu.assertEquals( bmp1.base:bpp(), 4 )
+  lu.assertEquals( bmp1.base.bpp(bmp1), 4 )
+
+  -- these are syntactically correct, but treated as error
+  --   bmp1.base.base:bpp() or bmp1.base.base.bpp(bmp1)
+  -- (see two consecutive calls to __index() with key 'base' )
+
+  -- all modifications affect bmp1 only and are not available for bmp2
+  local bmp2 = vpixels.bmp( 8, 9, 10 )
+  lu.assertError( findex, bmp2, 'number' )  -- bmp2.number
+  lu.assertError( findex, bmp2, 'name' )    -- bmp2.name
+  lu.assertError( findex, bmp2, 'consts' )  -- bmp2.consts
+  lu.assertError( findex, bmp2, 'getnumber' )  -- bmp2.getnumber
+  lu.assertError( findex, bmp2, 'getname' )  -- bmp2.getname
+  lu.assertError( findex, bmp2, 'getbpp' )   -- bmp2.getbpp
+
+  lu.assertEquals( bmp2:bpp(), 8 )
+  lu.assertEquals( bmp2:width(), 9 )
+  lu.assertEquals( bmp2:height(), 10 )
+end
+
 function TestBmp:testGC()
   local bmp = vpixels.bmp( 1, 3, 4 )
   lu.assertEquals( bmp:bpp(), 1 )

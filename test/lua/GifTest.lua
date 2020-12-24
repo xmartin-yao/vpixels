@@ -429,32 +429,115 @@ end
 
 function TestGif:testIndexing()
   local gif = vpixels.gif( 2, 3, 4, 5 )
+  local findex = getmetatable(gif).__index
   local ret = nil
 
   -- arg is number
-  ret = gif:__index( 0 )
+  ret = findex( gif, 0 )
   lu.assertEquals( type(ret), 'userdata' )
   lu.assertStrContains( tostring(ret), 'gifimage' )
-  ret = gif:__index( 4 )
+  ret = findex( gif, 4 )
   lu.assertEquals( type(ret), 'userdata' )
   lu.assertStrContains( tostring(ret), 'gifimage' )
 
-  lu.assertError( gif.__index, gif, -1 )
-  lu.assertError( gif.__index, gif, 5 )
+  lu.assertError( findex, gif, -1 )
+  lu.assertError( findex, gif, 5 )
 
   -- arg is string
-  ret = gif:__index( 'bpp' )
+  ret = findex( gif, 'bpp' )
   lu.assertEquals( type(ret), 'function' )
-  ret = gif:__index( 'dimension' )
+  ret = findex( gif, 'dimension' )
   lu.assertEquals( type(ret), 'function' )
 
-  lu.assertError( gif.__index, gif, '0' )
-  lu.assertError( gif.__index, gif, 'not-exist' )
+  lu.assertError( findex, gif, '0' )
+  lu.assertError( findex, gif, 'not-exist' )
 
   -- arg is neither number nor string
-  lu.assertError( gif.__index, gif, ret )
-  lu.assertError( gif.__index, gif, gif )
-  lu.assertError( gif.__index, gif, {} )
+  lu.assertError( findex, gif, ret )
+  lu.assertError( findex, gif, gif )
+  lu.assertError( findex, gif, {} )
+end
+
+function TestGif:testNewIndex()
+  local gif1 = vpixels.gif( 2, 3, 4, 5 )
+  local fnewindex = getmetatable(gif1).__newindex
+  local findex = getmetatable(gif1).__index
+
+  -- "base" is reserved, manipulating it is not allowed
+  lu.assertError( fnewindex, gif1, "base", 3.14 )  -- gif1.base = 3.14
+  lu.assertError( fnewindex, gif1, "base", "string" ) -- gif1.base = "string"
+  lu.assertError( fnewindex, gif1, "base", {} )  -- gif1.base = {}
+  lu.assertError( fnewindex, gif1, "base", function() end ) -- gif1.base = function() end
+
+  -- add variables to gif1
+  gif1.number = 0  -- number
+  lu.assertEquals( gif1.number, 0 )
+
+  gif1.name = "a name"  -- string
+  lu.assertEquals( gif1.name, "a name" )
+
+  gif1.consts = { 0.0, 0.0 }  -- table
+  lu.assertEquals( gif1.consts[1], 0.0 )
+  lu.assertEquals( gif1.consts[2], 0.0 )
+
+  -- change variables
+  gif1.number = 1
+  lu.assertEquals( gif1.number, 1 )
+
+  gif1.name = "a vp.gif"  -- string
+  lu.assertEquals( gif1.name, "a vp.gif" )
+
+  gif1.consts[1] = 0.01
+  gif1.consts[2] = 0.02
+  lu.assertEquals( gif1.consts[1], 0.01 )
+  lu.assertEquals( gif1.consts[2], 0.02 )
+
+  -- add methods to gif1
+  function gif1:getnumber() return gif1.number end
+  lu.assertEquals( gif1:getnumber(), 1 )
+
+  function gif1:getname() return gif1.name end
+  lu.assertEquals( gif1:getname(), "a vp.gif" )
+
+  function gif1:getconst(i) return gif1.consts[i] end
+  lu.assertEquals( gif1:getconst(1), 0.01 )
+  lu.assertEquals( gif1:getconst(2), 0.02 )
+  lu.assertEquals( gif1:getconst(3), nil )
+
+  function gif1:getbpp() return gif1:bpp() end  -- call method in metatable
+  lu.assertEquals( gif1:getbpp(), 2 )
+
+  -- redefine methods
+  function gif1:getnumber() return gif1.name end
+  lu.assertEquals( gif1:getnumber(), "a vp.gif" )
+
+  function gif1:getname() return gif1.number end
+  lu.assertEquals( gif1:getname(), 1 )
+
+  function gif1:getbpp() return #gif1 end
+  lu.assertEquals( gif1:getbpp(), 5 )
+
+  -- override a method defined in metatable of vp.gif
+  function gif1:bpp() return 0 end
+  lu.assertEquals( gif1:bpp(), 0 )
+
+  -- using 'base' key to access the method defined in metatable of vp.gif
+  lu.assertEquals( gif1.base:bpp(), 2 )
+  lu.assertEquals( gif1.base.bpp(gif1), 2 )
+
+  -- the following are syntactically correct, but treated as error
+  --   gif1.base.base:bpp() or gif1.base.base.bpp(gif1)
+  -- (see two consecutive calls to __index() with key 'base' )
+
+  -- modifications affect gif1 only
+  local gif2 = vpixels.gif( 3, 4, 5, 6 )
+  lu.assertError( findex, gif2, 'number' )  -- gif2.number
+  lu.assertError( findex, gif2, 'name' )    -- gif2.name
+  lu.assertError( findex, gif2, 'consts' )  -- gif2.consts
+  lu.assertError( findex, gif2, 'getnumber' )  -- gif2.getnumber
+  lu.assertError( findex, gif2, 'getname' )    -- gif2.getname
+  lu.assertError( findex, gif2, 'getconst' )   -- gif2.getconst
+  lu.assertError( findex, gif2, 'getbpp' )     -- gif2.getbpp
 end
 
 function TestGif:testIPairs()

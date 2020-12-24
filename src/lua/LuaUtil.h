@@ -52,6 +52,25 @@ namespace LuaUtil
   // check value within [lower, upper)
   void CheckValueRangeEx( lua_State* L, int arg, uint16_t value, uint16_t lower, 
                           uint16_t upper );
+
+
+  ////////////////////////////
+  // The following functions are to make a full userdata extendable.
+  //
+  // The idea is to create and associate a table to an instance of
+  // a userdata type, therefore new methods and data can be added
+  // to this table, in turn, the functionality of the userdata type
+  // is extended or customized.
+  //////////////////////////////////////////////////////////////////////
+
+  // Make a userdata type extendable
+  void Extend( lua_State* L, int Index );
+
+  // Implementation of __index
+  int Indexing( lua_State* L, const char* ID );
+
+  // Implementation of __newindex
+  int NewIndex( lua_State* L, const char* ID );
 }
 
 #endif //LuaUtil_h

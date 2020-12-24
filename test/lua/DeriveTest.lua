@@ -124,9 +124,9 @@ function TestDerive:testIndexing()
 
   -- access meta fields of vp.bmp
 
-  -- '__index' of vp.bmp: a metatable
-  lu.assertEquals( "table",  type(derived_bmp.__index) )
-  lu.assertEquals( derived_bmp.__index, bmp.__index )
+  -- '__index' of vp.bmp: a function
+  lu.assertEquals( "function",  type(derived_bmp.__index) )
+  lu.assertNotEquals( derived_bmp.__index, bmp.__index )
 
   -- '__tostring' of vp.bmp: function
   -- since __tostring of vp.bmp points to a function, derived_bmp.__tostring
@@ -221,9 +221,10 @@ function TestDerive:testIndexing()
 end
 
 function TestDerive:testOverride()
-  local derived_bmp = vpixels.derive( vpixels.bmp(4, 2, 2) )
+  local bmp = vpixels.bmp(4, 2, 2)
+  local derived_bmp = vpixels.derive( bmp )
 
-  -- before overriding: bpp() of vp.bmp gets called 
+  -- before overriding: bpp() of bmp gets called
   lu.assertEquals( 4, derived_bmp:bpp() )
 
   -- override bpp()
@@ -231,11 +232,18 @@ function TestDerive:testOverride()
     return 2
   end
 
+  function bmp:bpp()
+    return 6
+  end
+
   -- bpp() of derived_bmp gets called 
   lu.assertEquals( 2, derived_bmp:bpp() )
 
-  -- call bpp() of vp.bmp
-  lu.assertEquals( 4, derived_bmp.super:bpp() )
+  -- call overridden bpp() of bmp
+  lu.assertEquals( 6, derived_bmp.super:bpp() )
+
+  -- call original bpp() of bmp
+  lu.assertEquals( 4, derived_bmp.super.base:bpp() )
 
   -- override setcolor()
   function derived_bmp:setcolor()
@@ -257,16 +265,16 @@ end
 
 function TestDerive:testTostring()
   local derived_bmp = vpixels.derive( vpixels.bmp() )
-  lu.assertNotEquals( nil, string.find( tostring(derived_bmp), "derived", 1, true ) )
-  lu.assertNotEquals( nil, string.find( tostring(derived_bmp), "bmp", 1, true ) )
+  lu.assertStrContains( tostring(derived_bmp), "derived" )
+  lu.assertStrContains( tostring(derived_bmp), "bmp" )
 
   local derived_gif = vpixels.derive( vpixels.gif() )
-  lu.assertNotEquals( nil, string.find( tostring(derived_gif), "derived", 1, true ) )
-  lu.assertNotEquals( nil, string.find( tostring(derived_gif), "gif", 1, true ) )
+  lu.assertStrContains( tostring(derived_gif), "derived" )
+  lu.assertStrContains( tostring(derived_gif), "gif" )
 
   local derived_img = vpixels.derive( derived_gif[0] )
-  lu.assertNotEquals( nil, string.find( tostring(derived_img), "derived", 1, true ) )
-  lu.assertNotEquals( nil, string.find( tostring(derived_img), "gifimage", 1, true ) )
+  lu.assertStrContains( tostring(derived_img), "derived" )
+  lu.assertStrContains( tostring(derived_img), "gifimage" )
 end
 
 function TestDerive:testLengthOp()

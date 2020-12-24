@@ -47,6 +47,8 @@ namespace LuaBmpImpl
   int GetPixel( lua_State* L );
 
   // meta methods
+  int Indexing( lua_State* L );
+  int NewIndex( lua_State* L );
   int ToString( lua_State* L );
   int Finalizer( lua_State* L );
 
@@ -100,8 +102,12 @@ void LuaBmp::Register( lua_State* L )
   luaL_newmetatable( L, LuaBmpImpl::ID ); 
 
   // meta fields
-  lua_pushstring( L, "__index" ); // points to itself
-  lua_pushvalue( L, -2 );
+  lua_pushstring( L, "__index" );
+  lua_pushcfunction( L, LuaBmpImpl::Indexing );
+  lua_settable( L, -3 );
+
+  lua_pushstring( L, "__newindex" );
+  lua_pushcfunction( L, LuaBmpImpl::NewIndex );
   lua_settable( L, -3 );
 
   lua_pushstring( L, "__tostring" );
@@ -138,7 +144,10 @@ int LuaBmp::New( lua_State* L )
   else // no argument
     pBmp = new vp::Bmp();
 
-  return LuaBmpImpl::Cast2Lua( L, pBmp );
+  if( pBmp != nullptr )
+    return LuaBmpImpl::Cast2Lua( L, pBmp );
+  else
+    return luaL_error( L, "failed to create '%s' object", LuaBmpImpl::ID );
 }
 
 ////////////////////
@@ -169,7 +178,10 @@ int LuaBmpImpl::Clone( lua_State* L )
   vp::Bmp* pBmpOld = CheckBmp( L, 1 );
   vp::Bmp* pBmpNew = new vp::Bmp( *pBmpOld );
 
-  return Cast2Lua( L, pBmpNew );
+  if( pBmpNew != nullptr )
+    return Cast2Lua( L, pBmpNew );
+  else
+    return luaL_error( L, "failed to clone '%s' object", LuaBmpImpl::ID );
 }
 
 ////////////////
@@ -448,6 +460,22 @@ int LuaBmpImpl::GetPixel( lua_State* L )
   }
 }
 
+///////////
+// metamethod __index
+///////////////////////////////////
+int LuaBmpImpl::Indexing( lua_State* L )
+{
+  return LuaUtil::Indexing( L, ID );
+}
+
+///////////
+// metamethod __newindex
+///////////////////////////////////
+int LuaBmpImpl::NewIndex( lua_State* L )
+{
+  return LuaUtil::NewIndex( L, ID );
+}
+
 ///////////////
 // meta method __tostring
 ///////////////////////////
@@ -491,6 +519,9 @@ int LuaBmpImpl::Cast2Lua( lua_State* L, vp::Bmp* pBmp )
   // set the metatable to the userdatum
   luaL_getmetatable( L, ID );
   lua_setmetatable( L, -2 );
+
+  // make userdatum extendable
+  LuaUtil::Extend( L, -2 );
 
   return 1;
 }

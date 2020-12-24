@@ -56,6 +56,7 @@ namespace LuaGifImpl
 
   // meta methods
   int Indexing( lua_State* L );
+  int NewIndex( lua_State* L );
   int ToString( lua_State* L );
   int Finalizer( lua_State* L );
   int IPairs( lua_State* L );
@@ -124,6 +125,10 @@ void LuaGif::Register( lua_State* L )
   // meta fields
   lua_pushstring( L, "__index" );
   lua_pushcfunction( L, LuaGifImpl::Indexing );
+  lua_settable( L, -3 );
+
+  lua_pushstring( L, "__newindex" );
+  lua_pushcfunction( L, LuaGifImpl::NewIndex );
   lua_settable( L, -3 );
 
   lua_pushstring( L, "__len" );
@@ -577,7 +582,15 @@ int LuaGifImpl::Indexing( lua_State* L )
   if( lua_type( L, 2 ) == LUA_TNUMBER )
     return GetImage( L );  // return an image
   else
-    return GetField( L );  // return a field in metatable
+    return GetField( L );  // return a field in metatable or in the associated table
+}
+
+///////////
+// metamethod __newindex
+///////////////////////////////////
+int LuaGifImpl::NewIndex( lua_State* L )
+{
+  return LuaUtil::NewIndex( L, ID );
 }
 
 ///////////////
@@ -673,6 +686,9 @@ int LuaGifImpl::Cast2Lua( lua_State* L, vp::Gif* pGif )
   luaL_getmetatable( L, ID );
   lua_setmetatable( L, -2 );
 
+  // make userdatum extendable
+  LuaUtil::Extend( L, -2 );
+
   return 1;
 }
 
@@ -724,14 +740,7 @@ void LuaGifImpl::CheckGif( lua_State* L, vp::Gif* pGif, int arg )
 ///////////////////////////////////
 int LuaGifImpl::GetField( lua_State* L )
 {
-  LuaUtil::CheckArgs( L, 2 );
-
-  CheckGifUD( L, 1 );
-  const char* Key = luaL_checkstring( L, 2 );
-  if( luaL_getmetafield( L, 1, Key ) )
-    return 1;
-  else
-    return luaL_error( L, "'%s' object has no field '%s'", ID, Key );
+  return LuaUtil::Indexing( L, ID );
 }
 
 ////////////////////////
