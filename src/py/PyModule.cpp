@@ -128,11 +128,28 @@ namespace
     Py_INCREF( &PyGifImage::GifImage_Type );
 
     // add types
-    PyModule_AddObject( M, "bmp", reinterpret_cast<PyObject*>(&PyBmp::Bmp_Type) );
-    PyModule_AddObject( M, "gif", reinterpret_cast<PyObject*>(&PyGif::Gif_Type) );
+    if( PyModule_AddObject( M, "bmp", reinterpret_cast<PyObject*>(&PyBmp::Bmp_Type) ) != 0 )
+    {
+      Py_DECREF( M );
+      Py_DECREF( &PyBmp::Bmp_Type );
+      return nullptr;
+    }
+
+    if( PyModule_AddObject( M, "gif", reinterpret_cast<PyObject*>(&PyGif::Gif_Type) ) != 0 )
+    {
+      Py_DECREF( M );
+      Py_DECREF( &PyGif::Gif_Type );
+      return nullptr;
+    }
+
     // do not need to add GifImage_Type. doing so is to allow the use of help()
     // to display docstrings without having to have a gifimage instance.
-    PyModule_AddObject( M, "gifimage", reinterpret_cast<PyObject*>(&PyGifImage::GifImage_Type) );
+    if( PyModule_AddObject( M, "gifimage", reinterpret_cast<PyObject*>(&PyGifImage::GifImage_Type) ) != 0 )
+    {
+      Py_DECREF( M );
+      Py_DECREF( &PyGifImage::GifImage_Type );
+      return nullptr;
+    }
 
     // add strings
     PyModule_AddObject( M, "__copyright__",
