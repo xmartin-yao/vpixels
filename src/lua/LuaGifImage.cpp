@@ -68,6 +68,7 @@ namespace LuaGifImageImpl
   LuaGifImageUD* CheckGifImageUD( lua_State* L, int arg );
   uint16_t CheckColorTable( lua_State* L, vp::GifImage* pGifImage );
   const char* TypeName( lua_State* L, int arg );
+  int CopyImage( lua_State* L, vp::GifImage*, vp::GifImage*, int arg );
 
   // methods of LuaGifImage
   const luaL_Reg Methods[] = {
@@ -193,27 +194,7 @@ int LuaGifImageImpl::Clone( lua_State* L )
   auto pThisGifImage = CheckGifImage( L, 1 );
   auto pOtherGifImage = CheckGifImage( L, 2 );
 
-  bool Error = false;
-  try
-  {
-    *pThisGifImage = *pOtherGifImage;
-  }
-  catch( const vp::Exception& )
-  {
-    // luaL_argerror() should be called outside of catch-block,
-    // b/c it never returns; otherwise, the exception object
-    // won't be deallocated.
-    Error = true;
-  }
-
-  if( Error )
-  {
-    const char* msg = lua_pushfstring( L, "argument '%s' object belongs to an incompatible '%s' object",
-                                       ID, LuaGifImpl::ID );
-    return luaL_argerror( L, 2, msg );
-  }
-  else
-    return 0;
+  return CopyImage( L, pThisGifImage, pOtherGifImage, 2 );
 }
 
 /////////////
@@ -780,4 +761,42 @@ uint16_t LuaGifImageImpl::CheckColorTable( lua_State* L, vp::GifImage* pGifImage
     return luaL_error( L, "there is neither global nor local color table" );
 
   return Size;
+}
+
+/////////////////
+// Copy LuaGifImage in Index to vp::GifImage
+//////////////////////////////////////////////////////////////
+int LuaGifImageImpl::CopyImage( lua_State* L, int Index, vp::GifImage* pThisGifImage )
+{
+  auto pOtherGifImage = CheckGifImage( L, Index );
+  return CopyImage( L, pThisGifImage, pOtherGifImage, Index );
+}
+
+///////////////
+// Call assignment operator of vp::GifImage
+///////////////////////////////////////////////////////////////////
+int LuaGifImageImpl::CopyImage( lua_State* L, vp::GifImage* pThisGifImage,
+                                vp::GifImage* pOtherGifImage, int arg )
+{
+  bool Error = false;
+  try
+  {
+    *pThisGifImage = *pOtherGifImage;
+  }
+  catch( const vp::Exception& )
+  {
+    // luaL_argerror() should be called outside of catch-block,
+    // b/c it never returns; otherwise, the exception object
+    // won't be deallocated.
+    Error = true;
+  }
+
+  if( Error )
+  {
+    const char* msg = lua_pushfstring( L, "'%s' object belongs to an incompatible '%s' object",
+                                       ID, LuaGifImpl::ID );
+    return luaL_argerror( L, arg, msg );
+  }
+  else
+    return 0;
 }

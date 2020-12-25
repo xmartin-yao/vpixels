@@ -64,13 +64,14 @@ namespace LuaGifImpl
   // utils
   int Iterator( lua_State* L );
   int Cast2Lua( lua_State* L, vp::Gif* pGif );
-  int GetField( lua_State* L );
+  int DelCopyImage( lua_State* L );
   vp::Gif* NewGif( lua_State* L );
   vp::Gif* CheckGif( lua_State* L, int arg );
   void     CheckGif( lua_State* L, vp::Gif* pGif, int arg );
   LuaGifUD* CheckGifUD( lua_State* L, int arg );
   void Invalidate( SimpleList<LuaGifImageUD>* pListImageUD );
   void RemoveFromList( SimpleList<LuaGifImageUD>* pListImageUD, vp::GifImage* pGifImage );
+  vp::GifImage* FetchImage( lua_State* L );
 
   // methods of LuaGif
   const luaL_Reg Methods[] = {
@@ -515,18 +516,8 @@ int LuaGifImpl::GetImage( lua_State* L )
   LuaUtil::CheckArgs( L, 2 );
 
   LuaGifUD* pGifUD = CheckGifUD( L, 1 );
-  vp::Gif* pGif = pGifUD->pGif;
-  CheckGif( L, pGif, 1 );
+  LuaGifImageImpl::Cast2Lua( L, FetchImage(L), pGifUD );
 
-  auto Images = static_cast<uint16_t>(pGif->Images());
-  if( Images == 0 )
-    luaL_error( L, "'%s' object has no image", ID );
-
-  auto Index = LuaUtil::CheckUint16( L, 2 );
-  LuaUtil::CheckValueUpper( L, 2, Index, Images );
-  vp::GifImage& Image = (*pGif)[Index];
-
-  LuaGifImageImpl::Cast2Lua( L, &Image, pGifUD );
   return 1;
 }
 
@@ -582,7 +573,8 @@ int LuaGifImpl::Indexing( lua_State* L )
   if( lua_type( L, 2 ) == LUA_TNUMBER )
     return GetImage( L );  // return an image
   else
-    return GetField( L );  // return a field in metatable or in the associated table
+    // return a field in metatable or in the associated table
+    return LuaUtil::Indexing( L, ID );
 }
 
 ///////////
@@ -590,7 +582,11 @@ int LuaGifImpl::Indexing( lua_State* L )
 ///////////////////////////////////
 int LuaGifImpl::NewIndex( lua_State* L )
 {
-  return LuaUtil::NewIndex( L, ID );
+  // if 2nd argument is a number
+  if( lua_type( L, 2 ) == LUA_TNUMBER )
+    return DelCopyImage( L );
+  else
+    return LuaUtil::NewIndex( L, ID );
 }
 
 ///////////////
@@ -737,12 +733,6 @@ void LuaGifImpl::CheckGif( lua_State* L, vp::Gif* pGif, int arg )
   }
 }
 
-///////////////////////////////////
-int LuaGifImpl::GetField( lua_State* L )
-{
-  return LuaUtil::Indexing( L, ID );
-}
-
 ////////////////////////
 // set LuaGifImage objects in the list to invalid state
 //////////////////////////////////////////////////////////////
@@ -774,4 +764,42 @@ void LuaGifImpl::RemoveFromList( SimpleList<LuaGifImageUD>* pListImageUD, vp::Gi
 
     pGifImageUD = pListImageUD->Next();
   }
+}
+
+////////////
+// remove an image: gif[index] = nil
+// copy an image:   gif[index] = img or gif1[index1] = gif2[index2]
+/////////////////////////////////////////////
+int LuaGifImpl::DelCopyImage( lua_State* L )
+{
+  // LuaGif, index, nil/LuaGifImage
+  LuaUtil::CheckArgs( L, 3 );
+
+  // 3rd argument is nil
+  if( lua_type( L, 3 ) == LUA_TNIL )
+  {
+    lua_pop( L, 1 );  // nil
+    RemoveImage( L );
+
+    return 0;
+  }
+  else
+    // 3rd argument is not nil
+    return LuaGifImageImpl::CopyImage( L, 3, FetchImage(L) );
+}
+
+////////////////////////////////////////////////
+vp::GifImage* LuaGifImpl::FetchImage( lua_State* L )
+{
+  // stack: LuaGif, index
+  vp::Gif* pGif = CheckGif( L, 1 );
+  auto Index = LuaUtil::CheckUint16( L, 2 );
+
+  auto Images = static_cast<uint16_t>(pGif->Images());
+  if( Images == 0 )
+    luaL_error( L, "'%s' object has no image", ID );
+
+  LuaUtil::CheckValueUpper( L, 2, Index, Images );
+
+  return &(*pGif)[Index];
 }

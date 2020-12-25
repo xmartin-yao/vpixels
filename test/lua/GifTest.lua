@@ -383,20 +383,20 @@ function TestGif:testRemoveImage()
 
   img0 = gif[0]
   lu.assertEquals( img0:bitsperpixel(), 2 )
-  lu.assertIsTrue( gif:removeimage(0) )  -- remove 1st image
-  lu.assertError( img0.bitsperpixe )     -- img0 becomes invalid
+  lu.assertIsTrue( gif:removeimage(0) )     -- remove 1st image
+  lu.assertError( img0.bitsperpixel, img0 ) -- img0 becomes invalid
   lu.assertEquals( #gif, 6 )
 
   img5 = gif[5]
   lu.assertEquals( img5:bitsperpixel(), 2 )
-  lu.assertIsTrue( gif:removeimage(5) )  -- remove last one
-  lu.assertError( img5.bitsperpixe )     -- img5 becomes invalid
+  lu.assertIsTrue( gif:removeimage(5) )     -- remove last one
+  lu.assertError( img5.bitsperpixel, img5 ) -- img5 becomes invalid
   lu.assertEquals( #gif, 5 )
 
   img2 = gif[2]
   lu.assertEquals( img2:bitsperpixel(), 2 )
-  lu.assertIsTrue( gif:removeimage(2) )  -- remove middle one
-  lu.assertError( img2.bitsperpixe )     -- img2 becomes invalid
+  lu.assertIsTrue( gif:removeimage(2) )     -- remove middle one
+  lu.assertError( img2.bitsperpixel, img2 ) -- img2 becomes invalid
   lu.assertEquals( #gif, 4 )
 
   -- error cases
@@ -538,6 +538,37 @@ function TestGif:testNewIndex()
   lu.assertError( findex, gif2, 'getname' )    -- gif2.getname
   lu.assertError( findex, gif2, 'getconst' )   -- gif2.getconst
   lu.assertError( findex, gif2, 'getbpp' )     -- gif2.getbpp
+
+  -- delete an image: 3rd arg is nil
+  lu.assertEquals( #gif2, 6 )
+  img0 = gif2[0]
+  lu.assertEquals( img0:bpp(), 3 )
+  gif2[0] = nil                    -- delete image #0
+  lu.assertError( img0.bpp, img0 ) -- img0 becomes invalid
+  lu.assertEquals( #gif2, 5 )      -- 5 images left
+  img3 = gif2[3]
+  lu.assertEquals( img3:bpp(), 3 )
+  gif2[3] = nil                    -- delete image #4
+  lu.assertError( img3.bpp, img3 ) -- img0 becomes invalid
+  lu.assertEquals( #gif2, 4 )      -- 4 images left
+  -- wrong index
+  lu.assertError( fnewindex, gif2, -1, nil )
+  lu.assertError( fnewindex, gif2, 4, nil )
+
+  -- copy an image: 3rd arg is a vp.gifimage
+  gif2[1]:setall(3)
+  lu.assertEquals( gif2[0]:getpixel(0, 0), 0 )
+  gif2[0] = gif2[1]
+  lu.assertEquals( gif2[0]:getpixel(0, 0), 3 )
+  -- wrong index
+  lu.assertError( fnewindex, gif2, -1, gif2[1] )
+  lu.assertError( fnewindex, gif2, 4, gif2[1] )
+  -- 3rd arg is a vp.gifimage, but belongs to an incompatible a vp.gif
+  lu.assertError( fnewindex, gif2, 0, gif1[1] )
+  -- 3rd arg is neither a vp.gifimage nor a nil
+  lu.assertError( fnewindex, gif2, 0, 2.718 )
+  lu.assertError( fnewindex, gif2, 0, '3.14' )
+  lu.assertError( fnewindex, gif2, 0, {} )
 end
 
 function TestGif:testIPairs()
