@@ -1,3 +1,18 @@
+0.7.2
+- Python module
+  - PyGifObject allows forward/backward to iterate over PyGifImageObjects.
+  - PyGifObject allows to remove an image using syntax
+      del gif[index]  or  gif[index] = None
+  - PyGifObject allows to copy an image using syntax
+      gif[index] = img  or  gif1[index2] = gif1[index2]
+- Lua module
+  - LuaGif and LuaBmp objects can be extended/customized by adding data and methods.
+  - LuaGif allows forward iterating over LuaGif objects using ipairs().
+  - LuaGif allows to remove an image using syntax
+      gif[index] = nil
+  - LuaGif allows to copy an image using syntax
+      gif[index] = img  or  gif1[index2] = gif1[index2]
+
 0.7.1
 - Lua and Python module
   - Add the following info

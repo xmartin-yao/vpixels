@@ -26,6 +26,7 @@ Please see license terms in file COPYING.
   * [Methods of BMP object](#methods-of-bmp-object)
   * [Methods of GIF object](#methods-of-gif-object)
   * [Methods of GIF image object](#methods-of-gif-image-object)
+  * [Extend or customize BMP and GIF object](#extend-or-customize-bmp-and-gif-object)
 * [Python API](#python-api)
 
 ## Repo Directories
@@ -303,11 +304,16 @@ Please see examples in directory `example/lua/`
      n = gif:images() -- get the number of images(frames)
      n = #gif         -- same as gif:images()
 
-     img = gif:image(i) -- get an image(frame)
-     img = gif[i]       -- same as gif:image(i)
+     img = gif:getimage(i) -- get an image(frame)
+     img = gif[i]          -- same as gif:getimage(i)
 
      gif:removeimage(i) -- remove an image(frame)
      gif:remove(i)      -- same as gif:removeimage(i)
+     gif[i] = nil       -- same as gif:removeimage(i)
+
+     for i, img in ipairs(gif) do  -- iterate over all images
+       -- put code here
+     end
 
      -- n: number of images(frames)
      -- i: index of the image(frame), within range [0, n)
@@ -318,7 +324,15 @@ Please see examples in directory `example/lua/`
 
 * Copy a GIF image(frame) object
 ```
-     img2:clone(img1)  -- img2 copies img1
+     img2:clone(img1)      -- img2 copies img1
+     gif[2]:clone(img1)    -- gif[2] copies img1
+     gif[2]:clone(gif[1])  -- gif[2] copies gif[1]
+     gif[2] = img1         -- gif[2] copies img1
+     gif[2] = gif[1]       -- gif[2] copies gif[1]
+
+     -- the following are not copying
+     img2 = gif[0] -- img2 now is the 1st image in gif
+     img2 = img1   -- img2 now references the same value as img1 does
 ```
 
 * Bits/pixel
@@ -423,6 +437,27 @@ Please see examples in directory `example/lua/`
      img1 ~= img2  -- negation of img1 == img2
 ```
 
+### Extend or customize BMP and GIF objects
+Data and methods can added to BMP and GIF objects. If the name of the added method 
+collides with the name a built-in method, the built-in method still can be accessed
+with key named "base".
+```
+     -- create a BMP object
+     bmp = vpixels.gif(4, 120, 60)
+
+     -- add a data field
+     bmp.pi = 3.14
+
+     -- add a method
+     function bmp:bitsperpixel()  -- this method overrides the one built in BMP object
+       return self.pi
+     end
+
+     x = bmp.pi               -- get the newly added data
+     bmp:bitsperpixel()       -- call the newly added method
+     bmp.base:bitsperpixel()  -- call the built-in one
+```
+
 ## Python API
 **[New in version 0.7.0]**\
 Python API is documented using docstrings, please use help() function for details.\
@@ -462,6 +497,23 @@ instead as the name of the methods.
 * Python uses "**!=**", instead of "**~=**", as unequal operator
 ```
      img1 != img2
+```
+
+* Remove an image(frame) from a GIF object
+```
+     gif[i] = None  # i is the index of the image(frame)
+     del gif[i]
+```
+
+* Iterate over images in a GIF object
+```
+     for img in gif:
+       -- put code here
+       pass
+
+     for img in reversed(gif):  # backward iteration
+       -- put code here
+       pass
 ```
 
 However, it is worth mentioning that Python uses _**dot**_ when calling a method of an object, e.g.
