@@ -481,9 +481,12 @@ int LuaBmpImpl::NewIndex( lua_State* L )
 ///////////////////////////
 int LuaBmpImpl::ToString( lua_State* L )
 {
+  constexpr uint32_t Colors24bit = 16777216;
+
   vp::Bmp* pBmp = CheckBmp( L, 1 );
-  lua_pushfstring( L, "%s: bpp=%d %dx%d", ID, pBmp->BitsPerPixel(),
-                   pBmp->Width(), pBmp->Height() );
+  lua_pushfstring( L, "%s: bpp=%d %dx%d colors=%d", ID, pBmp->BitsPerPixel(),
+                   pBmp->Width(), pBmp->Height(),
+                   (pBmp->ColorTableSize() == 0)? Colors24bit : pBmp->ColorTableSize() );
   return 1;
 }
 

@@ -197,7 +197,7 @@ int LuaDeriveImpl::ToString( lua_State* L )
   LuaUtil::CheckArgs( L, 1 );
   CheckDerived( L, 1 );
   ReplaceWithSuper( L, 1 );
-  lua_pushfstring( L, "%s (%s)", ID, luaL_tolstring(L, 1, nullptr) );
+  lua_pushfstring( L, "%s(%s)", ID, luaL_tolstring(L, 1, nullptr) );
   return 1;
 }
 
