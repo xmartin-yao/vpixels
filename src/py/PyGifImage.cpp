@@ -415,7 +415,7 @@ PyObject* PyGifImageImpl::Repr( PyGifImageObject* self )
 {
   GifImage_Check( self )
 
-  return PyString_FromFormat( "<%s object: bpp=%d (%d,%d) %dx%d colors=%d>",
+  return PyString_FromFormat( "<%s: bpp=%d (%d,%d) %dx%d colors=%d>",
                               Py_TYPE(self)->tp_name, self->pGifImage->BitsPerPixel(),
                               self->pGifImage->Left(), self->pGifImage->Top(),
                               self->pGifImage->Width(), self->pGifImage->Height(),

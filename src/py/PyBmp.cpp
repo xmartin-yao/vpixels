@@ -261,14 +261,14 @@ PyTypeObject PyBmp::Bmp_Type = {
   0,                              // tp_subclasses
   0,                              // tp_weaklist
   0,                              // tp_del
-  0                               // tp_version_tag
+  0,                              // tp_version_tag
 #if PY_MAJOR_VERSION == 3
-  ,0                              // tp_finalize
+  0,                              // tp_finalize
 #if PY_MINOR_VERSION >= 8
-  ,0                              // tp_vectorcall
+  0,                              // tp_vectorcall
 #endif
 #if PY_MINOR_VERSION == 8
-  ,0                              // tp_print (3.8 only)
+  0,                              // tp_print (3.8 only)
 #endif
 #endif
 };
@@ -277,7 +277,8 @@ PyTypeObject PyBmp::Bmp_Type = {
 PyObject* PyBmpImpl::New( PyTypeObject* type, PyObject*, PyObject* )
 {
   PyObject* self = type->tp_alloc( type, 0 );
-  reinterpret_cast<PyBmpObject*>(self)->pBmp = nullptr;
+  if( self != nullptr )
+    reinterpret_cast<PyBmpObject*>(self)->pBmp = nullptr;
 
   return self;
 }
@@ -317,9 +318,13 @@ void PyBmpImpl::Dealloc( PyBmpObject* self )
 ///////////////////////////////////////
 PyObject* PyBmpImpl::Repr( PyBmpObject* self )
 {
-  return PyString_FromFormat( "<%s object: bpp=%d %dx%d>",
+  constexpr uint32_t Colors24bit = 16777216;
+
+  return PyString_FromFormat( "<%s: bpp=%d %dx%d colors=%d>",
                               Py_TYPE(self)->tp_name, self->pBmp->BitsPerPixel(),
-                              self->pBmp->Width(), self->pBmp->Height() );                            
+                              self->pBmp->Width(), self->pBmp->Height(),
+                              (self->pBmp->ColorTableSize() == 0)? Colors24bit :
+                              self->pBmp->ColorTableSize() );
 }
 
 /////////////////////////
@@ -339,7 +344,7 @@ vp::Bmp* PyBmpImpl::NewBmp( PyObject* args, PyObject* kw )
   if( !vp::Bmp::Supported(bpp) )
   {
     PyErr_Format( PyExc_ValueError, 
-                  "supported color depth: 1, 4, 8 and 24 (%d given)", bpp );
+                  "supported color depth: 1, 4, 8 and 24 (got %d)", bpp );
     return nullptr;
   }
 
