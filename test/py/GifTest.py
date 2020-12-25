@@ -508,7 +508,7 @@ class TestGif( unittest.TestCase ):
 
     img2 = gif[2]
     self.assertEqual( img2.bitsperpixel(), 2 )
-    del gif[2]  # delete middle one
+    gif[2] = None  # delete middle one
     self.assertRaises( Exception, img2.bitsperpixel ) # img2 becomes invalid
     self.assertEqual( len(gif), 4 )
 

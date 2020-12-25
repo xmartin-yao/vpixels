@@ -433,7 +433,7 @@ void PyGifImpl::Invalidate( SimpleList<PyGifImageObject>* pGifImageObjectList )
 ///////////////////////////////////////
 PyObject* PyGifImpl::Repr( PyGifObject* self )
 {
-  return PyString_FromFormat( "<%s object: %s bpp=%d %dx%d images=%d colors=%d>",
+  return PyString_FromFormat( "<%s: %s bpp=%d %dx%d images=%d colors=%d>",
                               Py_TYPE(self)->tp_name,
                               self->pGif->Version().c_str(),
                               self->pGif->BitsPerPixel(),
@@ -828,7 +828,7 @@ void PyGifImpl::RemoveFromList( SimpleList<PyGifImageObject>* pGifImageObjectLis
 ////////////////////////////////////////////////////////////////
 int PyGifImpl::DelCopyImage( PyGifObject* self, PyObject* arg, PyObject* other )
 {
-  if( other == nullptr )
+  if( other == nullptr || other == Py_None )
     return DelImage( self, arg );
   else
     return CopyImage( self, arg, other );
