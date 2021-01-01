@@ -181,7 +181,7 @@ void LuaUtil::CheckValueRangeEx( lua_State* L, int arg, uint16_t value,
 }
 
 
-// utils for Indexing() and NewIndex()
+// utils for LuaUtil::Indexing() and LuaUtil::NewIndex()
 namespace
 {
   //////////////////
@@ -202,8 +202,17 @@ namespace
   }
 
   /////////////
-  // Return the value of ReservedKey.
-  //   Index: index to userdata
+  // Return true, if the value at Index is a string and is the same as
+  // the reserved key; false, otherwise.
+  /////////////////////////////////////////////
+  inline bool IsReserved( lua_State* L, int Index )
+  {
+    return lua_type(L, Index) == LUA_TSTRING && IsReserved(lua_tostring(L, Index));
+  }
+
+  /////////////
+  // Retrieve the value of the reserved field in uservalue.
+  // Index: index to userdata
   ///////////////////////////////////////////
   bool MetatableOnly( lua_State* L, int Index )
   {
@@ -214,17 +223,17 @@ namespace
     lua_rawget( L, -2 );
 
     // retrieve its value
-    bool Ret = LuaUtil::CheckBoolean( L, -1 );
+    bool Result = lua_toboolean( L, -1 );
 
-    lua_pop( L, 2 );  // the table, the field
+    lua_pop( L, 2 );  // uservalue, reserved field
 
-    return Ret;
+    return Result;
   }
 
   //////////////
-  // Set the value of ReservedKey in the associated table.
-  //   Index: index to userdata
-  //   Value: value to be set to ReservedKey
+  // Set the value of the reserved field in uservalue.
+  // Index: index to userdata
+  // Value: value to be set
   /////////////////////////////////////////////////////////////////
   void SetMetatableOnly( lua_State* L, int Index, bool Value = true )
   {
@@ -235,10 +244,118 @@ namespace
     lua_pushboolean( L, Value );
     lua_rawset( L, -3 );
 
-    lua_pop( L, 1 );  // the table
+    lua_pop( L, 1 );  // uservalue
   }
 
-}  // anonymous namespace
+  //////////////
+  // Retrieve a field from a table.
+  // If successful, replace the table with the field and return true;
+  // otherwise, remove the table and return false.
+  /////////////////////////////////////////////////////////
+  bool GetTableField( lua_State* L )
+  {
+    // stack: userdata, key, table
+    lua_pushvalue( L, 2 );
+    lua_rawget( L, 3 );
+    if( lua_isnil(L, 4) )
+    {
+      lua_pop( L, 2 );  // table, nil
+
+      // stack: userdata, key
+      return false;
+    }
+    else
+    {
+      lua_remove( L, 3 );  // table
+
+      // stack: userdata, key, table[key]
+      return true;
+    }
+  }
+
+  //////////////
+  // Retrieve a field from uservalue of userdata.
+  /////////////////////////////////////////
+  bool GetUservalueField( lua_State* L )
+  {
+    // stack: userdata, key
+    lua_getuservalue( L, 1 );
+
+    return GetTableField( L );
+  }
+
+  //////////////
+  // Retrieve a field from metatable of userdata.
+  /////////////////////////////////////////
+  bool GetMetafield( lua_State* L )
+  {
+    // stack: userdata, key
+    if( lua_getmetatable(L, 1) == 0 )
+      return false;
+
+    return GetTableField( L );
+  }
+
+  /////////////////
+  // Set the value of the reserved field to true and return userdata.
+  // This function prepares LuaUtil::Indexing() to be called again,
+  // in the case that reserved key is explicitly referred, e.g.
+  //    ud.base:func()
+  // In this case, LuaUtil::Indexing() gets called twice:
+  // 1) To resolve ud.base. This function gets called.
+  // 2) To resolve ud.func. LuaUtil::Indexing() searches only metatable of ud.
+  //////////////////////////////////////////////////
+  int PrepNextRound( lua_State* L, const char* ID )
+  {
+    // stack: userdata, key
+
+    // the field already set to true, e.g. calling ud.base.base:func(),
+    // though syntactically correct, is treated as an error.
+    if( MetatableOnly(L, 1) )
+    {
+      // set to false, so if the method is called using pcall(),
+      //   e.g. pcall(ud.base.base.func, ud)
+      // ud is still in default/valid state.
+      SetMetatableOnly( L, 1, false );
+
+      return luaL_error( L, "'%s' of '%s' object has no field '%s'",
+                         ReservedKey, ID, ReservedKey );
+    }
+
+    // switch to metatable only
+    SetMetatableOnly( L, 1 );
+    lua_pop( L, 1 );  // key
+
+    // stack: userdata
+    return 1;
+  }
+
+  /////////////
+  // Check if the argument at arg is a valid userdata.
+  /////////////////////////////////////////////
+  void CheckUserdata( lua_State* L, int arg, const char* ID )
+  {
+    // argument is a full userdata
+    if( lua_type(L, arg) != LUA_TUSERDATA )
+      luaL_argerror( L, arg,
+                     lua_pushfstring( L, "expected %s, got %s",
+                                      ID, luaL_typename(L, arg) ) );
+
+    // userdata has a table as its uservalue
+    lua_getuservalue( L, arg );
+    if( !lua_istable(L, -1) )
+      luaL_argerror( L, arg, "it has no uservalue" );
+
+    // uservalue has a reserved field that stores a boolean
+    lua_pushstring( L, ReservedKey );
+    lua_rawget( L, -2 );
+    if( !lua_isboolean(L, -1) )
+      luaL_argerror( L, arg,
+                     lua_pushfstring(L, "it has no '%s' field", ReservedKey) );
+
+    lua_pop( L, 2 );  // uservalue, value of reserved field
+  }
+} // anonymous namespace
 
 ////////////////
 // Create and initialize a table, associate it to userdata.
@@ -285,58 +402,37 @@ void LuaUtil::Extend( lua_State* L, int Index )
 ///////////////////////////////////////////////////////////////////
 int LuaUtil::Indexing( lua_State* L, const char* ID )
 {
-  CheckArgs( L, 2 );  // userdata, key
+  // stack: userdata, key
+  CheckArgs( L, 2 );
+  CheckUserdata( L, 1, ID );
 
-  const char* Key = luaL_checkstring( L, 2 );
-  if( IsReserved(Key) )
-  {
-    // error, the field already set to true
-    // e.g. calling ud.base.base:func()
-    if( MetatableOnly(L, 1) )
-    {
-      // set to default value, so that if the method is called
-      // using pcall(),
-      //     e.g. pcall(ud.base.base.func, ud)
-      // ud is still in default/valid state.
-      SetMetatableOnly( L, 1, false );
+  // key is reserved
+  if( IsReserved(L, 2) )
+    return PrepNextRound( L, ID );
 
-      return luaL_error( L, "'%s' of '%s' object has no field '%s'",
-                         ReservedKey, ID, ReservedKey );
-    }
-
-    // switch to metatable only
-    SetMetatableOnly( L, 1 );
-
-    lua_pop( L, 1 );  // key
-
-    return 1;  // userdata (for next round of search)
-  }
-
-  // search metatable
   if( MetatableOnly(L, 1) )
   {
     SetMetatableOnly( L, 1, false );
 
-    if( luaL_getmetafield( L, 1, Key ) )
+    // search metatable
+    if( GetMetafield( L ) )
       return 1;
-
-    return luaL_error( L, "'%s' of '%s' object has no field '%s'",
-                       ReservedKey, ID, Key );
+    else
+      return luaL_error( L, "'%s' of '%s' object has no field '%s'",
+                         ReservedKey, ID, luaL_tolstring(L, 2, nullptr) );
   }
   else
   {
-    // search the associated table
-    lua_getuservalue( L, 1 );
-    lua_insert( L, 2 );
-    lua_rawget( L, 2 );
-    if( !lua_isnoneornil( L, 3 ) )
+    // search uservalue
+    if( GetUservalueField( L ) )
       return 1;
 
     // search metatable
-    if( luaL_getmetafield( L, 1, Key ) )
+    if( GetMetafield( L ) )
       return 1;
-
-    return luaL_error( L, "'%s' object has no field '%s'", ID, Key );
+    else
+      return luaL_error( L, "'%s' object has no field '%s'", ID,
+                         luaL_tolstring(L, 2, nullptr) );
   }
 }
 
@@ -344,18 +440,19 @@ int LuaUtil::Indexing( lua_State* L, const char* ID )
 // Implementation of __newindex
 //   ID: ID of userdata
 //
-// Add whatever key and value to the associated table, except the reserved key.
+// Add whatever key and value to uservalue, except the reserved key.
 /////////////////////////////////////////////////////////
 int LuaUtil::NewIndex( lua_State* L, const char* ID )
 {
-  CheckArgs( L, 3 );  // userdata, key, value
+  // stack: userdata, key, value
+  CheckArgs( L, 3 );
+  CheckUserdata( L, 1, ID );
 
-  // modifying ReservedKey is not allowed
-  const char* Key = luaL_checkstring( L, 2 );
-  if( IsReserved(Key) )
+  // modifying the reserved field is not allowed
+  if( IsReserved(L, 2) )
     return luaL_error( L, "'%s' of '%s' object is a read-only field", ReservedKey, ID );
 
-  // add to the associated table
+  // add to uservalue
   lua_getuservalue( L, 1 );
   lua_insert( L, 2 );
   lua_rawset( L, 2 );

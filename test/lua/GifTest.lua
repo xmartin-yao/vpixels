@@ -429,45 +429,176 @@ end
 
 function TestGif:testIndexing()
   local gif = vpixels.gif( 2, 3, 4, 5 )
-  local findex = getmetatable(gif).__index
+  local index = getmetatable(gif).__index
+  local uvalue = debug.getuservalue(gif)
   local ret = nil
 
-  -- arg is number
-  ret = findex( gif, 0 )
+  -- key named 'base' is reserved, calling __index with 'base' returns
+  -- the gif object itself. two consecutive calls to __index with key 'base'
+  --    e.g. gif.base.base
+  -- trigger an error (see override a method in testExtendGif() )
+  ret = index( gif, 'base' )   -- gif.base
+  lu.assertEquals( ret, gif )  -- gif.base returns gif
+  lu.assertError( index, gif, 'base' )  -- calling __index again triggers an error
+
+  -- expect two arguments
+  lu.assertError( index )
+  lu.assertError( index, gif )
+  lu.assertError( index, gif, 'var', 2 )
+
+  -- 1st argument must be a userdata that has a uservalue
+  local img = gif[0]  -- img doesn't have uservalue
+  lu.assertError( index, img, 'pi' )
+
+  debug.setuservalue( gif, {} ) -- uservalue (a table) has no 'base' field
+  lu.assertError( index, gif, 'pi' )
+
+  -- restore uservalue
+  debug.setuservalue( gif, uvalue )
+
+  -- 2nd argument is a number, get a gifimage
+  ret = index( gif, 0 )  -- ret = gif[0]
   lu.assertEquals( type(ret), 'userdata' )
   lu.assertStrContains( tostring(ret), 'gifimage' )
-  ret = findex( gif, 4 )
+
+  ret = gif[4]  -- ret = index( gif, 4 )
   lu.assertEquals( type(ret), 'userdata' )
   lu.assertStrContains( tostring(ret), 'gifimage' )
 
-  lu.assertError( findex, gif, -1 )
-  lu.assertError( findex, gif, 5 )
+  -- error cases: out of range
+  lu.assertError( index, gif, -1 )
+  lu.assertError( index, gif, 5 )
 
-  -- arg is string
-  ret = findex( gif, 'bpp' )
+  -- 2nd argument is a string, get a function
+  ret = index( gif, 'bpp' )
   lu.assertEquals( type(ret), 'function' )
-  ret = findex( gif, 'dimension' )
-  lu.assertEquals( type(ret), 'function' )
+  lu.assertEquals( ret(gif), gif:bpp() )
 
-  lu.assertError( findex, gif, '0' )
-  lu.assertError( findex, gif, 'not-exist' )
+  -- error cases: fields not exist
+  lu.assertError( index, gif, '0' )
+  lu.assertError( index, gif, 'not-exist' )
 
-  -- arg is neither number nor string
-  lu.assertError( findex, gif, ret )
-  lu.assertError( findex, gif, gif )
-  lu.assertError( findex, gif, {} )
+  -- 2nd argument is neither a number nor a string
+  -- before
+  lu.assertError( index, gif, img )
+  lu.assertError( index, gif, gif )
+  lu.assertError( index, gif, {} )
+  -- affter assign values
+  gif[img] = "img as a key"  -- call __newindex
+  lu.assertEquals( index(gif, img), "img as a key" )
+  lu.assertEquals( uvalue[img], "img as a key" )
+
+  gif[gif] = "gif as a key"  -- call __newindex
+  lu.assertEquals( index(gif, gif), "gif as a key" )
+  lu.assertEquals( uvalue[gif], "gif as a key" )
+
+  local t = {}
+  gif[t] = t  -- call __newindex
+  lu.assertEquals( index(gif, t), t )
+  lu.assertEquals( uvalue[t], t )
 end
 
 function TestGif:testNewIndex()
-  local gif1 = vpixels.gif( 2, 3, 4, 5 )
-  local fnewindex = getmetatable(gif1).__newindex
-  local findex = getmetatable(gif1).__index
+  local gif = vpixels.gif( 2, 3, 4, 5 )
+  local newindex = getmetatable(gif).__newindex
 
-  -- "base" is reserved, manipulating it is not allowed
-  lu.assertError( fnewindex, gif1, "base", 3.14 )  -- gif1.base = 3.14
-  lu.assertError( fnewindex, gif1, "base", "string" ) -- gif1.base = "string"
-  lu.assertError( fnewindex, gif1, "base", {} )  -- gif1.base = {}
-  lu.assertError( fnewindex, gif1, "base", function() end ) -- gif1.base = function() end
+  -- gif has uservalue
+  local uvalue = debug.getuservalue( gif )
+  lu.assertNotEquals( uvalue, nil )
+  lu.assertEquals( type(uvalue), 'table' )  -- uservalue is a table
+  lu.assertEquals( type(uvalue.base), 'boolean' ) -- field 'base' stores a boolean
+
+  -- key named 'base' is reserved and unmodifiable
+  lu.assertError( newindex, gif, "base", 3.14 )  -- gif.base = 3.14
+  lu.assertError( newindex, gif, "base", "string" ) -- gif.base = "string"
+  lu.assertError( newindex, gif, "base", {} )  -- gif.base = {}
+  lu.assertError( newindex, gif, "base", function() end ) -- gif.base = function() end
+
+  -- expect three arguments
+  lu.assertError( newindex )
+  lu.assertError( newindex, gif )
+  lu.assertError( newindex, gif, 'pi' )
+  lu.assertError( newindex, gif, 'pi', 3.14, 3.14 )
+
+  -- 1st argument must be a userdata that has a uservalue
+  local img = gif[0] -- img doesn't have uservalue
+  lu.assertError( newindex, img, 'pi', 3.14 )
+
+  debug.setuservalue( gif, {} ) -- uservalue (a table) has no 'base' field
+  lu.assertError( newindex, gif, 'pi', 3.14 )
+
+  -- restore uservalue
+  debug.setuservalue( gif, uvalue )
+
+  -- error cases: 1st argument is not userdata
+  lu.assertError( newindex, {}, 'pi', 3.14 )
+  lu.assertError( newindex, 3.14, 'pi', 3.14 )
+  lu.assertError( newindex, function() end, 'pi', 3.14 )
+
+  -- delete an image: 2nd argument is a number and 3rd is nil
+  lu.assertEquals( #gif, 5 )
+  img0 = gif[0]  -- call __index
+  lu.assertEquals( img0:bpp(), 2 )
+  newindex( gif, 0, nil )          -- gif[0] = nil, delete image #0
+  lu.assertError( img0.bpp, img0 ) -- img0:bpp(), img0 is invalid
+  lu.assertEquals( #gif, 4 )       -- 4 images left
+
+  img3 = gif[3]  -- call __index
+  lu.assertEquals( img3:bpp(), 2 )
+  gif[3] = nil                     -- __newindex(gif, 3, nil), delete image #3
+  lu.assertError( img3.bpp, img3 ) -- img3:bpp(), img3 is invalid
+  lu.assertEquals( #gif, 3 )       -- 3 images left
+
+  -- wrong index
+  lu.assertError( newindex, gif, -1, nil )
+  lu.assertError( newindex, gif, 3, nil )
+
+  -- copy an image: 2nd argument is a number and 3rd is a vp.gifimage
+  gif[1]:setall(3)
+  lu.assertEquals( gif[0]:getpixel(0, 0), 0 )
+  newindex( gif, 0, gif[1] )   -- gif[0] = gif[1], copy gif[1] to gif[0]
+  lu.assertEquals( gif[0]:getpixel(0, 0), 3 )
+
+  local img2 = gif[2]
+  img2:setall(1)
+  gif[0] = img2   -- __newindex(gif, 0, img2), copy img2 to gif[0]
+  lu.assertEquals( gif[0]:getpixel(0, 0), 1 )
+
+  -- wrong index
+  lu.assertError( newindex, gif, -1, gif[1] )  -- gif[-1] = gif[1]
+  lu.assertError( newindex, gif, 4, gif[1] )   -- gif[4] = gif[1]
+
+  -- error case: 3rd argument is a vp.gifimage, but belongs to an incompatible a vp.gif
+  local gif2 = vpixels.gif( 3, 4, 5, 6 )
+  lu.assertError( newindex, gif, 0, gif2[0] )  -- gif[0] = gif2[0]
+
+  -- error cases: 2nd argument is a number and 3rd is neither a vp.gifimage nor a nil
+  lu.assertError( newindex, gif, 0, 2.718 )    -- gif[0] = 2.718
+  lu.assertError( newindex, gif, 0, '3.14' )   -- gif[0] = 3.14'
+  lu.assertError( newindex, gif, 0, {} )       -- gif[0] = {}
+
+  -- when 2nd argument is not a number, 3rd can be any value
+  newindex( gif, 'pi', 3.14 )  -- gif.pi = 3.14
+  lu.assertEquals( gif.pi, 3.14 )
+
+  newindex( gif, '0', "string key" )  -- gif['0'] = "string key"
+  lu.assertEquals( gif['0'], "string key" )
+
+  newindex( gif, gif, gif )  -- gif[gif] = gif
+  lu.assertEquals( gif[gif], gif )
+
+  local t = {}
+  newindex( gif, t, t )  -- gif[t] = t
+  lu.assertEquals( gif[t], t )
+
+  local f = function() end
+  newindex( gif, f, f )  -- gif[f] = f
+  lu.assertEquals( gif[f], f )
+end
+
+function TestGif:testExtendGif()
+  local gif1 = vpixels.gif( 2, 3, 4, 5 )
+  local gif2 = vpixels.gif( 3, 4, 5, 6 )
 
   -- add variables to gif1
   gif1.number = 0  -- number
@@ -518,57 +649,35 @@ function TestGif:testNewIndex()
   lu.assertEquals( gif1:getbpp(), 5 )
 
   -- override a method defined in metatable of vp.gif
-  function gif1:bpp() return 0 end
-  lu.assertEquals( gif1:bpp(), 0 )
+  local bpp = gif1.bpp              -- store its reference
+  lu.assertEquals( gif1:bpp(), 2 )  -- before overriding
+  function gif1:bpp() return 0 end  -- override bpp()
+  lu.assertEquals( gif1:bpp(), 0 )  -- after overriding
 
   -- using 'base' key to access the method defined in metatable of vp.gif
+  lu.assertEquals( gif1.base.bpp, bpp )         -- same function
+  lu.assertEquals( gif1.base:bpp(), bpp(gif1) ) -- same result
   lu.assertEquals( gif1.base:bpp(), 2 )
-  lu.assertEquals( gif1.base.bpp(gif1), 2 )
 
-  -- the following are syntactically correct, but treated as error
+  -- these are syntactically correct, but treated as error
   --   gif1.base.base:bpp() or gif1.base.base.bpp(gif1)
-  -- (see two consecutive calls to __index() with key 'base' )
+  -- (see two consecutive calls to __index with key 'base' in testIndexing() )
 
   -- modifications affect gif1 only
   local gif2 = vpixels.gif( 3, 4, 5, 6 )
-  lu.assertError( findex, gif2, 'number' )  -- gif2.number
-  lu.assertError( findex, gif2, 'name' )    -- gif2.name
-  lu.assertError( findex, gif2, 'consts' )  -- gif2.consts
-  lu.assertError( findex, gif2, 'getnumber' )  -- gif2.getnumber
-  lu.assertError( findex, gif2, 'getname' )    -- gif2.getname
-  lu.assertError( findex, gif2, 'getconst' )   -- gif2.getconst
-  lu.assertError( findex, gif2, 'getbpp' )     -- gif2.getbpp
-
-  -- delete an image: 3rd arg is nil
-  lu.assertEquals( #gif2, 6 )
-  img0 = gif2[0]
-  lu.assertEquals( img0:bpp(), 3 )
-  gif2[0] = nil                    -- delete image #0
-  lu.assertError( img0.bpp, img0 ) -- img0 becomes invalid
-  lu.assertEquals( #gif2, 5 )      -- 5 images left
-  img3 = gif2[3]
-  lu.assertEquals( img3:bpp(), 3 )
-  gif2[3] = nil                    -- delete image #4
-  lu.assertError( img3.bpp, img3 ) -- img0 becomes invalid
-  lu.assertEquals( #gif2, 4 )      -- 4 images left
-  -- wrong index
-  lu.assertError( fnewindex, gif2, -1, nil )
-  lu.assertError( fnewindex, gif2, 4, nil )
-
-  -- copy an image: 3rd arg is a vp.gifimage
-  gif2[1]:setall(3)
-  lu.assertEquals( gif2[0]:getpixel(0, 0), 0 )
-  gif2[0] = gif2[1]
-  lu.assertEquals( gif2[0]:getpixel(0, 0), 3 )
-  -- wrong index
-  lu.assertError( fnewindex, gif2, -1, gif2[1] )
-  lu.assertError( fnewindex, gif2, 4, gif2[1] )
-  -- 3rd arg is a vp.gifimage, but belongs to an incompatible a vp.gif
-  lu.assertError( fnewindex, gif2, 0, gif1[1] )
-  -- 3rd arg is neither a vp.gifimage nor a nil
-  lu.assertError( fnewindex, gif2, 0, 2.718 )
-  lu.assertError( fnewindex, gif2, 0, '3.14' )
-  lu.assertError( fnewindex, gif2, 0, {} )
+  -- gif2 doesn't get the overridden method
+  lu.assertNotEquals( gif2.bpp, gif1.bpp )     -- different functions
+  lu.assertNotEquals( gif2:bpp(), gif1:bpp() ) -- different results
+  lu.assertEquals( gif2:bpp(), 3 )
+  -- newly added data are not available for gif2
+  local index = getmetatable(gif2).__index
+  lu.assertError( index, gif2, 'number' )  -- gif2.number
+  lu.assertError( index, gif2, 'name' )    -- gif2.name
+  lu.assertError( index, gif2, 'consts' )  -- gif2.consts
+  lu.assertError( index, gif2, 'getnumber' )  -- gif2.getnumber
+  lu.assertError( index, gif2, 'getname' )    -- gif2.getname
+  lu.assertError( index, gif2, 'getconst' )   -- gif2.getconst
+  lu.assertError( index, gif2, 'getbpp' )     -- gif2.getbpp
 end
 
 function TestGif:testIPairs()

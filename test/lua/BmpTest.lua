@@ -335,39 +335,165 @@ function TestBmp:testExport()
   lu.assertError( bmp.export, bmp, 'temp.bmp', false )
 end
 
-function TestBmp:testIndexingNewIndex()
+-- test LuaUtil::NewIndex()
+-- b/c __newindex of LuaBmp delegates to LuaUtil::NewIndex()
+function TestBmp:testNewIndex()
+  local bmp = vpixels.bmp( 4, 5, 6 )
+  local newindex = getmetatable( bmp ).__newindex
+
+  -- bmp has uservalue
+  local uvalue = debug.getuservalue( bmp )
+  lu.assertNotEquals( uvalue, nil )
+  lu.assertEquals( type(uvalue), 'table' )  -- uservalue is a table
+  lu.assertEquals( type(uvalue.base), 'boolean' ) -- field 'base' stores a boolean
+
+  -- key named 'base' is reserved and unmodifiable
+  lu.assertError( newindex, bmp, 'base', nil )   -- bmp.base = nil
+  lu.assertError( newindex, bmp, 'base', {} )    -- bmp.base = {}
+  lu.assertError( newindex, bmp, 'base', 3.14 )  -- bmp.base = 3.14
+  lu.assertError( newindex, bmp, 'base', "string" )  -- bmp.base = "string"
+  lu.assertError( newindex, bmp, 'base', function() end )  -- bmp.base = function() end
+
+  -- expect three arguments
+  lu.assertError( newindex )
+  lu.assertError( newindex, bmp )
+  lu.assertError( newindex, bmp, 'pi' )
+  lu.assertError( newindex, bmp, 'pi', 3.14, 3.14 )
+
+  -- 1st argument must be a userdata that has a uservalue
+  debug.setuservalue( bmp, nil )  -- uservalue removed
+  lu.assertError( newindex, bmp, 'pi', 3.14 )
+
+  debug.setuservalue( bmp, {} ) -- uservalue (a table) has no 'base' field
+  lu.assertError( newindex, bmp, 'pi', 3.14 )
+
+  -- restore uservalue
+  debug.setuservalue( bmp, uvalue )
+
+  -- error cases: 1st argument is not userdata
+  lu.assertError( newindex, {}, 'pi', 3.14 )
+  lu.assertError( newindex, 3.14, 'pi', 3.14 )
+  lu.assertError( newindex, function() end, 'pi', 3.14 )
+
+  -- 2nd argument can be any value
+  newindex( bmp, 'pi', 3.14 )  -- bmp.pi = 3.14
+  lu.assertEquals( bmp.pi, 3.14 )
+
+  newindex( bmp, 0, "number key" )  -- bmp[0] = "number key"
+  lu.assertEquals( bmp[0], "number key" )
+
+  newindex( bmp, '0', "string key" )  -- bmp['0'] = "string key"
+  lu.assertEquals( bmp['0'], "string key" )
+
+  newindex( bmp, bmp, "bmp for key" )  -- bmp[bmp] = "bmp for key"
+  lu.assertEquals( bmp[bmp], "bmp for key" )
+
+  local t = {}
+  newindex( bmp, t, "table for key" )  -- bmp[t] = "table for key"
+  lu.assertEquals( bmp[t], "table for key" )
+
+  local f = function() end
+  newindex( bmp, f, "function for key" )  -- bmp[f] = "function for key"
+  lu.assertEquals( bmp[f], "function for key" )
+
+  -- assigned values are stored in uservalue
+  lu.assertEquals( uvalue.pi,   3.14 )
+  lu.assertEquals( uvalue[0],   "number key" )
+  lu.assertEquals( uvalue['0'], "string key" )
+  lu.assertEquals( uvalue[bmp], "bmp for key" )
+  lu.assertEquals( uvalue[t],   "table for key" )
+  lu.assertEquals( uvalue[f],   "function for key" )
+
+  -- 3rd argument can be any value
+  newindex( bmp, 'var', bmp )  -- bmp.var = bmp
+  lu.assertEquals( bmp.var, bmp )
+  lu.assertEquals( uvalue.var, bmp )
+
+  newindex( bmp, 'var', t )  -- bmp.var = t
+  lu.assertEquals( bmp.var, t )
+  lu.assertEquals( uvalue.var, t )
+
+  newindex( bmp, 'var', f )  -- bmp.var = f
+  lu.assertEquals( bmp.var, f )
+  lu.assertEquals( uvalue.var, f )
+
+  -- do NOT directly refer 'base' when doing assignment operation.
+  -- although the following example is syntactically correct and runs,
+  -- it doesn't add a field 'pi' to 'base' and leaves bmp in an abnormal status.
+  bmp.base.pi = 3.1415
+  -- to accomplish this task, both __index and __newindex are called.
+  -- 1) __index gets called to resolve bmp.base and it returns bmp,
+  --    but it sets 'base' of bmp's uservalue to true.
+  lu.assertEquals( uvalue.base, true )
+  -- 2) __newindex gets called with bmp, pi and 3.1415. it adds
+  --    a new field 'pi' to uservalue.
+  lu.assertEquals( uvalue.pi, 3.1415 )
+  -- when pi is retrieved,
+  --    e.g  x = bmp.pi  or  x = bmp.base.pi
+  -- __index gets called. __index won't search uservalue but metatable of bmp,
+  -- b/c 'base' was set to true during the last round. so it fails
+  lu.assertError( getmetatable(bmp).__index, bmp, 'pi' )
+  -- before __index errors out, it sets 'base' back to false
+  lu.assertEquals( uvalue.base, false )
+end
+
+-- test LuaUtil::testIndexing()
+-- b/c __index of LuaBmp delegates to LuaUtil::testIndexing()
+function TestBmp:testIndexing()
+  local bmp = vpixels.bmp( 4, 5, 6 )
+  local index = getmetatable( bmp ).__index
+  local uvalue = debug.getuservalue( bmp )
+  local ret = nil
+
+  -- key named 'base' is reserved, calling __index with 'base' returns
+  -- the bmp object itself. two consecutive calls to __index with key 'base'
+  --    e.g. bmp.base.base
+  -- trigger an error (see override a method in testExtendBmp() )
+  ret = index( bmp, 'base' )   -- bmp.base
+  lu.assertEquals( ret, bmp )  -- bmp.base returns bmp
+  lu.assertError( index, bmp, 'base' )  -- calling __index again triggers an error
+
+  -- expect two arguments
+  lu.assertError( index )
+  lu.assertError( index, bmp )
+  lu.assertError( index, bmp, 'var', 2 )
+
+  -- 1st argument must be a userdata that has a uservalue
+  debug.setuservalue( bmp, nil )  -- uservalue removed
+  lu.assertError( index, bmp, 'pi' )
+
+  debug.setuservalue( bmp, {} ) -- uservalue (a table) has no 'base' field
+  lu.assertError( index, bmp, 'pi' )
+
+  -- restore uservalue
+  debug.setuservalue( bmp, uvalue )
+
+  -- error cases: 1st argument is not userdata
+  lu.assertError( index, {}, 'pi' )
+  lu.assertError( index, 3.14, 'pi' )
+  lu.assertError( index, function() end, 'pi' )
+
+  -- 2nd argument can be any value
+  bmp[1] = 0.01
+  lu.assertEquals( index(bmp, 1), 0.01 )
+
+  bmp.pi = 3.14
+  lu.assertEquals( index(bmp, 'pi'), 3.14 )
+
+  local t = {}
+  bmp[t] = t
+  lu.assertEquals( index(bmp, t), t )
+
+  local f = function() end
+  bmp[f] = f
+  lu.assertEquals( index(bmp, f), f )
+end
+
+-- test that LuaUtil::testIndexing() and LuaUtil::testNewIndex()
+-- work correctly to extend vp.bmp object
+function TestBmp:testExtendBmp()
   local bmp1 = vpixels.bmp( 4, 5, 6 )
-  local findex = getmetatable(bmp1).__index
-  local fnewindex = getmetatable(bmp1).__newindex
-
-  ------------------------------------
-  -- the key named 'base' is reserved
-  ------------------------------------
-
-  -- filed 'base' is not modifiable
-  lu.assertError( fnewindex, bmp1, 'base', nil )   -- bmp1.base = nil
-  lu.assertError( fnewindex, bmp1, 'base', {} )    -- bmp1.base = {}
-  lu.assertError( fnewindex, bmp1, 'base', 3.14 )  -- bmp1.base = 3.14
-  lu.assertError( fnewindex, bmp1, 'base', "string" ) -- bmp1.base = "string"
-  lu.assertError( fnewindex, bmp1, 'base', function() end ) -- bmp1.base = function() end
-
-  -- a call to __index() with key 'base' returns the vp.bmp object itself
-  -- two consecutive calls to __index() with key 'base'
-  --   e.g. bmp1.base.base
-  -- trigger an error (see override a method defined in metatable)
-  local ret = findex( bmp1, 'base' )
-  lu.assertEquals( type(ret), 'userdata' )
-  lu.assertStrContains( tostring(ret), 'bmp' )
-  lu.assertError( findex, bmp1, 'base' )
-
-  -- __index() accepts two arguments
-  lu.assertError( findex )
-  lu.assertError( findex, bmp1 )
-
-  -- __newindex() accepts three arguments
-  lu.assertError( fnewindex )
-  lu.assertError( fnewindex, bmp1 )
-  lu.assertError( fnewindex, bmp1, 'var' )
+  local bmp2 = vpixels.bmp( 8, 9, 10 )
 
   -- add variables to bmp1
   bmp1.number = 0  -- number
@@ -380,7 +506,7 @@ function TestBmp:testIndexingNewIndex()
   lu.assertEquals( bmp1.consts[1], 0.0 )
   lu.assertEquals( bmp1.consts[2], 0.0 )
 
-  -- change variables
+  -- change values of variables
   bmp1.number = 1
   lu.assertEquals( bmp1.number, 1 )
 
@@ -426,21 +552,21 @@ function TestBmp:testIndexingNewIndex()
   lu.assertEquals( bmp1.base.bpp(bmp1), 4 )
 
   -- these are syntactically correct, but treated as error
-  --   bmp1.base.base:bpp() or bmp1.base.base.bpp(bmp1)
-  -- (see two consecutive calls to __index() with key 'base' )
+  --   bmp1.base.base:bpp()  or  bmp1.base.base.bpp(bmp1)
+  -- (see two consecutive calls to __index with key 'base' in testIndexing() )
 
-  -- all modifications affect bmp1 only and are not available for bmp2
-  local bmp2 = vpixels.bmp( 8, 9, 10 )
-  lu.assertError( findex, bmp2, 'number' )  -- bmp2.number
-  lu.assertError( findex, bmp2, 'name' )    -- bmp2.name
-  lu.assertError( findex, bmp2, 'consts' )  -- bmp2.consts
-  lu.assertError( findex, bmp2, 'getnumber' )  -- bmp2.getnumber
-  lu.assertError( findex, bmp2, 'getname' )  -- bmp2.getname
-  lu.assertError( findex, bmp2, 'getbpp' )   -- bmp2.getbpp
-
+  -- all modifications affect bmp1 only
+  -- bmp2 doesn't get the overridden method
+  lu.assertNotEquals( bmp2:bpp(), bmp1:bpp() )
   lu.assertEquals( bmp2:bpp(), 8 )
-  lu.assertEquals( bmp2:width(), 9 )
-  lu.assertEquals( bmp2:height(), 10 )
+  -- newly added data are not available for bmp2
+  local index = getmetatable(bmp2).__index
+  lu.assertError( index, bmp2, 'number' )  -- bmp2.number
+  lu.assertError( index, bmp2, 'name' )    -- bmp2.name
+  lu.assertError( index, bmp2, 'consts' )  -- bmp2.consts
+  lu.assertError( index, bmp2, 'getnumber' )  -- bmp2.getnumber
+  lu.assertError( index, bmp2, 'getname' )  -- bmp2.getname
+  lu.assertError( index, bmp2, 'getbpp' )   -- bmp2.getbpp
 end
 
 function TestBmp:testGC()
