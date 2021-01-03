@@ -23,6 +23,7 @@
 #include "LuaGifImage.h"
 #include "LuaDerive.h"
 #include "LuaUtil.h"
+#include "Util.h"
 #include "config.h"
 #include <string>
 #include <iostream>
@@ -47,12 +48,36 @@ namespace
     std::cout << Notice << std::endl;
   }
 
-  // version of the module
-  int Version( lua_State* L ) 
+  // verify the module's version
+  int CheckVersion( lua_State* L )
   {
-    LuaUtil::CheckArgs( L, 0 );
-    lua_pushstring( L, PACKAGE_VERSION );
-    return 1;
+    luaL_checktype( L, 1, LUA_TSTRING );
+    auto ReqVersion = lua_tostring(L, 1);
+    auto Exact = LuaUtil::OptBoolean( L, 2, false );
+
+    auto Result = Util::CheckVersion( ReqVersion, PACKAGE_VERSION, Exact );
+    lua_pushboolean( L, Result );
+    if( Result )
+      return 1;
+    else
+    {
+      // include a message, so it can used by assert()
+      lua_pushfstring( L, "require version %s, got %s", ReqVersion, PACKAGE_VERSION );
+      return 2;
+    }
+  }
+
+  // return or verify the module's version
+  int Version( lua_State* L )
+  {
+    auto argc = LuaUtil::CheckArgs( L, 0, 2 );
+    if( argc == 0 )
+    {
+      lua_pushstring( L, PACKAGE_VERSION );
+      return 1;
+    }
+    else
+      return CheckVersion( L );
   }
 
   // about the module

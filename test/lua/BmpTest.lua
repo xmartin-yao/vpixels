@@ -596,6 +596,50 @@ function TestBmp:testMetatable()
   lu.assertError( setmetatable, bmp, {} )
 end
 
+-- test version() of the module
+-- TODO: create a Lua script when the module needs more tests
+function TestBmp:testModuleVersion()
+  -- no argument, get a string
+  local version = vpixels.version()
+  lu.assertIsString( version )
+
+  -- compare with itself, always pass
+  lu.assertTrue( vpixels.version(version) )
+  lu.assertTrue( vpixels.version(version, true) )  -- 2nd argument is optional
+  lu.assertTrue( vpixels.version(version, false) ) -- and it's false by default
+
+  -- compare with a previous version
+  version = '0.7.1'
+  lu.assertTrue( vpixels.version(version) )  -- pass, current is a later version
+  lu.assertFalse( vpixels.version(version, true) )  -- fail, not exactly same
+
+  -- when it fails, it returns false + a string
+  local ret, msg = vpixels.version(version, true)
+  lu.assertFalse( ret )
+  lu.assertIsString( msg )
+
+  -- 1st argument must be a string
+  lu.assertError( vpixels.version, 0.7 )
+  lu.assertError( vpixels.version, {} )
+  lu.assertError( vpixels.version, function() end )
+
+  -- 2nd argument must be a boolean
+  lu.assertError( vpixels.version, version, 0.7 )
+  lu.assertError( vpixels.version, version, {} )
+  lu.assertError( vpixels.version, version, function() end )
+
+  -- leading zeros don't count
+  version = '0.007.01'   -- same as '0.7.1'
+  lu.assertTrue( vpixels.version(version) )
+  lu.assertFalse( vpixels.version(version, true) )
+
+  -- contain non-digit, always fail
+  version = '0.7.1a'
+  lu.assertFalse( vpixels.version(version) )
+  version = '0.7a.1'
+  lu.assertFalse( vpixels.version(version) )
+end
+
 
 local runner = lu.LuaUnit.new()
 --runner:setOutputType("tap")

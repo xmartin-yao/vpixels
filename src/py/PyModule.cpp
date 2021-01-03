@@ -22,6 +22,7 @@
 #include "PyGif.h"
 #include "PyGifImage.h"
 #include "PyUtil.h"
+#include "Util.h"
 #include "config.h"
 #include <string>
 #include <iostream>
@@ -49,7 +50,13 @@ Display information about the module." );
 
 PyDoc_STRVAR( version_doc,
 "version() -> str\n\n\
-Return version of the module." );
+Return the version of the module.\n\n\
+version(v [, exact]) -> bool\n\n\
+   v: required version\n\
+   exact: if True, check whether the version of the module is exactly the same as\n\
+          the required; otherwise, check whether it is at least the required or\n\
+          a later version. False by default.\n\n\
+Verify the version of the module." );
 
 ////////
 // define module
@@ -59,10 +66,28 @@ namespace
   #define COPYRIGHT "Copyright (C) 2019 Xueyi Yao"
   #define LICENSE   "GNU GPL version 3 or later"
 
-  // version of the module
-  PyObject* Version( PyObject*, PyObject* )
+  // verify the module's version
+  PyObject* CheckVersion( PyObject* args )
   {
-    return PyString_FromString( PACKAGE_VERSION );
+    const char* ReqVersion = nullptr;
+    auto pyBool = Py_False;  // False by default
+    if( !PyArg_ParseTuple(args, "s|O!", &ReqVersion, &PyBool_Type, &pyBool) )
+      return nullptr;
+
+    bool Exact = PyObject_IsTrue( pyBool );
+    if( Util::CheckVersion( ReqVersion, PACKAGE_VERSION, Exact ) )
+      Py_RETURN_TRUE;
+    else
+      Py_RETURN_FALSE;
+  }
+
+  // return or verify the module's version
+  PyObject* Version( PyObject*, PyObject* args )
+  {
+    if( PyTuple_Size( args ) == 0 )
+      return PyString_FromString( PACKAGE_VERSION );
+    else
+      return CheckVersion( args );
   }
 
   // about the module
@@ -80,7 +105,7 @@ namespace
 
   // module methods
   PyMethodDef Methods[] = {
-    MDef( version, Version, METH_NOARGS, version_doc )
+    MDef( version, Version, METH_VARARGS, version_doc )
     MDef( about,   About,   METH_NOARGS, about_doc )
     { nullptr, nullptr, 0, nullptr } 
   };

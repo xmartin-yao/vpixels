@@ -283,5 +283,44 @@ class TestBmp( unittest.TestCase ):
     self.assertEqual( 3, bmp.getpixel( 1, 2 ) )
 
 
+  # test version() of the module
+  # TODO: create a Python script when the module needs more tests
+  def testModuleVersion( self ):
+    # no argument, get a string
+    version = vpixels.version()
+    self.assertIsInstance( version, str )
+
+    # compare with itself, always pass
+    self.assertTrue( vpixels.version(version) )
+    self.assertTrue( vpixels.version(version, True) )  # 2nd argument is optional
+    self.assertTrue( vpixels.version(version, False) ) # and it's false by default
+
+    # compare with a previous version
+    version = '0.7.1'
+    self.assertTrue( vpixels.version(version) )  # pass, current is a later version
+    self.assertFalse( vpixels.version(version, True) )  # fail, not exactly same
+
+    # 1st argument must be a string
+    self.assertRaises( TypeError, vpixels.version, 0.7 )
+    self.assertRaises( TypeError, vpixels.version, {} )
+    self.assertRaises( TypeError, vpixels.version, [] )
+
+    # 2nd argument must be a boolean
+    self.assertRaises( TypeError, vpixels.version, version, 0.7 )
+    self.assertRaises( TypeError, vpixels.version, version, {} )
+    self.assertRaises( TypeError, vpixels.version, version, [] )
+
+    # leading zeros don't count
+    version = '0.007.01'   # same as '0.7.1'
+    self.assertTrue( vpixels.version(version) )
+    self.assertFalse( vpixels.version(version, True) )
+
+    # contain non-digit, always fail
+    version = '0.7.1a'
+    self.assertFalse( vpixels.version(version) )
+    version = '0.7a.1'
+    self.assertFalse( vpixels.version(version) )
+
+
 if __name__ == '__main__':
   unittest.main()
