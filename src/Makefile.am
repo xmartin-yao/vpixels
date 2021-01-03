@@ -42,7 +42,7 @@ libvpixels_la_SOURCES = bmp/BmpInfo.cpp bmp/BmpInfo1Bit.cpp \
                         gif/GifImageVecBuilder.cpp \
                         gif/GifImageImpl.cpp gif/GifImage.cpp \
                         gif/GifImpl.cpp gif/Gif.cpp \
-                        util/Exception.cpp
+                        util/Exception.cpp util/Util.cpp
 
 ## shared: build shared lib
 ## VP_EXTENSION: define VP_EXTENSION to exclude some of the verifications

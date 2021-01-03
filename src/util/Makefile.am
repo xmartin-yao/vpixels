@@ -17,4 +17,4 @@
 
 ## Makefile.am for src/util/
 
-EXTRA_DIST = Exception.cpp IOutil.h SimpleList.h
+EXTRA_DIST = Exception.cpp IOutil.h SimpleList.h Util.h Util.cpp

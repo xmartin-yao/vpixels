@@ -31,11 +31,11 @@ link_directories(${CPPUNIT_LIBRARY_DIRS})
 # target: UtilTest, build tests
 #
 add_executable(UtilTest EXCLUDE_FROM_ALL
-               IOutilTest.cpp SimpleListTest.cpp
+               IOutilTest.cpp SimpleListTest.cpp UtilTest.cpp
                ${PROJECT_SOURCE_DIR}/test/UnitTestMain.cpp)
 
 target_compile_options(UtilTest PUBLIC ${CPPUNIT_CFLAGS})
-target_link_libraries(UtilTest ${CPPUNIT_LIBRARIES})
+target_link_libraries(UtilTest ${CPPUNIT_LIBRARIES} vpixels-lib)
 
 #
 # target: check-util, run tests

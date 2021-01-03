@@ -23,8 +23,12 @@ EXTRA_DIST = CMakeLists.txt
 ## Source of UtilTest
 UtilTest_SOURCES = IOutilTest.h IOutilTest.cpp \
                    SimpleListTest.h SimpleListTest.cpp \
+                   UtilTest.h UtilTest.cpp \
                    @top_srcdir@/test/UnitTestMain.cpp
-                   
+
+## Dependency of UtilTest: lib to link
+UtilTest_LDADD = @top_builddir@/src/.libs/libvpixels.a
+
 ## Dependencies of target check_PROGRAMS
 ## i.e. executables to be built when running 'make check'
 check_PROGRAMS = UtilTest

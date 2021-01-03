@@ -32,7 +32,7 @@ set(VPIXELS_SRCS bmp/BmpInfo.cpp bmp/BmpInfo1Bit.cpp bmp/BmpInfo4Bit.cpp
                  gif/GifImageData.cpp gif/GifApplicationExt.cpp gif/GifCommentExt.cpp
                  gif/GifPlainTextExt.cpp gif/GifComponentVecUtil.cpp gif/GifImageVecBuilder.cpp
                  gif/GifImageImpl.cpp gif/GifImpl.cpp gif/GifImage.cpp gif/Gif.cpp
-                 util/Exception.cpp)
+                 util/Exception.cpp util/Util.cpp)
 
 #
 # target: vpixels-lib
