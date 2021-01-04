@@ -1,3 +1,13 @@
+0.7.3
+- Add Util::CheckVersion() to verify versions.
+- Lua module
+  - Add module version verification.
+  - Enhance LuaUtil::NewIndex() and LuaUtil::Indexing() to distinguish
+    number keys from string keys.
+- Python module
+  - Add module version verification.
+- Update examples hourglass.lua and hourglass.py
+
 0.7.2
 - Python module
   - PyGifObject allows forward/backward to iterate over PyGifImageObjects.
